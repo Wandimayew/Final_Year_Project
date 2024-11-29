@@ -27,7 +27,7 @@ export const MENU_ITEMS = [
     id: 'createschool',
     icon: FaRegPlusSquare,
     label: 'Create School',
-    href: '/createschool',
+    href: '/school/createschool',
     roles: "",
   },
   {

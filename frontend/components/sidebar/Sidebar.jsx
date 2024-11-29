@@ -30,7 +30,7 @@ const Sidebar = ({ isMenuOpen }) => {
       <div key={item.id}>
         <div
           className={`
-            flex items-center justify-between py-3 cursor-pointer font-bold
+            flex items-center justify-between py-1 cursor-pointer font-bold
             ${isItemActive ? 'bg-navy-700 text-[#1672EE]' : 'text-[#555] hover:text-[#1672EE]'}
             rounded-lg transition-colors duration-150
           `}
@@ -41,7 +41,7 @@ const Sidebar = ({ isMenuOpen }) => {
             className="flex items-center flex-1 gap-3"
             onClick={(e) => hasSubItems && e.preventDefault()}
           >
-            <span className="glassmorphism p-2 rounded-md">
+            <span className="glassmorphism p-2 rounded-md text-[#1672EE]">
               <item.icon size={25}/>
             </span>
             {isMenuOpen && <span className="text-sm">{item.label}</span>}

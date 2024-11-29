@@ -44,13 +44,13 @@ const Dashboard1 = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen top-20 relative">     
+    <div className="flex min-h-screen top-20 relative bg-gray-50 p-6">     
 
       {/* Main Content */}
       <main className="flex-1 ml-0 md:ml-30 px-8">
         <div className="mb-8 bg-white p-3 rounded-md">
           <h2 className="text-2xl font-semibold mb-4">Dashboard</h2>
-          <p className="text-gray-600">Home - Dashboard</p>
+          <p className="text-gray-600">Home / Dashboard</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
