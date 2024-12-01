@@ -1,5 +1,5 @@
 import CreateSchool from '@/components/school/CreateSchool'
-import Layout from '@/components/sidebar/Layout'
+import Layout from '@/components/layout/Layout'
 import React from 'react'
 
 const Create = () => {
