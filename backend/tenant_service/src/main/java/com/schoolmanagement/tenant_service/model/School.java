@@ -3,8 +3,6 @@ package com.schoolmanagement.tenant_service.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -59,6 +57,9 @@ public class School {
 
     @Column(nullable = false)
     private String created_by;
+
+    @Column(nullable = false)
+    private String school_information;
 
     private boolean isActive;
 

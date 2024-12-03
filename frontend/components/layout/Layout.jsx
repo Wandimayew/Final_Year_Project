@@ -12,7 +12,7 @@ const Layout = ({ children }) => {
       <div className="flex flex-1">
         <Sidebar isMenuOpen={isMenuOpen} />
         <div className={`flex-1 transition-all duration-300 ${isMenuOpen ? 'ml-64' : 'ml-16'}`}>
-          <main className="h-screen overflow-auto p-4">
+          <main className="h-screen overflow-y-auto p-4">
             {children}
           </main>
         </div>

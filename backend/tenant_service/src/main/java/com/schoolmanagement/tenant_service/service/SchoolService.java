@@ -46,6 +46,7 @@ public class SchoolService {
         school.setSchool_type(schoolRequest.getSchool_type());
         school.setCreated_at(LocalDateTime.now());
         school.setEstablishment_date(LocalDate.now());
+        school.setSchool_information(schoolRequest.getSchool_information());
         school.setStatus("Paid");
         school.setActive(true);
         school.setCreated_by("admin");
@@ -99,6 +100,7 @@ public class SchoolService {
         existingSchool.setStatus("Paid");
         existingSchool.setCreated_by("admin");
         existingSchool.setUpdated_at(LocalDateTime.now());
+        existingSchool.setSchool_information(schoolRequest.getSchool_information());
 
         if (schoolRequest.getLogo() != null) {
             uploadSchoolLogo(schoolRequest.getLogo(), existingSchool.getSchool_id());
@@ -213,6 +215,7 @@ public class SchoolService {
                 .school_name(school.getSchool_name())
                 .school_type(school.getSchool_type())
                 .establishment_date(school.getEstablishment_date())
+                .school_information(school.getSchool_information())
                 .isActive(school.isActive())
                 .addresses(addressResponses)
                 .logo(FileUtils.readFileFromLocation(school.getLogo()))

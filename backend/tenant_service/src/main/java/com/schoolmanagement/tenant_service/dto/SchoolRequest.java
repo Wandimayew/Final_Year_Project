@@ -25,6 +25,9 @@ public class SchoolRequest {
     private String school_type;
  
     private LocalDate establishment_date;
-
+    
+    private String school_information;
+    
     private MultipartFile logo;
+
 }

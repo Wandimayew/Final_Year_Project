@@ -1,30 +1,29 @@
 "use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import axios from "axios";
 
 export default function SchoolList() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [schools, setSchools]= useState([]);
 
-  const schools = [
-    {
-      id: 1,
-      name: 'August Ramos',
-      address: 'In ut quidem in aspe',
-      phone: '55',
-      info: 'Occaecat sequi Nam a',
-      status: 'Active'
-    },
-    {
-      id: 2,
-      name: 'Paramount Secondary School',
-      address: '911 Hillside Dr, Kodiak, Alaska 99615, USA',
-      phone: '234565434',
-      info: 'This is officially unofficial page of Paramount Boarding High School, and is not actually associated',
-      status: 'Active'
-    },
-  ];
+  const getSchoolList = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8083/tenant/api/getAllSchools"
+      );
+      console.log("school Resposes : ",response.data);
+      setSchools(response.data);
+      
+    } catch (error) {
+      console.error("Error during submission:", error); // Log the full error
+      toast.error(`Network error: ${error.message}`);
+    }
+  };
+  useEffect(() => {
+    getSchoolList();
+  }, []);
 
   return (
     <div className="p-6">
@@ -41,7 +40,7 @@ export default function SchoolList() {
             + Add School
           </button>
         </div>
-        
+
         <div className="flex justify-between items-center">
           <div className="relative">
             <input
@@ -99,12 +98,20 @@ export default function SchoolList() {
           </thead>
           <tbody>
             {schools.map((school) => (
-              <tr key={school.id} className="border-b hover:bg-gray-50">
-                <td className="py-3 px-4">{school.id}</td>
-                <td className="py-3 px-4">{school.name}</td>
-                <td className="py-3 px-4">{school.address}</td>
-                <td className="py-3 px-4">{school.phone}</td>
-                <td className="py-3 px-4">{school.info}</td>
+              <tr key={school.school_id} className="border-b hover:bg-gray-50">
+                <td className="py-3 px-4">{school.school_id}</td>
+                <td className="py-3 px-4">{school.school_name}</td>
+                <td className="py-3 px-4">
+        {school.addresses && school.addresses.length > 0 
+          ? school.addresses.map((address, index) => (
+              <div key={index}>
+                {address.address_line}, {address.city}, {address.zone},{address.region}, {address.country}
+              </div>
+            ))
+          : 'No address available'}
+      </td>
+                <td className="py-3 px-4">{school.contact_number}</td>
+                <td className="py-3 px-4">{school.school_information}</td>
                 <td className="py-3 px-4">
                   <span className="px-2 py-1 rounded-full text-sm bg-green-100 text-green-600">
                     {school.status}

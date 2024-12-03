@@ -57,20 +57,22 @@ const Sidebar = ({ isMenuOpen }) => {
 
         {isMenuOpen && hasSubItems && isExpanded && (
           <div className="ml-8 mt-1 space-y-1">
-            {item.subItems.map(subItem => (
-              <Link
-                key={subItem.id}
-                href={subItem.href}
-                className={`
-                  block px-4 py-2 rounded-lg text-sm font-bold
-                  ${isActive(subItem.href) 
-                    ? 'bg-navy-700 text-[#1672EE]' 
-                    : 'text-[#555] hover:text-[#1672EE]'}
-                `}
-              >
-                {subItem.label}
-              </Link>
-            ))}
+            <div className="max-h-60 overflow-y-auto">
+              {item.subItems.map(subItem => (
+                <Link
+                  key={subItem.id}
+                  href={subItem.href}
+                  className={`
+                    block px-4 py-2 rounded-lg text-sm font-bold
+                    ${isActive(subItem.href) 
+                      ? 'bg-navy-700 text-[#1672EE]' 
+                      : 'text-[#555] hover:text-[#1672EE]'}
+                  `}
+                >
+                  {subItem.label}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -78,7 +80,9 @@ const Sidebar = ({ isMenuOpen }) => {
   };
 
   return (
-    <aside className={`h-screen bg-[#fff] text-[#555] flex flex-col fixed left-0 top-20 transition-all duration-300 ${isMenuOpen ? 'w-64' : 'w-16'}`}>
+    <aside 
+      className={`h-screen bg-[#fff] text-[#555] flex flex-col fixed left-0 top-20 transition-all duration-300 ${isMenuOpen ? 'w-64' : 'w-16'}`}
+    >
       <nav className="flex-1 p-2 space-y-2 overflow-y-auto">
         {MENU_ITEMS.map((menu) => renderMenuItem(menu))}
       </nav>
