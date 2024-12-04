@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: User_Service
+    file:
+      uploads:
+        photos-output-path: ./uploads
+  output:
+    ansi:
+      enabled: ALWAYS
+  datasource:
+    url: jdbc:mysql://localhost:3306/User_Service  
+    username: root  
+    password: Tame123! 
+    driver-class-name: com.mysql.cj.jdbc.Driver  
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 600000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect  
+  profiles:
+    active: dev
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+server:
+  port: 8082
+  
+app:
+  jwtSecret: yourSecretKey
+  jwtExpirationMs: 86400000
+
+
