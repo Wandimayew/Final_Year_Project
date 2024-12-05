@@ -35,7 +35,7 @@ public class PermissionService {
     }
 
     public ResponseEntity<Permission> createPermission(PermissionRequest permissionRequest) {
-        log.info("we are creating permisson  ");
+        log.info("we are creating permission  ");
         if (permissionRepository.findByName(permissionRequest.getName()).isPresent()) {
             throw new DuplicateResourceException("Permission with name " + permissionRequest.getName() + " already exists");
         }

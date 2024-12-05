@@ -18,12 +18,6 @@ public class UserController {
 
     private final UserService userService;
 
-    // Register a new user
-    @PostMapping("/register")
-    public ResponseEntity<UserResponseDTO> registerUser(@Valid @RequestBody SignupRequest signupRequest) {
-        return userService.registerUser(signupRequest);
-    }
-
     // Update user details
     @PutMapping("/{userId}")
     public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long userId, @Valid @RequestBody SignupRequest updatedUserDetails) {
@@ -38,25 +32,25 @@ public class UserController {
 
     // Get all users by roles
     @GetMapping("/roles")
-    public ResponseEntity<List<User>> getUsersByRoles(@RequestParam List<Long> roleId) {
+    public ResponseEntity<List<UserResponseDTO>> getUsersByRoles(@RequestParam List<Long> roleId) {
         return userService.getUsersByRoles(roleId);
     }
 
     // Delete user by ID (soft delete)
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable Long userId) {
+    public ResponseEntity<String> deleteUserById(@PathVariable Long userId) {
         return userService.deleteUserById(userId);
     }
 
     // Get all users by school ID
     @GetMapping("/school/{schoolId}")
-    public ResponseEntity<List<User>> getUsersBySchool(@PathVariable Long schoolId) {
+    public ResponseEntity<List<UserResponseDTO>> getUsersBySchool(@PathVariable Long schoolId) {
         return userService.getUsersBySchool(schoolId);
     }
 
     // Change user password
     @PutMapping("/{userId}/change-password")
-    public ResponseEntity<User> changePassword(@PathVariable Long userId, @RequestParam String currentPassword, @RequestParam String newPassword) {
+    public ResponseEntity<UserResponseDTO> changePassword(@PathVariable Long userId, @RequestParam String currentPassword, @RequestParam String newPassword) {
         return userService.changePassword(userId, currentPassword, newPassword);
     }
 

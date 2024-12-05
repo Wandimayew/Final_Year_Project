@@ -33,7 +33,7 @@ server:
   port: 8082
   
 app:
-  jwtSecret: yourSecretKey
+  jwtSecret: zWR3i+mURw4kppEwVNhxZdqblotfvWseQGKI1SdLI9Y=
   jwtExpirationMs: 86400000
 
 

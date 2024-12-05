@@ -68,6 +68,8 @@ public class AuthService {
             .map(Role::getName)
             .collect(Collectors.toList());
 
+        user.setLastLogin(LocalDateTime.now());
+        userRepository.save(user);
         return JwtResponse.builder()
             .token(jwt)
             .userId(user.getUserId())
@@ -97,10 +99,10 @@ public class AuthService {
         user.setUserAddress(signupRequest.getUserAddress());
         user.setPhoneNumber(signupRequest.getPhoneNumber());
         user.setGender(signupRequest.getGender());
-        user.setIsActive(true);  
-        user.setLastLogin(LocalDateTime.now());
+        user.setIsActive(true);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
+        user.setCreatedBy("admin");
 
         Set<Role> roles = new HashSet<>();
         if (signupRequest.getRoles() == null || signupRequest.getRoles().isEmpty()) {
