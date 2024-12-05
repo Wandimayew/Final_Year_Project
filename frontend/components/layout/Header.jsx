@@ -5,8 +5,33 @@ import Link from 'next/link';
 import { FaCalendarAlt } from 'react-icons/fa';
 import logo from '@/public/logo.svg';                                                                                                                      
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 const Header = ({ setIsMenuOpen, isMenuOpen }) => { 
+  const [user, setUser] = useState({});
+  const [token, setToken] = useState("");
+
+  useEffect(()=>{
+    const userData=localStorage.getItem('auth-store');
+    console.log("user is :", userData);
+
+    console.log("log user: ",user);
+    console.log("log token: ",token);
+    if (userData) {
+      try {
+        // Parse the JSON data
+        const parsedData = JSON.parse(userData);
+        console.log("parsed :",parsedData);
+        
+        setToken(parsedData.token);
+        setUser(parsedData.user);
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
+  },[]);
+
+
   return (
     <header className="fixed top-0 left-0 right-0 flex justify-between items-center py-4 px-6 bg-[#fff] shadow-md z-10">
       <div className="flex items-center">
@@ -33,8 +58,8 @@ const Header = ({ setIsMenuOpen, isMenuOpen }) => {
         </div>
         <Link href="#" className="flex items-end gap-3">
           <div className='flex flex-col'>
-            <span className="font-bold text-[#333]">John Doe</span>
-            <span className="text-[#555] font-medium">Admin</span>
+            <span className="font-bold text-[#333]">{user.name}</span>
+            <span className="text-[#555] font-medium">{user.role}</span>
           </div>
           <span className="bg-white p-1 rounded-md glassmorphism">
             <FiUser size={35} className='text-[#999] font-bold'/>

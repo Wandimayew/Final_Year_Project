@@ -9,6 +9,8 @@ import java.util.Set;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Data
 public class SignupRequest {
 
@@ -24,12 +26,8 @@ public class SignupRequest {
 
     private String userAddress;
 
-    private MultipartFile userPhoto;
-
     private String phoneNumber;
-
-    private String gender;
-
+    @JsonProperty("roles")
     private Set<String> roles;
 
 }

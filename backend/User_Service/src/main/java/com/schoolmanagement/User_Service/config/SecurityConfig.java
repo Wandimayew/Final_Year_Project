@@ -28,11 +28,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui/index.html", "/favicon.ico").permitAll()
                 .requestMatchers("/api/**").permitAll()
-                
                 .anyRequest().authenticated()  
             )
-            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class);  // Ensure JwtAuthenticationFilter comes before the default UsernamePasswordAuthenticationFilter
-        
+            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 

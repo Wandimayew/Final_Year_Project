@@ -89,7 +89,7 @@ const Login = ({ setLogin }) => {
             />
             <span className="ml-2">Remember me</span>
           </label>
-          <a href="#" className="text-sm text-blue-600 hover:underline">
+          <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
             Forgot password?
           </a>
         </div>

@@ -14,14 +14,13 @@ const CreateSchool = () => {
     schoolType: "",
     establishmentDate: "",
     adminName: "",
-    gender: "",
     adminEmail: "",
     adminPassword: "",
     schoolLogo: null,
-    adminPhoto: null,
     schoolInfo: "",
     adminAddress: "",
     adminPhone: "",
+    adminUsername: ""
   });
 
   const [addressClicked, setAddressClicked] = useState(false);
@@ -52,11 +51,9 @@ const CreateSchool = () => {
       "establishmentDate",
       "schooType",
       "adminName",
-      "gender",
       "adminEmail",
       "adminPassword",
       "schoolLogo",
-      "adminPhoto",
       "schoolInfo",
       "adminAddress",
       "adminPhone",
@@ -104,7 +101,6 @@ const CreateSchool = () => {
     formDataToSend.append("school_name", formData.schoolName);
     // Convert the address array to a JSON string if necessary
     formDataToSend.append("addresses", JSON.stringify(formData.schoolAddress)); // Sending as JSON string
-
     formDataToSend.append("contact_number", formData.schoolPhone);
     formDataToSend.append("email_address", formData.schoolEmail);
     formDataToSend.append("school_type", formData.schoolType);
@@ -130,17 +126,43 @@ const CreateSchool = () => {
       console.log("successfully registered :", response);
 
       if (response.status === 200) {
+        console.log("school response :",response);
+        
+        const schoolId=response.data.school_id;
+        const formUserData = {
+          schoolId: schoolId,
+          fullName: formData.adminName,
+          username: formData.adminUsername,
+          email: formData.adminEmail,
+          password: formData.adminPassword,
+          userAddress: formData.adminAddress,
+          phoneNumber: formData.adminPhone,
+          roles: ["ADMIN"],
+        };
+        try{
+          const userResponse = await axios.post(
+            "http://localhost:8082/api/auth/register",
+            formUserData,
+            {
+              headers: {
+                "Content-Type": "application/json", // Correct for JSON payloads
+              },
+            }
+          );
+          console.log("user one with school registered : ",userResponse);
+
+          if (userResponse.status === 200) {
+
+          console.log("user with school registered : ",userResponse);
+          }
+
+        }catch(error){
+          console.error("Error during submission:", error); // Log the full error
+          toast.error(`Network error: ${error.message}`);
+        }
+
         toast.success("School created successfully!");
-        // Reset form or handle success here
-        // setFormData({
-        //   schoolName: "",
-        //   schoolAddress: "",
-        //   schoolEmail: "",
-        //   schoolPhone: "",
-        //   schoolType: "",
-        //   establishmentDate: "",
-        //   schoolLogo: null,
-        // });
+        
       } else {
         console.log("error is occured");
 
@@ -349,7 +371,7 @@ const CreateSchool = () => {
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Gender
                 </label>
@@ -364,6 +386,19 @@ const CreateSchool = () => {
                   <option value="male">Male</option>
                   <option value="female">Female</option>
                 </select>
+              </div> */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  name="adminUsername"
+                  value={formData.adminUsername}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -391,7 +426,7 @@ const CreateSchool = () => {
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Admin Photo
                 </label>
@@ -403,7 +438,7 @@ const CreateSchool = () => {
                   title="Please select a file"
                   required
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

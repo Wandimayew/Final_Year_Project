@@ -7,6 +7,7 @@ import com.schoolmanagement.User_Service.model.User;
 import com.schoolmanagement.User_Service.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import javax.naming.AuthenticationException;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
@@ -23,7 +25,9 @@ public class AuthController {
     // User Authentication
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> authenticateUser(@RequestBody LoginRequest loginRequest) {
+        log.info("we are in login");
         try {
+            log.info("login request {}" + loginRequest);
             JwtResponse jwtResponse = authService.authenticateUser(loginRequest);
             return ResponseEntity.ok(jwtResponse);
         } catch (AuthenticationException e) {
@@ -34,8 +38,10 @@ public class AuthController {
     }
 
     // User Registration
-    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<User> registerUser(@ModelAttribute SignupRequest signupRequest) {
+    @PostMapping(value = "/register")
+    public ResponseEntity<User> registerUser(@RequestBody SignupRequest signupRequest) {
+        log.info("we are in registering");
+        log.info("register request {}" + signupRequest);
         User createdUser = authService.registerUser(signupRequest);
         return ResponseEntity.ok(createdUser);
     }

@@ -9,6 +9,26 @@
             "projectName": "tenant_service",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-KeyGen<User_Service>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.schoolmanagement.User_Service.security.KeyGen",
+            "projectName": "User_Service",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-UserServiceApplication<User_Service>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.schoolmanagement.User_Service.UserServiceApplication",
+            "projectName": "User_Service",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
