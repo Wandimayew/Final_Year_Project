@@ -39,7 +39,6 @@ public class RoleService {
         return ResponseEntity.ok(roles);
     }
 
-    @SuppressWarnings("unchecked")
     public ResponseEntity<Role> createRole(RoleRequest roleRequest) {
         Optional<Role> existingRole = roleRepository.findBySchoolIdAndName(roleRequest.getSchoolId(), roleRequest.getName());
         if (existingRole.isPresent()) {

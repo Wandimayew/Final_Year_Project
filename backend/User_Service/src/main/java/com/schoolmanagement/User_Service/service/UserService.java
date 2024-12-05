@@ -23,6 +23,9 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.naming.AuthenticationException;
 
 @Service
 @Slf4j
@@ -34,64 +37,12 @@ public class UserService {
     private final FileStorageService fileStorageService;
     private final PasswordEncoder passwordEncoder;
 
-    public ResponseEntity<UserResponseDTO> registerUser(@Valid SignupRequest signupRequest) {
-        // Validate unique username and email
-        if (userRepository.existsByUsername(signupRequest.getUsername())) {
-            log.error("Username is already taken");
-            return ResponseEntity.badRequest().body(null);
-        }
-
-        if (userRepository.existsByEmail(signupRequest.getEmail())) {
-            log.error("Email is already in use");
-            return ResponseEntity.badRequest().body(null);
-        }
-
-        // Create user and set properties
-        User user = User.builder()
-                .schoolId(signupRequest.getSchoolId())
-                .username(signupRequest.getUsername())
-                .email(signupRequest.getEmail())
-                .password(passwordEncoder.encode(signupRequest.getPassword()))
-                .fullName(signupRequest.getFullName())
-                .userAddress(signupRequest.getUserAddress())
-                .phoneNumber(signupRequest.getPhoneNumber())
-                .gender(signupRequest.getGender())
-                .isActive(true)
-                .lastLogin(LocalDateTime.now())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        // Assign roles to user
-        Set<Role> roles = new HashSet<>();
-        if (signupRequest.getRoles() == null || signupRequest.getRoles().isEmpty()) {
-            Role userRole = roleRepository.findByName("ROLE_USER")
-                    .orElseThrow(() -> new RuntimeException("Default role not found"));
-            roles.add(userRole);
-        } else {
-            signupRequest.getRoles().forEach(roleName -> {
-                Role role = roleRepository.findByName(roleName)
-                        .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
-                roles.add(role);
-            });
-        }
-
-        user.setRoles(roles);
-
-        // Upload user photo if provided
-        if (signupRequest.getUserPhoto() != null) {
-            uploadUserPhoto(signupRequest.getUserPhoto(), user.getUserId());
-        }
-
-        // Save user to the database
-        User savedUser = userRepository.save(user);
-
-        return ResponseEntity.ok(convertToUserResponse(savedUser));
-    }
-
     public ResponseEntity<UserResponseDTO> updateUser(SignupRequest updatedUserDetails, Long userId) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID:: " + userId));
+        if(!existingUser.getIsActive()){
+         throw new EntityNotFoundException("Account is inactive");
+        }
 
         existingUser.setFullName(updatedUserDetails.getFullName() != null ? updatedUserDetails.getFullName() : existingUser.getFullName());
         existingUser.setEmail(updatedUserDetails.getEmail() != null ? updatedUserDetails.getEmail() : existingUser.getEmail());
@@ -110,27 +61,31 @@ public class UserService {
     public ResponseEntity<UserResponseDTO> getUserById(Long userId) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID:: " + userId));
-
+                if(!existingUser.getIsActive()){
+                    throw new EntityNotFoundException("Account is inactive");
+                   }
         return ResponseEntity.ok(convertToUserResponse(existingUser));
     }
 
-    public ResponseEntity<List<User>> getUsersByRoles(List<Long> roleId) {
+    public ResponseEntity<List<UserResponseDTO>> getUsersByRoles(List<Long> roleId) {
         List<User> users = userRepository.findByRoles(roleId);
-        return ResponseEntity.ok(users);
+                return ResponseEntity.ok(users.stream().map(this::convertToUserResponse).collect(Collectors.toList()));
+
     }
 
-    public ResponseEntity<Void> deleteUserById(Long userId) {
+    public ResponseEntity<String> deleteUserById(Long userId) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID:: " + userId));
 
         existingUser.setIsActive(false);
         userRepository.save(existingUser);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("User with id " + existingUser.getUserId()+ " deleted successfully.");
     }
 
-    public ResponseEntity<List<User>> getUsersBySchool(Long schoolId) {
+    public ResponseEntity<List<UserResponseDTO>> getUsersBySchool(Long schoolId) {
         List<User> users = userRepository.findBySchoolId(schoolId);
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(users.stream().map(this::convertToUserResponse).collect(Collectors.toList()));
+
     }
 
 
@@ -142,7 +97,7 @@ public class UserService {
         user.setUserPhoto(photoPath);
         userRepository.save(user);
     }
-    public ResponseEntity<User> changePassword(Long userId, String currentPassword, String newPassword) {
+    public ResponseEntity<UserResponseDTO> changePassword(Long userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
@@ -153,7 +108,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setUpdatedAt(LocalDateTime.now());
         User updatedUser = userRepository.save(user);
-        return ResponseEntity.ok(updatedUser);
+        return ResponseEntity.ok(convertToUserResponse(updatedUser));
     }
 
     private UserResponseDTO convertToUserResponse(User user) {
