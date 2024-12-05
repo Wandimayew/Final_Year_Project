@@ -14,6 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schoolmanagement.User_Service.config.JwtUtils;
 import com.schoolmanagement.User_Service.dto.JwtResponse;
 import com.schoolmanagement.User_Service.dto.LoginRequest;
@@ -98,7 +101,6 @@ public class AuthService {
         user.setFullName(signupRequest.getFullName());
         user.setUserAddress(signupRequest.getUserAddress());
         user.setPhoneNumber(signupRequest.getPhoneNumber());
-        user.setGender(signupRequest.getGender());
         user.setIsActive(true);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
@@ -119,18 +121,17 @@ public class AuthService {
 
         user.setRoles(roles);
         userRepository.save(user);
-        uploadUserPhoto(signupRequest.getUserPhoto(), user.getUserId());
         return user;
       
     }
 
-     public void uploadUserPhoto(MultipartFile file, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("No user found with ID:: " + userId));
-        var photo = fileStorageService.saveFile(file, userId);
-        user.setUserPhoto(photo);
-        userRepository.save(user);
-    }
+    //  public void uploadUserPhoto(MultipartFile file, Long userId) {
+    //     User user = userRepository.findById(userId)
+    //             .orElseThrow(() -> new EntityNotFoundException("No user found with ID:: " + userId));
+    //     var photo = fileStorageService.saveFile(file, userId);
+    //     user.setUserPhoto(photo);
+    //     userRepository.save(user);
+    // }
 
     
 }

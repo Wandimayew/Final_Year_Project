@@ -47,12 +47,11 @@ public class UserService {
         existingUser.setFullName(updatedUserDetails.getFullName() != null ? updatedUserDetails.getFullName() : existingUser.getFullName());
         existingUser.setEmail(updatedUserDetails.getEmail() != null ? updatedUserDetails.getEmail() : existingUser.getEmail());
         existingUser.setPhoneNumber(updatedUserDetails.getPhoneNumber() != null ? updatedUserDetails.getPhoneNumber() : existingUser.getPhoneNumber());
-        existingUser.setGender(updatedUserDetails.getGender() != null ? updatedUserDetails.getGender() : existingUser.getGender());
         existingUser.setUpdatedAt(LocalDateTime.now());
 
-        if (updatedUserDetails.getUserPhoto() != null) {
-            uploadUserPhoto(updatedUserDetails.getUserPhoto(), existingUser.getUserId());
-        }
+        // if (updatedUserDetails.getUserPhoto() != null) {
+        //     uploadUserPhoto(updatedUserDetails.getUserPhoto(), existingUser.getUserId());
+        // }
 
         User updatedUser = userRepository.save(existingUser);
         return ResponseEntity.ok(convertToUserResponse(updatedUser));
@@ -89,14 +88,14 @@ public class UserService {
     }
 
 
-    public void uploadUserPhoto(MultipartFile file, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("No user found with ID:: " + userId));
+    // public void uploadUserPhoto(MultipartFile file, Long userId) {
+    //     User user = userRepository.findById(userId)
+    //             .orElseThrow(() -> new EntityNotFoundException("No user found with ID:: " + userId));
 
-        var photoPath = fileStorageService.saveFile(file, userId);
-        user.setUserPhoto(photoPath);
-        userRepository.save(user);
-    }
+    //     var photoPath = fileStorageService.saveFile(file, userId);
+    //     user.setUserPhoto(photoPath);
+    //     userRepository.save(user);
+    // }
     public ResponseEntity<UserResponseDTO> changePassword(Long userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -120,10 +119,8 @@ public class UserService {
                 .fullName(user.getFullName())
                 .userAddress(user.getUserAddress())
                 .phoneNumber(user.getPhoneNumber())
-                .gender(user.getGender())
                 .roles(user.getRoles())
                 .isActive(user.getIsActive())
-                .userPhoto(FileUtils.readFileFromLocation(user.getUserPhoto()))
                 .lastLogin(user.getLastLogin())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

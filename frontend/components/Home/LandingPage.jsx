@@ -4,9 +4,9 @@ import React, { useState, useEffect } from "react";
 import Login from "./Login";
 import schoolLogo from "@/public/schoolLogo.svg";
 import Image from "next/image";
+import Link from "next/link";
 
 const LandingPage = () => {
-  const [isLogin, setLogin] = useState(false);
   const [isClient, setIsClient] = useState(false); 
 
 
@@ -16,11 +16,6 @@ const LandingPage = () => {
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 flex flex-col items-center justify-center text-white">
-      {isClient && ( 
-        isLogin ? (
-          <Login setLogin={setLogin} />
-        ) : (
-          <>
             <header className="text-center py-16">
               <h1 className="text-5xl font-extrabold mb-6">
                 Welcome to <span className="text-yellow-300">School Management System</span>
@@ -43,20 +38,17 @@ const LandingPage = () => {
                 <div className="ml-6">
                   <h1 className="text-2xl font-bold text-gray-800">Schola</h1>
                   <p className="text-gray-600 mt-2">
-                    <span
-                      onClick={() => setLogin(true)}
+                    <Link
+                      href='/login'
                       className="cursor-pointer text-blue-600 font-semibold hover:underline"
                     >
                       Login
-                    </span>{" "}
+                    </Link>{" "}
                     to your account
                   </p>
                 </div>
               </div>
             </section>
-          </>
-        )
-      )}
       <footer className="mt-20 text-sm text-center">
         &copy; {new Date().getFullYear()} School Management System. All rights reserved.
       </footer>

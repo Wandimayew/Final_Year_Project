@@ -10,7 +10,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/User_Service  
     username: root  
-    password: Tame123! 
+    password: root 
     driver-class-name: com.mysql.cj.jdbc.Driver  
     hikari:
       minimum-idle: 5
@@ -29,11 +29,25 @@ spring:
       enabled: true
       max-file-size: 50MB
       max-request-size: 50MB
-server:
-  port: 8082
-  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: wandimayew8@gmail.com
+    password: jrbt rotv xjwz tfqk
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 app:
+  password-reset:
+    token:
+      expiration: 30 # minutes
   jwtSecret: zWR3i+mURw4kppEwVNhxZdqblotfvWseQGKI1SdLI9Y=
   jwtExpirationMs: 86400000
 
+server:
+  port: 8082
 

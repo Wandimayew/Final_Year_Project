@@ -55,9 +55,9 @@ public class User {
     @Size(max = 255, message = "Address cannot exceed 255 characters")
     private String userAddress;
 
-    @Lob
-    @Column(columnDefinition = "BLOB")
-    private String userPhoto;
+    // @Lob
+    // @Column(columnDefinition = "BLOB")
+    // private String userPhoto;
 
     private LocalDateTime lastLogin;
 
@@ -83,8 +83,8 @@ public class User {
     @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Phone number must be between 10 and 15 digits and may optionally start with a '+'")
     private String phoneNumber;
 
-    @NotBlank(message = "Gender cannot be blank")
-    @Pattern(regexp = "MALE|FEMALE", message = "Invalid gender. Allowed values are MALE or FEMALE.")
-    @Column(nullable = false)
-    private String gender;
+    // @NotBlank(message = "Gender cannot be blank")
+    // @Pattern(regexp = "MALE|FEMALE", message = "Invalid gender. Allowed values are MALE or FEMALE.")
+    // @Column(nullable = false)
+    // private String gender;
 }

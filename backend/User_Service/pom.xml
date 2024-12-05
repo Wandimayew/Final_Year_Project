@@ -117,6 +117,13 @@
     <version>2.18.1</version> <!-- Ensure the version matches your Jackson version -->
 </dependency>
 
+    <!-- Spring Boot Starter Mail - for email functionality -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
+
+
     </dependencies>
 
     <build>
