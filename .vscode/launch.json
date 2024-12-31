@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "AcademicServiceApplication",
+            "request": "launch",
+            "mainClass": "com.schoolmanagement.academic_service.AcademicServiceApplication",
+            "projectName": "academic_service"
+        },
+        {
+            "type": "java",
             "name": "Spring Boot-TenantServiceApplication<tenant_service>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
