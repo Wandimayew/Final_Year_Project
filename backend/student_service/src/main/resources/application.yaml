@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: student_service
+    file:
+      uploads:
+        photos-output-path: ./uploads
+  output:
+    ansi:
+      enabled: ALWAYS
+  datasource:
+    url: jdbc:mysql://localhost:3306/Student_Service
+    username: root
+    password: FiRo@12345
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 600000 # 10 minutes
+      pool-name: HikariCP # Optional for clarity in logs
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  profiles:
+    active: dev
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+server:
+  port: 8083
