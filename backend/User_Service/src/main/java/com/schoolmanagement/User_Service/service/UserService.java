@@ -44,9 +44,15 @@ public class UserService {
          throw new EntityNotFoundException("Account is inactive");
         }
 
-        existingUser.setFullName(updatedUserDetails.getFullName() != null ? updatedUserDetails.getFullName() : existingUser.getFullName());
+        //existingUser.setFullName(updatedUserDetails.getFullName() != null ? updatedUserDetails.getFullName() : existingUser.getFullName());
         existingUser.setEmail(updatedUserDetails.getEmail() != null ? updatedUserDetails.getEmail() : existingUser.getEmail());
+<<<<<<< HEAD
         existingUser.setPhoneNumber(updatedUserDetails.getPhoneNumber() != null ? updatedUserDetails.getPhoneNumber() : existingUser.getPhoneNumber());
+=======
+        existingUser.setUsername(updatedUserDetails.getUsername() != null ? updatedUserDetails.getUsername() : existingUser.getUsername());
+        existingUser.setPassword(updatedUserDetails.getPassword() != null ? passwordEncoder.encode(updatedUserDetails.getPassword()) : existingUser.getPassword());
+        //existingUser.setPhoneNumber(updatedUserDetails.getPhoneNumber() != null ? updatedUserDetails.getPhoneNumber() : existingUser.getPhoneNumber());
+>>>>>>> 81b6b4b (Staff Service added)
         existingUser.setUpdatedAt(LocalDateTime.now());
 
         // if (updatedUserDetails.getUserPhoto() != null) {
@@ -116,9 +122,12 @@ public class UserService {
                 .schoolId(user.getSchoolId())
                 .username(user.getUsername())
                 .email(user.getEmail())
+<<<<<<< HEAD
                 .fullName(user.getFullName())
                 .userAddress(user.getUserAddress())
                 .phoneNumber(user.getPhoneNumber())
+=======
+>>>>>>> 81b6b4b (Staff Service added)
                 .roles(user.getRoles())
                 .isActive(user.getIsActive())
                 .lastLogin(user.getLastLogin())

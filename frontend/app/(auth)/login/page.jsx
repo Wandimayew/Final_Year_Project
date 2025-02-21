@@ -141,4 +141,8 @@ const Login = ({ setLogin }) => {
   );
 };
 
+<<<<<<< HEAD
 export default Login;
+=======
+export default Login;
+>>>>>>> 81b6b4b (Staff Service added)

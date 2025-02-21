@@ -57,12 +57,12 @@ const Dashboard1 = () => {
           {/* Stats Cards */}
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold">Schools</h3>
+              <h3 className="font-semibold text-black">Schools</h3>
               <button>−</button>
             </div>
             <div className="flex items-center">
               <div>
-                <h4 className="text-4xl font-bold mb-2">4</h4>
+                <h4 className="text-4xl font-bold mb-2 text-black">4</h4>
                 <p className="text-gray-600">Total Schools</p>
               </div>
               <div className="ml-auto">
@@ -75,12 +75,12 @@ const Dashboard1 = () => {
 
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold">Subscription</h3>
+              <h3 className="font-semibold text-black">Subscription</h3>
               <button>−</button>
             </div>
             <div className="flex items-center">
               <div>
-                <h4 className="text-4xl font-bold mb-2">1</h4>
+                <h4 className="text-4xl font-bold mb-2 text-black">1</h4>
                 <p className="text-gray-600">Total Active Subscription</p>
               </div>
               <div className="ml-auto">
@@ -93,7 +93,7 @@ const Dashboard1 = () => {
 
           {/* Chart */}
           <div className="md:col-span-2 bg-white p-6 rounded-lg shadow">
-            <h3 className="font-semibold mb-4">Subscription Payment</h3>
+            <h3 className="font-semibold mb-4 text-black">Subscription Payment</h3>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={subscriptionData}>
