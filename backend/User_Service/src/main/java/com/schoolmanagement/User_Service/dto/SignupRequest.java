@@ -16,7 +16,7 @@ public class SignupRequest {
 
     private Long schoolId;
 
-    private String fullName;
+    // private String fullName;
 
     private String username;
 
@@ -24,9 +24,15 @@ public class SignupRequest {
 
     private String password;
 
+<<<<<<< HEAD
     private String userAddress;
 
     private String phoneNumber;
+=======
+    // private String userAddress;
+
+    // private String phoneNumber;
+>>>>>>> 81b6b4b (Staff Service added)
     @JsonProperty("roles")
     private Set<String> roles;
 

@@ -20,9 +20,16 @@ public class UserResponseDTO {
     private Long schoolId;
     private String username;
     private String email;
+<<<<<<< HEAD
     private String fullName;
     private String userAddress;
     private String phoneNumber;
+=======
+    private String password;
+    // private String fullName;
+    // private String userAddress;
+    // private String phoneNumber;
+>>>>>>> 81b6b4b (Staff Service added)
     @JsonProperty("roles")
     private Set<Role> roles;
     private boolean isActive;
