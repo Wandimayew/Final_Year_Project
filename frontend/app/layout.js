@@ -13,7 +13,7 @@ const geistMono = localFont({
 });
 
 export const metadata = {
-  title: "Schola",
+  title: "SSMS",
   description: "SaaS School management system",
 };
 

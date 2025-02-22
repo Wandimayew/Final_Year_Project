@@ -40,6 +40,18 @@ spring:
           auth: true
           starttls:
             enable: true
+<<<<<<< HEAD
+=======
+  springdoc:
+    api-docs:
+      path: /v3/api-docs
+    swagger-ui:
+      path: /swagger-ui.html
+      disable-swagger-default-url: true
+springdoc:
+  packages-to-scan:
+  - com.schoolmanagement.User_Service
+>>>>>>> 81b6b4b (Staff Service added)
 
 app:
   password-reset:
@@ -49,5 +61,9 @@ app:
   jwtExpirationMs: 86400000
 
 server:
+<<<<<<< HEAD
   port: 8082
 
+=======
+  port: 8082
+>>>>>>> 81b6b4b (Staff Service added)

@@ -4,8 +4,25 @@ import {
   FiClock,
   FiPackage,
   FiSettings,
+<<<<<<< HEAD
 } from "react-icons/fi";
 import { FaSchool, FaRegPlusSquare } from "react-icons/fa";
+=======
+  FiList,
+  FiUserPlus,
+  FiDownload,
+  FiCamera,
+  FiEye,
+} from "react-icons/fi";
+import {
+  FaSchool,
+  FaRegPlusSquare,
+  FaUser,
+  FaUsers,
+  FaCalendarCheck,
+  FaQrcode,
+} from "react-icons/fa";
+>>>>>>> 81b6b4b (Staff Service added)
 
 export const MENU_ITEMS = [
   {
@@ -23,6 +40,7 @@ export const MENU_ITEMS = [
     roles: "",
   },
   {
+<<<<<<< HEAD
     id: "createschool",
     icon: FaRegPlusSquare,
     label: "Create School",
@@ -84,6 +102,96 @@ export const MENU_ITEMS = [
     ],
   },
   {
+=======
+    id: "employee",
+    icon: FaUsers,
+    label: "Employees",
+    href: "/employee",
+    roles: "",
+    subItems: [
+      {
+        id: "employee_List",
+        icon: FiList,
+        label: "Employee List",
+        href: "/employee",
+        roles: "",
+      },
+      {
+        id: "addEmployee",
+        icon: FiUserPlus,
+        label: "Add Employee",
+        href: "/employee/addemployee",
+        roles: "",
+      },
+    ],
+  },
+  {
+    id: "attendance",
+    icon: FaCalendarCheck,
+    label: "Attendance",
+    href: "/attendance",
+    roles: "",
+    subItems: [
+      {
+        id: "generate",
+        icon: FaQrcode,
+        label: "Generate QR Code",
+        href: "/attendance/generate",
+        roles: "",
+      },
+      {
+        id: "scan",
+        icon: FiCamera,
+        label: "Scan QR Code",
+        href: "/attendance/scan",
+        roles: "",
+      },
+      {
+        id: "list",
+        icon: FiList,
+        label: "Attendance List",
+        href: "/attendance/list",
+        roles: "",
+      },
+      {
+        id: "view",
+        icon: FiEye,
+        label: "View Attendance",
+        href: "/attendance/view",
+        roles: "",
+      },
+    ],
+  },
+  {
+    id: "createschool",
+    icon: FaRegPlusSquare,
+    label: "Create School",
+    href: "/school/createschool",
+    roles: "",
+  },
+  {
+    id: "subscription",
+    icon: FiDollarSign,
+    label: "Subscription",
+    href: "/subscription",
+    roles: "",
+  },
+  {
+    id: "pandingrequest",
+    icon: FiClock,
+    label: "Pending Request",
+    href: "/pandingrequest",
+    roles: "",
+  },
+  {
+    id: "package",
+    icon: FiPackage,
+    label: "Package",
+    href: "/package",
+    roles: "",
+  },
+  {
+>>>>>>> 81b6b4b (Staff Service added)
     id: "setting",
     icon: FiSettings,
     label: "Settings",
