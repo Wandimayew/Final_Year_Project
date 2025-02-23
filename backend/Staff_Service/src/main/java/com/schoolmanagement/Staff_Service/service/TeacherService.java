@@ -7,11 +7,9 @@ import org.hibernate.Hibernate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.schoolmanagement.Staff_Service.client.UserClient;
 import com.schoolmanagement.Staff_Service.dto.StaffResponseDTO;
 import com.schoolmanagement.Staff_Service.dto.TeacherRequestDTO;
 import com.schoolmanagement.Staff_Service.dto.TeacherResponseDTO;
-import com.schoolmanagement.Staff_Service.dto.UserResponseDTO;
 import com.schoolmanagement.Staff_Service.exception.BadRequestException;
 import com.schoolmanagement.Staff_Service.file.FileUtils;
 import com.schoolmanagement.Staff_Service.model.Staff;
@@ -30,19 +28,14 @@ public class TeacherService {
 
     private final TeacherRepository teacherRepository;
     private final StaffRepository staffRepository;
-    private final UserClient userClient;
 
     public ResponseEntity<TeacherResponseDTO> createTeacher(TeacherRequestDTO teacherRequest) {
-        UserResponseDTO user = userClient.getUserById(teacherRequest.getStaffId());
-        if (user == null || user.getSchoolId() != teacherRequest.getSchoolId()) {
-            throw new BadRequestException("User not found or school ID mismatch");
-        }
 
         Staff staff = staffRepository.findById(teacherRequest.getStaffId())
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Staff not found with ID: " + teacherRequest.getStaffId()));
 
-        if (!hasRole(user, "TEACHER")) {
+        if (!hasRole(staff, "TEACHER")) {
             throw new IllegalStateException("Staff member is not assigned the role of TEACHER");
         }
 
@@ -64,73 +57,35 @@ public class TeacherService {
         return ResponseEntity.ok(convertToTeacherResponse(savedTeacher));
     }
 
-    private boolean hasRole(UserResponseDTO user, String role) {
-        return user.getRoles().stream().anyMatch(r -> r.equals(role));
+    private boolean hasRole(Staff staff, String role) {
+        return staff.getRoles().stream().anyMatch(r -> r.equals(role));
     }
 
-    public ResponseEntity<TeacherResponseDTO> editTeacher(Long teacherId, TeacherRequestDTO teacherRequest) {
-        // Retrieve existing Teacher entity
+    public Teacher updateTeacher(Long teacherId, TeacherRequestDTO teacherRequest) {
         Teacher existingTeacher = teacherRepository.findById(teacherId)
-                .orElseThrow(() -> new EntityNotFoundException("Teacher not found with ID: " + teacherId));
+                .orElseThrow(() -> new EntityNotFoundException("Teacher not found with ID:: " + teacherId));
 
-        Staff staff = existingTeacher.getStaff();
-
-        if (staff == null) {
-            throw new IllegalStateException("No staff record associated with this teacher");
+        // Update only if new values are provided (null check)
+        if (teacherRequest.getStreamId() != null) {
+            existingTeacher.setStreamId(teacherRequest.getStreamId());
         }
 
-        // Ensure the provided Staff ID matches the existing teacher's staff ID
-        if (!staff.getStaffId().equals(teacherRequest.getStaffId())) {
-            throw new IllegalStateException("Cannot change the staff ID associated with this teacher.");
-        }
-        if (!staff.getSchoolId().equals(existingTeacher.getStaff().getSchoolId())) {
-            throw new IllegalArgumentException("Teacher is not assigned to the given school");
+        if (teacherRequest.getExperience() != null) {
+            existingTeacher.setExperience(teacherRequest.getExperience());
         }
 
-        // if (teacherRequest.getStaff() != null) {
-        // staff.setFirstName(teacherRequest.getStaff().getFirstName());
-        // staff.setMiddleName(teacherRequest.getStaff().getMiddleName());
-        // staff.setLastName(teacherRequest.getStaff().getLastName());
-        // staff.setEmail(teacherRequest.getStaff().getEmail());
-        // staff.setPhoneNumber(teacherRequest.getStaff().getPhoneNumber());
-        // staff.setAddressJson(teacherRequest.getStaff().getAddressJson());
-        // staff.setRole(teacherRequest.getStaff().getRole());
-        // staff.setStatus(teacherRequest.getStaff().getStatus());
-        // staff.setDob(teacherRequest.getStaff().getDob());
-        // staff.setGender(teacherRequest.getStaff().getGender());
-        // MultipartFile photoFile = teacherRequest.getStaff().getPhoto();
-        // if (photoFile != null && !photoFile.isEmpty()) {
-        // try {
-        // String base64Photo =
-        // Base64.getEncoder().encodeToString(photoFile.getBytes());
-        // staff.setPhoto(base64Photo);
-        // } catch (IOException e) {
-        // throw new RuntimeException("Failed to process photo file", e);
-        // }
-        // }
-        // staff.setDateOfJoining(teacherRequest.getStaff().getDateOfJoining());
-        // staff.setUsername(teacherRequest.getStaff().getUsername());
-        // staff.setPassword(teacherRequest.getStaff().getPassword());
+        if (teacherRequest.getQualification() != null) {
+            existingTeacher.setQualification(teacherRequest.getQualification());
+        }
 
-        // // Update the updatedAt timestamp
-        // staff.setUpdatedAt(LocalDateTime.now());
-        // staff.setUpdated_by("Admin");
+        if (teacherRequest.getSubjectSpecialization() != null) {
+            existingTeacher.setSubjectSpecialization(teacherRequest.getSubjectSpecialization());
+        }
 
-        // staffRepository.save(staff);
-        // }
-
-        // Update Teacher-specific details
-        existingTeacher.setStreamId(teacherRequest.getStreamId());
-        existingTeacher.setExperience(teacherRequest.getExperience());
-        existingTeacher.setQualification(teacherRequest.getQualification());
-        existingTeacher.setSubjectSpecialization(teacherRequest.getSubjectSpecialization());
         existingTeacher.setUpdatedAt(LocalDateTime.now());
-        existingTeacher.setUpdatedBy("Admin"); // Get authenticated user
+        existingTeacher.setUpdatedBy("Admin");
 
-        // Save the updated Teacher record
-        Teacher updatedTeacher = teacherRepository.save(existingTeacher);
-
-        return ResponseEntity.ok(convertToTeacherResponse(updatedTeacher));
+        return teacherRepository.save(existingTeacher);
     }
 
     public ResponseEntity<TeacherResponseDTO> getTeacherById(Long teacherId) {
@@ -176,7 +131,6 @@ public class TeacherService {
     }
 
     private TeacherResponseDTO convertToTeacherResponse(Teacher teacher) {
-        UserResponseDTO user = userClient.getUserById(teacher.getStaff().getUserId());
 
         StaffResponseDTO staffResponseDTO = StaffResponseDTO.builder()
                 .staffId(teacher.getStaff().getStaffId())
@@ -185,13 +139,13 @@ public class TeacherService {
                 .firstName(teacher.getStaff().getFirstName())
                 .middleName(teacher.getStaff().getMiddleName())
                 .lastName(teacher.getStaff().getLastName())
-                .username(user.getUsername())
+                .username(teacher.getStaff().getUsername())
                 .dateOfJoining(teacher.getStaff().getDateOfJoining())
-                .email(user.getEmail())
-                .password(user.getPassword())
+                .email(teacher.getStaff().getEmail())
+                .password(teacher.getStaff().getPassword())
                 .phoneNumber(teacher.getStaff().getPhoneNumber())
                 .photo(FileUtils.readFileFromLocation(teacher.getStaff().getPhoto()))
-                .roles(user.getRoles())
+                .roles(teacher.getStaff().getRoles())
                 .status(teacher.getStaff().getStatus())
                 .dob(teacher.getStaff().getDob())
                 .gender(teacher.getStaff().getGender())

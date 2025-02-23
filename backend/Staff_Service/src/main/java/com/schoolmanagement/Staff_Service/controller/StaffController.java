@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.schoolmanagement.Staff_Service.dto.StaffRequestDTO;
 import com.schoolmanagement.Staff_Service.dto.StaffResponseDTO;
+import com.schoolmanagement.Staff_Service.dto.StaffUpdateDTO;
 import com.schoolmanagement.Staff_Service.service.StaffService;
 
 import jakarta.validation.Valid;
@@ -28,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class StaffController {
 
     private final StaffService staffService;
-  
+
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StaffResponseDTO> createStaff(@ModelAttribute StaffRequestDTO staffRequest) {
 
@@ -37,8 +38,9 @@ public class StaffController {
     }
 
     @PutMapping("/{staffId}")
-    public ResponseEntity<StaffResponseDTO> updateStaff(@PathVariable Long staffId,@Valid @RequestBody StaffRequestDTO staffRequest) {
-        return staffService.updateStaff(staffId, staffRequest);
+    public ResponseEntity<StaffResponseDTO> updateStaff(@PathVariable Long staffId,
+            @Valid @RequestBody StaffUpdateDTO staffUpdateDTO) {
+        return staffService.updateStaff(staffId, staffUpdateDTO);
     }
 
     @DeleteMapping("/{staffId}")
@@ -57,7 +59,8 @@ public class StaffController {
     }
 
     @PutMapping("/{staffId}/change-password")
-    public ResponseEntity<StaffResponseDTO> changePassword(@PathVariable Long staffId,@RequestParam String currentPassword,@RequestParam String newPassword) {
+    public ResponseEntity<StaffResponseDTO> changePassword(@PathVariable Long staffId,
+            @RequestParam String currentPassword, @RequestParam String newPassword) {
         return staffService.changePassword(staffId, currentPassword, newPassword);
     }
 }

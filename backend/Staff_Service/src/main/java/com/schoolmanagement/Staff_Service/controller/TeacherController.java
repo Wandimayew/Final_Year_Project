@@ -28,14 +28,6 @@ public class TeacherController {
         return teacherService.createTeacher(teacherRequest);
     }
 
-    // Edit an existing teacher by ID
-    @PutMapping("/{teacherId}")
-    public ResponseEntity<TeacherResponseDTO> editTeacher(@PathVariable Long teacherId,
-            @Valid @RequestBody TeacherRequestDTO teacherRequest) {
-        log.info("Editing teacher with ID: {}", teacherId);
-        return teacherService.editTeacher(teacherId, teacherRequest);
-    }
-
     // Get a teacher by ID
     @GetMapping("/{teacherId}")
     public ResponseEntity<TeacherResponseDTO> getTeacherById(@Valid @PathVariable Long teacherId) {

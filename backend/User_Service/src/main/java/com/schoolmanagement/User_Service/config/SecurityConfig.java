@@ -25,32 +25,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .cors(Customizer.withDefaults())
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers(
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**",
-                    "/v3/api-docs.yaml",
-                    "/swagger-ui.html",
-                    "/swagger-resources/**",
-                    "/favicon.ico",
-                    "/error"
-                ).permitAll()
-                .requestMatchers("/api/**").permitAll()
-<<<<<<< HEAD
-                .anyRequest().authenticated()  
-=======
-                .anyRequest().authenticated()
->>>>>>> 81b6b4b (Staff Service added)
-            )
-            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class);
+                .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs.yaml",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/favicon.ico",
+                                "/error")
+                        .permitAll()
+                        .requestMatchers("/api/**").permitAll()
+                        .anyRequest().authenticated())
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 

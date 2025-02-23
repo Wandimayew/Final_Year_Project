@@ -221,12 +221,6 @@
 			<!-- Ensure the version matches your Jackson version -->
 		</dependency>
 
-		   <!-- Feign Client (for Inter-Service Communication) -->
-		   <dependency>
-			   <groupId>org.springframework.cloud</groupId>
-			   <artifactId>spring-cloud-starter-openfeign</artifactId>
-			   <version>4.0.3</version>
-		   </dependency>
 		   </dependencies>
 	 <build>
         <plugins>

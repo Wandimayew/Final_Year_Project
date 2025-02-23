@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.schoolmanagement.Staff_Service.dto.TeacherResponseDTO;
 import com.schoolmanagement.Staff_Service.enums.EmploymentStatus;
 import com.schoolmanagement.Staff_Service.enums.Gender;
 import com.schoolmanagement.Staff_Service.enums.Role;
@@ -37,7 +38,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-@ToString(exclude = {"teacher", "attendances", "addressJsonString"})
+@ToString(exclude = { "teacher", "attendances", "addressJsonString" })
 public class Staff {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "staff_seq")
@@ -58,20 +59,22 @@ public class Staff {
     @NotBlank(message = "Last name is required.")
     private String lastName;
 
-    // @NotBlank(message = "Username cannot be blank")
-    // @Size(min = 5, max = 30, message = "Username must be between 5 and 30 characters")
-    // @Column(unique = true)
-    // private String username;
+    @NotBlank(message = "Username cannot be blank")
+    @Size(min = 5, max = 30, message = "Username must be between 5 and 30 characters")
+    @Column(unique = true)
+    private String username;
 
     private LocalDate dateOfJoining;
 
-    // @Email(message = "Email should be valid.")
-    // @NotBlank(message = "Email is required.")
-    // @Column(unique = true)
-    // private String email;
+    @Email(message = "Email should be valid.")
+    @NotBlank(message = "Email is required.")
+    @Column(unique = true)
+    private String email;
 
-    // @NotBlank(message = "Password cannot be blank")
-    // private String password;
+    @NotBlank(message = "Password cannot be blank")
+    private String password;
+
+    private Set<String> roles;
 
     @NotBlank(message = "Phone number cannot be blank")
     @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Phone number must be between 10 and 15 digits and may optionally start with a '+'")
@@ -102,7 +105,6 @@ public class Staff {
 
     private String updated_by;
 
-
     @NotNull(message = "Active status cannot be null")
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
@@ -126,11 +128,13 @@ public class Staff {
             return new HashMap<>();
         }
         try {
-            return mapper.readValue(addressJsonString, new TypeReference<Map<String, Object>>() {});
+            return mapper.readValue(addressJsonString, new TypeReference<Map<String, Object>>() {
+            });
         } catch (JsonProcessingException e) {
-            return new HashMap<>();  // Return empty map instead of throwing an exception
+            return new HashMap<>(); // Return empty map instead of throwing an exception
         }
     }
+
     public void setAddressJson(String addressJsonString) {
         try {
             // First validate that the string is valid JSON

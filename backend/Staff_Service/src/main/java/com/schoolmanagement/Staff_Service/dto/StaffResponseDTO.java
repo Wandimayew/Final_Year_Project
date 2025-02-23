@@ -16,8 +16,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,17 +27,17 @@ public class StaffResponseDTO {
     private Long userId;
 
     private Long schoolId;
-    
+
     private String firstName;
-    
+
     private String middleName;
-    
+
     private String lastName;
 
     private String username;
-    
+
     private LocalDate dateOfJoining;
-    
+
     private String email;
 
     private String password;
@@ -47,25 +45,25 @@ public class StaffResponseDTO {
     private Set<String> roles;
 
     private String phoneNumber;
-    
+
     @Enumerated(EnumType.STRING)
     private EmploymentStatus status;
-    
+
     private LocalDate dob;
-    
+
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
     private Boolean isActive;
-    
-    private byte[] photo; 
+
+    private byte[] photo;
 
     private LocalDateTime createdAt;
-    
+
     private LocalDateTime updatedAt;
 
     private String created_by;
 
     private Map<String, Object> addressJson;
-    
+
 }
