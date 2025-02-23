@@ -1,20 +1,19 @@
 package com.schoolmanagement.Staff_Service.service;
 
-import com.schoolmanagement.Staff_Service.client.UserClient;
 import com.schoolmanagement.Staff_Service.dto.StaffRequestDTO;
 import com.schoolmanagement.Staff_Service.dto.StaffResponseDTO;
-import com.schoolmanagement.Staff_Service.dto.UserResponseDTO;
-import com.schoolmanagement.Staff_Service.enums.Role;
+import com.schoolmanagement.Staff_Service.dto.StaffUpdateDTO;
 import com.schoolmanagement.Staff_Service.exception.BadRequestException;
 import com.schoolmanagement.Staff_Service.file.FileStorageService;
 import com.schoolmanagement.Staff_Service.file.FileUtils;
 import com.schoolmanagement.Staff_Service.model.Staff;
+import com.schoolmanagement.Staff_Service.model.Teacher;
 import com.schoolmanagement.Staff_Service.repository.StaffRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,15 +33,11 @@ public class StaffService {
     private final StaffRepository staffRepository;
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
-    private final UserClient userClient;
+    private final TeacherService teacherService;
 
     // Method to create a new staff
     public ResponseEntity<StaffResponseDTO> createStaff(StaffRequestDTO staffRequest) {
-        
-        UserResponseDTO user = userClient.getUserById(staffRequest.getUserId());
-        if(user==null || user.getSchoolId()!=staffRequest.getSchoolId()){
-            throw new BadRequestException("User not found");
-        }
+
         validateNewStaff(staffRequest);
         Staff staff = new Staff();
 
@@ -51,6 +46,10 @@ public class StaffService {
         staff.setFirstName(staffRequest.getFirstName());
         staff.setMiddleName(staffRequest.getMiddleName());
         staff.setLastName(staffRequest.getLastName());
+        staff.setUsername(staffRequest.getUsername());
+        staff.setEmail(staffRequest.getEmail());
+        staff.setPassword(passwordEncoder.encode(staffRequest.getPassword()));
+        staff.setRoles(staffRequest.getRoles());
         staff.setDateOfJoining(staffRequest.getDateOfJoining());
         staff.setGender(staffRequest.getGender());
         staff.setStatus(staffRequest.getStatus());
@@ -70,7 +69,7 @@ public class StaffService {
     }
 
     // Method to update an existing staff
-    public ResponseEntity<StaffResponseDTO> updateStaff(Long staffId, StaffRequestDTO staffRequest) {
+    public ResponseEntity<StaffResponseDTO> updateStaff(Long staffId, StaffUpdateDTO staffUpdateRequest) {
         Staff existingStaff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new EntityNotFoundException("Staff not found with ID:: " + staffId));
         if (!existingStaff.getIsActive()) {
@@ -78,27 +77,42 @@ public class StaffService {
         }
 
         existingStaff.setFirstName(
-                staffRequest.getFirstName() != null ? staffRequest.getFirstName() : existingStaff.getFirstName());
+                staffUpdateRequest.getFirstName() != null ? staffUpdateRequest.getFirstName()
+                        : existingStaff.getFirstName());
         existingStaff.setMiddleName(
-                staffRequest.getMiddleName() != null ? staffRequest.getMiddleName() : existingStaff.getMiddleName());
+                staffUpdateRequest.getMiddleName() != null ? staffUpdateRequest.getMiddleName()
+                        : existingStaff.getMiddleName());
         existingStaff.setLastName(
-                staffRequest.getLastName() != null ? staffRequest.getLastName() : existingStaff.getLastName());
-        // existingStaff.setUsername(
-        //         staffRequest.getUsername() != null ? staffRequest.getUsername() : existingStaff.getUsername());
-        // existingStaff.setEmail(staffRequest.getEmail() != null ? staffRequest.getEmail() : existingStaff.getEmail());
-        // existingStaff.setPassword(passwordEncoder
-        //         .encode(staffRequest.getPassword() != null ? staffRequest.getPassword() : existingStaff.getPassword()));
+                staffUpdateRequest.getLastName() != null ? staffUpdateRequest.getLastName()
+                        : existingStaff.getLastName());
+        existingStaff.setUsername(
+                staffUpdateRequest.getUsername() != null ? staffUpdateRequest.getUsername()
+                        : existingStaff.getUsername());
+        existingStaff.setEmail(
+                staffUpdateRequest.getEmail() != null ? staffUpdateRequest.getEmail() : existingStaff.getEmail());
+        existingStaff.setPassword(passwordEncoder
+                .encode(staffUpdateRequest.getPassword() != null ? staffUpdateRequest.getPassword()
+                        : existingStaff.getPassword()));
         existingStaff.setPhoneNumber(
-                staffRequest.getPhoneNumber() != null ? staffRequest.getPhoneNumber() : existingStaff.getPhoneNumber());
+                staffUpdateRequest.getPhoneNumber() != null ? staffUpdateRequest.getPhoneNumber()
+                        : existingStaff.getPhoneNumber());
         existingStaff
-                .setStatus(staffRequest.getStatus() != null ? staffRequest.getStatus() : existingStaff.getStatus());
+                .setStatus(staffUpdateRequest.getStatus() != null ? staffUpdateRequest.getStatus()
+                        : existingStaff.getStatus());
 
         existingStaff.setUpdatedAt(LocalDateTime.now());
         existingStaff.setUpdated_by("admin");
 
+        // update Teachers specific fields
+        if (existingStaff.getTeacher() != null && staffUpdateRequest.getTeacherRequest() != null) {
+            Teacher existingTeacher = existingStaff.getTeacher();
+            Teacher updatedTeacher = teacherService.updateTeacher(existingTeacher.getTeacherId(),
+                    staffUpdateRequest.getTeacherRequest());
+            existingStaff.setTeacher(updatedTeacher);
+        }
         Staff updatedStaff = staffRepository.save(existingStaff);
-        if (staffRequest.getPhoto() != null) {
-            uploadStaffPhoto(staffRequest.getPhoto(), existingStaff.getStaffId());
+        if (staffUpdateRequest.getPhoto() != null) {
+            uploadStaffPhoto(staffUpdateRequest.getPhoto(), existingStaff.getStaffId());
         }
         return ResponseEntity.ok(convertToStaffResponse(updatedStaff));
     }
@@ -148,20 +162,18 @@ public class StaffService {
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new EntityNotFoundException("Staff not found with ID:: " + staffId));
 
-        if (!passwordEncoder.matches(currentPassword, userClient.getUserById(staff.getUserId()).getPassword())) {
+        if (!passwordEncoder.matches(currentPassword, staff.getPassword())) {
             throw new BadRequestException("Current password is incorrect");
         }
 
-        userClient.getUserById(staff.getUserId()).setPassword(passwordEncoder.encode(newPassword));
+        staff.setPassword(passwordEncoder.encode(newPassword));
         staff.setUpdatedAt(LocalDateTime.now());
         Staff updatedStaff = staffRepository.save(staff);
         return ResponseEntity.ok(convertToStaffResponse(updatedStaff));
     }
 
-    // Helper method to validate if email or phone number already exists for a new
-    // staff
     private void validateNewStaff(StaffRequestDTO staffRequest) {
-        if (staffRepository.existsByEmail(userClient.getUserById(staffRequest.getUserId()).getEmail())) {
+        if (staffRepository.existsByEmail(staffRequest.getEmail())) {
             throw new BadRequestException("Email already exists");
         }
         if (staffRepository.existsByPhoneNumber(staffRequest.getPhoneNumber())) {
@@ -171,18 +183,18 @@ public class StaffService {
 
     // Helper method to convert Staff entity to StaffResponseDTO
     private StaffResponseDTO convertToStaffResponse(Staff staff) {
-        UserResponseDTO user = userClient.getUserById(staff.getUserId());
         return StaffResponseDTO.builder()
                 .staffId(staff.getStaffId())
+                .userId(staff.getUserId())
                 .schoolId(staff.getSchoolId())
                 .firstName(staff.getFirstName())
                 .middleName(staff.getMiddleName())
                 .lastName(staff.getLastName())
-                .username(user.getUsername())
+                .username(staff.getUsername())
                 .dateOfJoining(staff.getDateOfJoining())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .roles(user.getRoles())
+                .email(staff.getEmail())
+                .password(staff.getPassword())
+                .roles(staff.getRoles())
                 .phoneNumber(staff.getPhoneNumber())
                 .status(staff.getStatus())
                 .dob(staff.getDob())

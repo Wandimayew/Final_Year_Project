@@ -40,23 +40,25 @@ public class UserService {
     public ResponseEntity<UserResponseDTO> updateUser(SignupRequest updatedUserDetails, Long userId) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID:: " + userId));
-        if(!existingUser.getIsActive()){
-         throw new EntityNotFoundException("Account is inactive");
+        if (!existingUser.getIsActive()) {
+            throw new EntityNotFoundException("Account is inactive");
         }
 
-        //existingUser.setFullName(updatedUserDetails.getFullName() != null ? updatedUserDetails.getFullName() : existingUser.getFullName());
-        existingUser.setEmail(updatedUserDetails.getEmail() != null ? updatedUserDetails.getEmail() : existingUser.getEmail());
-<<<<<<< HEAD
-        existingUser.setPhoneNumber(updatedUserDetails.getPhoneNumber() != null ? updatedUserDetails.getPhoneNumber() : existingUser.getPhoneNumber());
-=======
-        existingUser.setUsername(updatedUserDetails.getUsername() != null ? updatedUserDetails.getUsername() : existingUser.getUsername());
-        existingUser.setPassword(updatedUserDetails.getPassword() != null ? passwordEncoder.encode(updatedUserDetails.getPassword()) : existingUser.getPassword());
-        //existingUser.setPhoneNumber(updatedUserDetails.getPhoneNumber() != null ? updatedUserDetails.getPhoneNumber() : existingUser.getPhoneNumber());
->>>>>>> 81b6b4b (Staff Service added)
+        // existingUser.setFullName(updatedUserDetails.getFullName() != null ?
+        // updatedUserDetails.getFullName() : existingUser.getFullName());
+        existingUser.setEmail(
+                updatedUserDetails.getEmail() != null ? updatedUserDetails.getEmail() : existingUser.getEmail());
+        existingUser.setUsername(updatedUserDetails.getUsername() != null ? updatedUserDetails.getUsername()
+                : existingUser.getUsername());
+        existingUser.setPassword(
+                updatedUserDetails.getPassword() != null ? passwordEncoder.encode(updatedUserDetails.getPassword())
+                        : existingUser.getPassword());
+        // existingUser.setPhoneNumber(updatedUserDetails.getPhoneNumber() != null ?
+        // updatedUserDetails.getPhoneNumber() : existingUser.getPhoneNumber());
         existingUser.setUpdatedAt(LocalDateTime.now());
 
         // if (updatedUserDetails.getUserPhoto() != null) {
-        //     uploadUserPhoto(updatedUserDetails.getUserPhoto(), existingUser.getUserId());
+        // uploadUserPhoto(updatedUserDetails.getUserPhoto(), existingUser.getUserId());
         // }
 
         User updatedUser = userRepository.save(existingUser);
@@ -66,15 +68,15 @@ public class UserService {
     public ResponseEntity<UserResponseDTO> getUserById(Long userId) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID:: " + userId));
-                if(!existingUser.getIsActive()){
-                    throw new EntityNotFoundException("Account is inactive");
-                   }
+        if (!existingUser.getIsActive()) {
+            throw new EntityNotFoundException("Account is inactive");
+        }
         return ResponseEntity.ok(convertToUserResponse(existingUser));
     }
 
     public ResponseEntity<List<UserResponseDTO>> getUsersByRoles(List<Long> roleId) {
         List<User> users = userRepository.findByRoles(roleId);
-                return ResponseEntity.ok(users.stream().map(this::convertToUserResponse).collect(Collectors.toList()));
+        return ResponseEntity.ok(users.stream().map(this::convertToUserResponse).collect(Collectors.toList()));
 
     }
 
@@ -84,7 +86,7 @@ public class UserService {
 
         existingUser.setIsActive(false);
         userRepository.save(existingUser);
-        return ResponseEntity.ok("User with id " + existingUser.getUserId()+ " deleted successfully.");
+        return ResponseEntity.ok("User with id " + existingUser.getUserId() + " deleted successfully.");
     }
 
     public ResponseEntity<List<UserResponseDTO>> getUsersBySchool(Long schoolId) {
@@ -93,21 +95,21 @@ public class UserService {
 
     }
 
-
     // public void uploadUserPhoto(MultipartFile file, Long userId) {
-    //     User user = userRepository.findById(userId)
-    //             .orElseThrow(() -> new EntityNotFoundException("No user found with ID:: " + userId));
+    // User user = userRepository.findById(userId)
+    // .orElseThrow(() -> new EntityNotFoundException("No user found with ID:: " +
+    // userId));
 
-    //     var photoPath = fileStorageService.saveFile(file, userId);
-    //     user.setUserPhoto(photoPath);
-    //     userRepository.save(user);
+    // var photoPath = fileStorageService.saveFile(file, userId);
+    // user.setUserPhoto(photoPath);
+    // userRepository.save(user);
     // }
     public ResponseEntity<UserResponseDTO> changePassword(Long userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-             new BadRequestException("Current password is incorrect");
+            new BadRequestException("Current password is incorrect");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
@@ -122,12 +124,6 @@ public class UserService {
                 .schoolId(user.getSchoolId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-<<<<<<< HEAD
-                .fullName(user.getFullName())
-                .userAddress(user.getUserAddress())
-                .phoneNumber(user.getPhoneNumber())
-=======
->>>>>>> 81b6b4b (Staff Service added)
                 .roles(user.getRoles())
                 .isActive(user.getIsActive())
                 .lastLogin(user.getLastLogin())
