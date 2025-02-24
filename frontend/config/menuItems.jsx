@@ -4,10 +4,8 @@ import {
   FiClock,
   FiPackage,
   FiSettings,
-<<<<<<< HEAD
 } from "react-icons/fi";
-import { FaSchool, FaRegPlusSquare } from "react-icons/fa";
-=======
+import {
   FiList,
   FiUserPlus,
   FiDownload,
@@ -22,7 +20,6 @@ import {
   FaCalendarCheck,
   FaQrcode,
 } from "react-icons/fa";
->>>>>>> 81b6b4b (Staff Service added)
 
 export const MENU_ITEMS = [
   {
@@ -40,7 +37,6 @@ export const MENU_ITEMS = [
     roles: "",
   },
   {
-<<<<<<< HEAD
     id: "createschool",
     icon: FaRegPlusSquare,
     label: "Create School",
@@ -102,7 +98,6 @@ export const MENU_ITEMS = [
     ],
   },
   {
-=======
     id: "employee",
     icon: FaUsers,
     label: "Employees",
@@ -162,36 +157,35 @@ export const MENU_ITEMS = [
       },
     ],
   },
+  // {
+  //   id: "createschool",
+  //   icon: FaRegPlusSquare,
+  //   label: "Create School",
+  //   href: "/school/createschool",
+  //   roles: "",
+  // },
+  // {
+  //   id: "subscription",
+  //   icon: FiDollarSign,
+  //   label: "Subscription",
+  //   href: "/subscription",
+  //   roles: "",
+  // },
+  // {
+  //   id: "pandingrequest",
+  //   icon: FiClock,
+  //   label: "Pending Request",
+  //   href: "/pandingrequest",
+  //   roles: "",
+  // },
+  // {
+  //   id: "package",
+  //   icon: FiPackage,
+  //   label: "Package",
+  //   href: "/package",
+  //   roles: "",
+  // },
   {
-    id: "createschool",
-    icon: FaRegPlusSquare,
-    label: "Create School",
-    href: "/school/createschool",
-    roles: "",
-  },
-  {
-    id: "subscription",
-    icon: FiDollarSign,
-    label: "Subscription",
-    href: "/subscription",
-    roles: "",
-  },
-  {
-    id: "pandingrequest",
-    icon: FiClock,
-    label: "Pending Request",
-    href: "/pandingrequest",
-    roles: "",
-  },
-  {
-    id: "package",
-    icon: FiPackage,
-    label: "Package",
-    href: "/package",
-    roles: "",
-  },
-  {
->>>>>>> 81b6b4b (Staff Service added)
     id: "setting",
     icon: FiSettings,
     label: "Settings",
