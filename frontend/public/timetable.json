@@ -1,0 +1,456 @@
+{
+  "schoolName": "eee",
+  "academicYear": "2017",
+  "timetable": {
+    "12": {
+      "A": [
+        {
+          "orderNo": 1,
+          "subjectTitle": "Chemistry",
+          "teacher": "T6",
+          "schedule": {
+            "Monday": "03:02 - 03:42",
+            "Tuesday": "05:02 - 05:42",
+            "Wednesday": "06:03 - 06:43",
+            "Thursday": "",
+            "Friday": "07:05 - 07:45"
+          }
+        },
+        {
+          "orderNo": 2,
+          "subjectTitle": "Final Exit",
+          "teacher": "T8",
+          "schedule": {
+            "Monday": "",
+            "Tuesday": "",
+            "Wednesday": "",
+            "Thursday": "",
+            "Friday": "08:03 - 08:43"
+          }
+        },
+        {
+          "orderNo": 3,
+          "subjectTitle": "English",
+          "teacher": "T20",
+          "schedule": {
+            "Monday": "12:34 - 13:24",
+            "Tuesday": "11:21 - 12:11",
+            "Wednesday": "13:44 - 14:34",
+            "Thursday": "09:01 - 09:51",
+            "Friday": "10:11 - 11:01"
+          }
+        }
+      ],
+      "B": [
+        {
+          "orderNo": 1,
+          "subjectTitle": "Chemistry",
+          "teacher": "T6",
+          "schedule": {
+            "Monday": "09:28 - 10:08",
+            "Tuesday": "12:34 - 13:14",
+            "Wednesday": "10:28 - 11:08",
+            "Thursday": "",
+            "Friday": "11:33 - 12:13"
+          }
+        },
+        {
+          "orderNo": 2,
+          "subjectTitle": "Final Exit",
+          "teacher": "T8",
+          "schedule": {
+            "Monday": "",
+            "Tuesday": "",
+            "Wednesday": "13:39 - 14:19",
+            "Thursday": "",
+            "Friday": ""
+          }
+        },
+        {
+          "orderNo": 3,
+          "subjectTitle": "English",
+          "teacher": "T20",
+          "schedule": {
+            "Monday": "07:00 - 07:50",
+            "Tuesday": "05:51 - 06:41",
+            "Wednesday": "04:37 - 05:27",
+            "Thursday": "02:21 - 03:11",
+            "Friday": "03:29 - 04:19"
+          }
+        }
+      ],
+      "C": [
+        {
+          "orderNo": 1,
+          "subjectTitle": "Chemistry",
+          "teacher": "T6",
+          "schedule": {
+            "Monday": "",
+            "Tuesday": "09:01 - 09:41",
+            "Wednesday": "11:08 - 11:48",
+            "Thursday": "13:17 - 13:57",
+            "Friday": "12:13 - 12:53"
+          }
+        },
+        {
+          "orderNo": 2,
+          "subjectTitle": "Final Exit",
+          "teacher": "T8",
+          "schedule": {
+            "Monday": "14:21 - 15:01",
+            "Tuesday": "",
+            "Wednesday": "",
+            "Thursday": "",
+            "Friday": ""
+          }
+        },
+        {
+          "orderNo": 3,
+          "subjectTitle": "English",
+          "teacher": "T20",
+          "schedule": {
+            "Monday": "07:50 - 08:40",
+            "Tuesday": "02:21 - 03:11",
+            "Wednesday": "05:59 - 06:49",
+            "Thursday": "03:31 - 04:21",
+            "Friday": "04:43 - 05:33"
+          }
+        }
+      ]
+    },
+    "nine": {
+      "A": [
+        {
+          "orderNo": 1,
+          "subjectTitle": "English",
+          "teacher": "T2",
+          "schedule": {
+            "Monday": "15:40 - 16:30",
+            "Tuesday": "18:07 - 18:57",
+            "Wednesday": "14:28 - 15:18",
+            "Thursday": "16:52 - 17:42",
+            "Friday": "13:13 - 14:03"
+          }
+        },
+        {
+          "orderNo": 2,
+          "subjectTitle": "Mathimatics",
+          "teacher": "T24",
+          "schedule": {
+            "Monday": "06:30 - 07:20",
+            "Tuesday": "07:39 - 08:29",
+            "Wednesday": "12:02 - 12:52",
+            "Thursday": "09:57 - 10:47",
+            "Friday": "08:47 - 09:37"
+          }
+        },
+        {
+          "orderNo": 3,
+          "subjectTitle": "Civic",
+          "teacher": "T2",
+          "schedule": {
+            "Monday": "",
+            "Tuesday": "22:18 - 22:58",
+            "Wednesday": "21:18 - 21:58",
+            "Thursday": "23:21 - 00:01",
+            "Friday": "19:15 - 19:55"
+          }
+        },
+        {
+          "orderNo": 4,
+          "subjectTitle": "Chemistry",
+          "teacher": "T29",
+          "schedule": {
+            "Monday": "",
+            "Tuesday": "03:16 - 03:56",
+            "Wednesday": "04:21 - 05:01",
+            "Thursday": "02:15 - 02:55",
+            "Friday": "05:25 - 06:05"
+          }
+        }
+      ],
+      "B": [
+        {
+          "orderNo": 1,
+          "subjectTitle": "English",
+          "teacher": "T2",
+          "schedule": {
+            "Monday": "00:03 - 00:53",
+            "Tuesday": "02:34 - 03:24",
+            "Wednesday": "01:17 - 02:07",
+            "Thursday": "03:47 - 04:37",
+            "Friday": "22:53 - 23:43"
+          }
+        },
+        {
+          "orderNo": 2,
+          "subjectTitle": "Mathimatics",
+          "teacher": "T24",
+          "schedule": {
+            "Monday": "02:21 - 03:11",
+            "Tuesday": "08:29 - 09:19",
+            "Wednesday": "04:43 - 05:33",
+            "Thursday": "10:47 - 11:37",
+            "Friday": "03:34 - 04:24"
+          }
+        },
+        {
+          "orderNo": 3,
+          "subjectTitle": "Civic",
+          "teacher": "T2",
+          "schedule": {
+            "Monday": "17:34 - 18:14",
+            "Tuesday": "",
+            "Wednesday": "15:18 - 15:58",
+            "Thursday": "12:58 - 13:38",
+            "Friday": "12:00 - 12:40"
+          }
+        },
+        {
+          "orderNo": 4,
+          "subjectTitle": "Chemistry",
+          "teacher": "T29",
+          "schedule": {
+            "Monday": "19:44 - 20:24",
+            "Tuesday": "21:54 - 22:34",
+            "Wednesday": "18:41 - 19:21",
+            "Thursday": "",
+            "Friday": "20:49 - 21:29"
+          }
+        }
+      ],
+      "C": [
+        {
+          "orderNo": 1,
+          "subjectTitle": "English",
+          "teacher": "T2",
+          "schedule": {
+            "Monday": "16:44 - 17:34",
+            "Tuesday": "19:12 - 20:02",
+            "Wednesday": "20:28 - 21:18",
+            "Thursday": "18:00 - 18:50",
+            "Friday": "21:37 - 22:27"
+          }
+        },
+        {
+          "orderNo": 2,
+          "subjectTitle": "Mathimatics",
+          "teacher": "T24",
+          "schedule": {
+            "Monday": "08:46 - 09:36",
+            "Tuesday": "06:29 - 07:19",
+            "Wednesday": "11:12 - 12:02",
+            "Thursday": "07:38 - 08:28",
+            "Friday": "10:01 - 10:51"
+          }
+        },
+        {
+          "orderNo": 3,
+          "subjectTitle": "Civic",
+          "teacher": "T2",
+          "schedule": {
+            "Monday": "",
+            "Tuesday": "04:18 - 04:58",
+            "Wednesday": "05:24 - 06:04",
+            "Thursday": "02:20 - 03:00",
+            "Friday": "03:20 - 04:00"
+          }
+        },
+        {
+          "orderNo": 4,
+          "subjectTitle": "Chemistry",
+          "teacher": "T29",
+          "schedule": {
+            "Monday": "13:27 - 14:07",
+            "Tuesday": "15:39 - 16:19",
+            "Wednesday": "12:20 - 13:00",
+            "Thursday": "14:32 - 15:12",
+            "Friday": ""
+          }
+        }
+      ]
+    },
+    "wandi": {
+      "A": [
+        {
+          "orderNo": 1,
+          "subjectTitle": "Chemistry",
+          "teacher": "T6",
+          "schedule": {
+            "Monday": "08:48 - 09:28",
+            "Tuesday": "09:48 - 10:28",
+            "Wednesday": "07:44 - 08:24",
+            "Thursday": "",
+            "Friday": "10:49 - 11:29"
+          }
+        },
+        {
+          "orderNo": 2,
+          "subjectTitle": "Civic",
+          "teacher": "T3",
+          "schedule": {
+            "Monday": "04:30 - 05:10",
+            "Tuesday": "05:35 - 06:15",
+            "Wednesday": "",
+            "Thursday": "02:22 - 03:02",
+            "Friday": "03:25 - 04:05"
+          }
+        },
+        {
+          "orderNo": 3,
+          "subjectTitle": "Exit Exam",
+          "teacher": "T20",
+          "schedule": {
+            "Monday": "",
+            "Tuesday": "",
+            "Wednesday": "",
+            "Thursday": "06:41 - 07:21",
+            "Friday": ""
+          }
+        }
+      ],
+      "B": [
+        {
+          "orderNo": 1,
+          "subjectTitle": "Chemistry",
+          "teacher": "T6",
+          "schedule": {
+            "Monday": "02:22 - 03:02",
+            "Tuesday": "04:22 - 05:02",
+            "Wednesday": "03:21 - 04:01",
+            "Thursday": "",
+            "Friday": "05:20 - 06:00"
+          }
+        },
+        {
+          "orderNo": 2,
+          "subjectTitle": "Civic",
+          "teacher": "T3",
+          "schedule": {
+            "Monday": "09:22 - 10:02",
+            "Tuesday": "06:18 - 06:58",
+            "Wednesday": "07:18 - 07:58",
+            "Thursday": "",
+            "Friday": "08:23 - 09:03"
+          }
+        },
+        {
+          "orderNo": 3,
+          "subjectTitle": "Exit Exam",
+          "teacher": "T20",
+          "schedule": {
+            "Monday": "",
+            "Tuesday": "",
+            "Wednesday": "",
+            "Thursday": "10:22 - 11:02",
+            "Friday": ""
+          }
+        }
+      ]
+    },
+    "ten": {
+      "A": [
+        {
+          "orderNo": 1,
+          "subjectTitle": "English",
+          "teacher": "T2",
+          "schedule": {
+            "Monday": "20:04 - 20:54",
+            "Tuesday": "15:19 - 16:09",
+            "Wednesday": "21:58 - 22:48",
+            "Thursday": "18:50 - 19:40",
+            "Friday": "14:03 - 14:53"
+          }
+        },
+        {
+          "orderNo": 2,
+          "subjectTitle": "Mathimatics",
+          "teacher": "T24",
+          "schedule": {
+            "Monday": "23:14 - 00:04",
+            "Tuesday": "03:03 - 03:53",
+            "Wednesday": "05:33 - 06:23",
+            "Thursday": "01:47 - 02:37",
+            "Friday": "00:30 - 01:20"
+          }
+        },
+        {
+          "orderNo": 3,
+          "subjectTitle": "Civic",
+          "teacher": "T2",
+          "schedule": {
+            "Monday": "",
+            "Tuesday": "04:58 - 05:38",
+            "Wednesday": "03:14 - 03:54",
+            "Thursday": "06:05 - 06:45",
+            "Friday": "02:15 - 02:55"
+          }
+        },
+        {
+          "orderNo": 4,
+          "subjectTitle": "Chemistry",
+          "teacher": "T29",
+          "schedule": {
+            "Monday": "09:12 - 09:52",
+            "Tuesday": "",
+            "Wednesday": "07:07 - 07:47",
+            "Thursday": "10:19 - 10:59",
+            "Friday": "08:12 - 08:52"
+          }
+        }
+      ],
+      "B": [
+        {
+          "orderNo": 1,
+          "subjectTitle": "English",
+          "teacher": "T2",
+          "schedule": {
+            "Monday": "04:43 - 05:33",
+            "Tuesday": "03:28 - 04:18",
+            "Wednesday": "02:15 - 03:05",
+            "Thursday": "07:04 - 07:54",
+            "Friday": "05:54 - 06:44"
+          }
+        },
+        {
+          "orderNo": 2,
+          "subjectTitle": "Mathimatics",
+          "teacher": "T24",
+          "schedule": {
+            "Monday": "09:36 - 10:26",
+            "Tuesday": "12:54 - 13:44",
+            "Wednesday": "15:21 - 16:11",
+            "Thursday": "11:37 - 12:27",
+            "Friday": "14:07 - 14:57"
+          }
+        },
+        {
+          "orderNo": 3,
+          "subjectTitle": "Civic",
+          "teacher": "T2",
+          "schedule": {
+            "Monday": "18:14 - 18:54",
+            "Tuesday": "",
+            "Wednesday": "22:48 - 23:28",
+            "Thursday": "20:54 - 21:34",
+            "Friday": "19:55 - 20:35"
+          }
+        },
+        {
+          "orderNo": 4,
+          "subjectTitle": "Chemistry",
+          "teacher": "T29",
+          "schedule": {
+            "Monday": "02:53 - 03:33",
+            "Tuesday": "01:54 - 02:34",
+            "Wednesday": "23:53 - 00:33",
+            "Thursday": "00:54 - 01:34",
+            "Friday": ""
+          }
+        }
+      ]
+    }
+  },
+  "message": "Timetable generated successfully",
+  "statusCode": 200
+}

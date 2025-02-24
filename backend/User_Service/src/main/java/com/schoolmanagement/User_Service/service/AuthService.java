@@ -98,15 +98,6 @@ public class AuthService {
         user.setUsername(signupRequest.getUsername());
         user.setEmail(signupRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
-<<<<<<< HEAD
-        user.setFullName(signupRequest.getFullName());
-        user.setUserAddress(signupRequest.getUserAddress());
-        user.setPhoneNumber(signupRequest.getPhoneNumber());
-=======
-        // user.setFullName(signupRequest.getFullName());
-        // user.setUserAddress(signupRequest.getUserAddress());
-        // user.setPhoneNumber(signupRequest.getPhoneNumber());
->>>>>>> 81b6b4b (Staff Service added)
         user.setIsActive(true);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());

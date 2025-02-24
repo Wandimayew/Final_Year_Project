@@ -38,11 +38,7 @@ public class SecurityConfig {
                     "/error"
                 ).permitAll()
                 .requestMatchers("/api/**").permitAll()
-<<<<<<< HEAD
                 .anyRequest().authenticated()  
-=======
-                .anyRequest().authenticated()
->>>>>>> 81b6b4b (Staff Service added)
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class);
 

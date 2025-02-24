@@ -3,29 +3,20 @@ package com.schoolmanagement.User_Service.service;
 import com.schoolmanagement.User_Service.dto.SignupRequest;
 import com.schoolmanagement.User_Service.dto.UserResponseDTO;
 import com.schoolmanagement.User_Service.exception.BadRequestException;
-import com.schoolmanagement.User_Service.model.Role;
 import com.schoolmanagement.User_Service.model.User;
-import com.schoolmanagement.User_Service.repository.RoleRepository;
 import com.schoolmanagement.User_Service.repository.UserRepository;
-import com.schoolmanagement.User_Service.file.FileStorageService;
-import com.schoolmanagement.User_Service.file.FileUtils;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.naming.AuthenticationException;
 
 @Service
 @Slf4j
@@ -33,8 +24,6 @@ import javax.naming.AuthenticationException;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final FileStorageService fileStorageService;
     private final PasswordEncoder passwordEncoder;
 
     public ResponseEntity<UserResponseDTO> updateUser(SignupRequest updatedUserDetails, Long userId) {
@@ -46,13 +35,7 @@ public class UserService {
 
         //existingUser.setFullName(updatedUserDetails.getFullName() != null ? updatedUserDetails.getFullName() : existingUser.getFullName());
         existingUser.setEmail(updatedUserDetails.getEmail() != null ? updatedUserDetails.getEmail() : existingUser.getEmail());
-<<<<<<< HEAD
-        existingUser.setPhoneNumber(updatedUserDetails.getPhoneNumber() != null ? updatedUserDetails.getPhoneNumber() : existingUser.getPhoneNumber());
-=======
-        existingUser.setUsername(updatedUserDetails.getUsername() != null ? updatedUserDetails.getUsername() : existingUser.getUsername());
-        existingUser.setPassword(updatedUserDetails.getPassword() != null ? passwordEncoder.encode(updatedUserDetails.getPassword()) : existingUser.getPassword());
-        //existingUser.setPhoneNumber(updatedUserDetails.getPhoneNumber() != null ? updatedUserDetails.getPhoneNumber() : existingUser.getPhoneNumber());
->>>>>>> 81b6b4b (Staff Service added)
+        // existingUser.setPhoneNumber(updatedUserDetails.getPhoneNumber() != null ? updatedUserDetails.getPhoneNumber() : existingUser.getPhoneNumber());
         existingUser.setUpdatedAt(LocalDateTime.now());
 
         // if (updatedUserDetails.getUserPhoto() != null) {
@@ -122,12 +105,6 @@ public class UserService {
                 .schoolId(user.getSchoolId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-<<<<<<< HEAD
-                .fullName(user.getFullName())
-                .userAddress(user.getUserAddress())
-                .phoneNumber(user.getPhoneNumber())
-=======
->>>>>>> 81b6b4b (Staff Service added)
                 .roles(user.getRoles())
                 .isActive(user.getIsActive())
                 .lastLogin(user.getLastLogin())

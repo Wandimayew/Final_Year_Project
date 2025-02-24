@@ -10,6 +10,210 @@ import { Button } from "@/components/ui/button";
  * A reusable table component for selecting items.
  * It renders a header checkbox for "select all" and a row per item.
  */
+
+const mockTeachers = [
+  {
+    teacherName: "John Doe",
+    teacherId: "T1",
+    subjectIds: [1, 2],
+    classNames: ["nine", "ten"],
+    maxClassesPerWeek: 12,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Jane Smith",
+    teacherId: "T2",
+    subjectIds: [3, 4],
+    classNames: ["nine", "ten"],
+    maxClassesPerWeek: 10,
+    maxClassesPerDay: 5,
+  },
+  {
+    teacherName: "Emily Johnson",
+    teacherId: "T3",
+    subjectIds: [3, 4],
+    classNames: ["ten", "wandi"],
+    maxClassesPerWeek: 18,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Michael Brown",
+    teacherId: "T4",
+    subjectIds: [4, 2],
+    classNames: ["wandi", "nine"],
+    maxClassesPerWeek: 25,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Sarah Davis",
+    teacherId: "T5",
+    subjectIds: [2, 4, 3],
+    classNames: ["12", "nine"],
+    maxClassesPerWeek: 20,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "David Wilson",
+    teacherId: "T6",
+    subjectIds: [1, 3],
+    classNames: ["12", "wandi"],
+    maxClassesPerWeek: 24,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Olivia Taylor",
+    teacherId: "T7",
+    subjectIds: [53, 3],
+    classNames: ["wandi", "12"],
+    maxClassesPerWeek: 19,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "James Martinez",
+    teacherId: "T8",
+    subjectIds: [52, 3],
+    classNames: ["ten", "12"],
+    maxClassesPerWeek: 11,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Sophia Garcia",
+    teacherId: "T9",
+    subjectIds: [52, 53],
+    classNames: ["ten", "nine"],
+    maxClassesPerWeek: 23,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Liam Rodriguez",
+    teacherId: "T10",
+    subjectIds: [53, 1, 3],
+    classNames: ["wandi", "12"],
+    maxClassesPerWeek: 26,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Johnh Doe",
+    teacherId: "T11",
+    subjectIds: [1, 2],
+    classNames: ["nine", "ten"],
+    maxClassesPerWeek: 12,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Janeh Smith",
+    teacherId: "T12",
+    subjectIds: [2, 4],
+    classNames: ["nine", "ten"],
+    maxClassesPerWeek: 20,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Emilhy Johnson",
+    teacherId: "T13",
+    subjectIds: [3, 4],
+    classNames: ["ten", "wandi"],
+    maxClassesPerWeek: 18,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Michhael Brown",
+    teacherId: "T14",
+    subjectIds: [4, 2],
+    classNames: ["wandi", "nine"],
+    maxClassesPerWeek: 15,
+    maxClassesPerDay: 4,
+  },
+  {
+    teacherName: "Sarahh Davis",
+    teacherId: "T15",
+    subjectIds: [2, 4],
+    classNames: ["12", "nine"],
+    maxClassesPerWeek: 20,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Davhid Wilson",
+    teacherId: "T16",
+    subjectIds: [4, 3],
+    classNames: ["12", "wandi"],
+    maxClassesPerWeek: 14,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Olihvia Taylor",
+    teacherId: "T17",
+    subjectIds: [53, 3],
+    classNames: ["wandi", "12"],
+    maxClassesPerWeek: 20,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Jamehs Martinez",
+    teacherId: "T18",
+    subjectIds: [52, 3],
+    classNames: ["ten", "12"],
+    maxClassesPerWeek: 21,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Sophhia Garcia",
+    teacherId: "T19",
+    subjectIds: [52, 2, 53],
+    classNames: ["ten", "nine"],
+    maxClassesPerWeek: 23,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Liamh Rodriguez",
+    teacherId: "T20",
+    subjectIds: [53, 2, 3],
+    classNames: ["wandi", "12"],
+    maxClassesPerWeek: 23,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Sophina Garcia",
+    teacherId: "T29",
+    subjectIds: [1, 2],
+    classNames: ["ten", "nine"],
+    maxClassesPerWeek: 23,
+    maxClassesPerDay: 5,
+  },
+  {
+    teacherName: "Liamn Rodriguez",
+    teacherId: "T32",
+    subjectIds: [2, 1],
+    classNames: ["wandi", "12"],
+    maxClassesPerWeek: 26,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Liamm Rodriguez",
+    teacherId: "T23",
+    subjectIds: [2],
+    classNames: ["wandi", "12"],
+    maxClassesPerWeek: 26,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Sophiam Garcia",
+    teacherId: "T24",
+    subjectIds: [2],
+    classNames: ["ten", "nine"],
+    maxClassesPerWeek: 23,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Liamo Rodriguez",
+    teacherId: "T42",
+    subjectIds: [2],
+    classNames: ["wandi", "12"],
+    maxClassesPerWeek: 16,
+    maxClassesPerDay: 5,
+  },
+];
+
 const SelectionTable = ({
   title,
   items,
@@ -108,10 +312,13 @@ const TimetableConfigurator = () => {
       .catch((error) => console.error("Failed to fetch streams:", error));
   }, []);
 
-  // Fetch teachers on mount (if needed)
+  // Fetch teachers on component mount (simulated with mock data)
   useEffect(() => {
-    // For now, we leave the teacher configuration as is.
-    // axios.get("...").then(...);
+    // Simulating a fetch from an API (e.g., axios.get("..."))
+    // For now, we are using mock data
+    console.log("setting");
+
+    setTeachers(mockTeachers);
   }, []);
 
   // Fetch all subjects for subject settings
@@ -348,8 +555,19 @@ const TimetableConfigurator = () => {
     }));
   };
 
-  // Build payload matching the server's expected structure
-  const handleSubmit = (e) => {
+  const saveJsonToFile = (jsonData, filename = "timetable.json") => {
+    const jsonString = JSON.stringify(jsonData, null, 2); // Pretty format JSON
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const link = document.createElement("a");
+
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Build classConfigs: For each selected stream and its selected classes,
@@ -431,19 +649,41 @@ const TimetableConfigurator = () => {
       schoolEndTime,
     };
 
+    // Build teacherConfigs from all teachers
+    const teacherConfigs = teachers.map((teacher) => {
+      return {
+        teacherId: teacher.teacherId,
+        teacherName: teacher.teacherName,
+        subjectIds: teacher.subjectIds, // You can map to actual subject details if needed
+        classNames: teacher.classNames,
+        maxClassesPerWeek: teacher.maxClassesPerWeek,
+        maxClassesPerDay: teacher.maxClassesPerDay,
+      };
+    });
+
     // Build final payload matching TimeTableRequest structure.
     const requestData = {
       schoolName,
       academicYear,
       classConfigs, // List<ClassConfig>
-      teacherConfigs: [], // For now, empty as requested
+      teacherConfigs, // List<TeacherConfig> with all teachers
       subjectConfigs, // List<SubjectConfig>
       streamConfigs: streamConfigList, // List<StreamConfig>
       timetableConstraints, // TimetableConstraints
     };
 
     console.log("Submitting configuration:", requestData);
+
+    try {
+      const response = await axios.post(
+        `http://localhost:8084/academic/api/new/addNewTimeTable`,
+        requestData
+      );
+      console.log(" generated response is ", response.data);
+      saveJsonToFile(response.data);
+    } catch (error) {}
     // Send requestData to your server here.
+    // Example: axios.post("/your/api/endpoint", requestData);
   };
 
   return (
