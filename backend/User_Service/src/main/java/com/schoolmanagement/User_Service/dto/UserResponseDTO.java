@@ -10,6 +10,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.schoolmanagement.User_Service.model.Role;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -23,6 +24,7 @@ public class UserResponseDTO {
     private String fullName;
     private String userAddress;
     private String phoneNumber;
+    private String password;
     @JsonProperty("roles")
     private Set<Role> roles;
     private boolean isActive;
