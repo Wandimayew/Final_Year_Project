@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-
 import com.schoolmanagement.student_service.model.Student;
 import com.schoolmanagement.student_service.repository.StudentRepository;
 
@@ -28,6 +27,7 @@ public class StudentService {
 
     // Create a new student
     public Student createStudent(Student student) {
+
         return studentRepository.save(student);
     }
 

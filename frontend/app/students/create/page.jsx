@@ -1,0 +1,279 @@
+"use client";
+import { useState } from "react";
+import { Mail, User, Phone, School } from "lucide-react";
+import { useCreateStudent } from "@/lib/api/students";
+import { useAuth } from "@/lib/api/users";
+import InputField from "@/components/InputField";
+import ImageUpload from "@/components/ImageUpload";
+import SectionHeader from "@/components/SectionHeader";
+
+const AdmissionForm = () => {
+  const [showProfilePicture, setShowProfilePicture] = useState(null);
+  const [showGuardianPicture, setShowGuardianPicture] = useState(null);
+
+  const { registerUser, error } = useAuth();
+  const { mutate: createStudent } = useCreateStudent();
+
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   const formData = new FormData(e.target);
+  //   createStudent(formData);
+  // };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("start handleSubmit");
+    // Step 1: Register the User
+    const userData = {
+      fullName: e.target.firstName.value + " " + e.target.lastName.value,
+      username:
+        e.target.firstName.value.toLowerCase() +
+        e.target.lastName.value.charAt(0).toLowerCase(),
+      email: e.target.guardianEmail.value,
+      password:
+        e.target.firstName.value.toLowerCase() + e.target.registerNo.value,
+      userAddress: e.target.userAddress.value,
+      phoneNumber: "+251 956 56 56 56",
+      roles: ["STUDENT"],
+    };
+
+    try {
+      console.log("start registerUser");
+      const userResponse = await registerUser(userData);
+      const userId = userResponse.id; // Assuming the response contains the userId
+
+      // Step 2: Create the Student
+      const studentFormData = new FormData(e.target);
+      studentFormData.append("userId", userId); // Include the userId in the student data
+
+      console.log("start createStudent");
+      await createStudent({
+        ...studentFormData,
+        address: { city: "Addis Ababa", state: "Addis Ababa" },
+        username:
+          e.target.firstName.value.toLowerCase() +
+          e.target.lastName.value.charAt(0).toLowerCase(),
+        isActive: true,
+        isPassed: false,
+        parentId: 1,
+      });
+
+      alert("Student created successfully!");
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Failed to create student.");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="mx-auto max-w-7xl rounded-lg bg-white p-6 shadow-lg">
+        <h1 className="mb-6 flex items-center text-2xl font-bold text-gray-800">
+          <School className="mr-2 h-6 w-6" />
+          Create Admission
+        </h1>
+
+        {/* Form starts here */}
+        <form onSubmit={handleSubmit}>
+          {/* Academic Details */}
+          <section className="mb-8">
+            <SectionHeader icon="🎓" title="Academic Details" />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <InputField
+                label="Academic Year"
+                name="academicYear"
+                type="select"
+                required
+              >
+                <option>2025-2026</option>
+              </InputField>
+              <InputField
+                label="Register No"
+                name="registerNo"
+                defaultValue="ISC-0001"
+                required
+              />
+              <InputField label="Roll" name="roll" />
+              <InputField
+                label="Admission Date"
+                name="admissionDate"
+                type="date"
+                defaultValue="2025-01-12"
+                required
+              />
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <InputField label="Class" name="class" type="select" required>
+                <option>Select Class</option>
+                <option value={1}>Class One</option>
+                <option value={2}>Class Two</option>
+              </InputField>
+              <InputField label="Section" name="section" type="select" required>
+                <option>Select Section</option>
+                <option value={1}>A</option>
+                <option value={2}>B</option>
+              </InputField>
+              <InputField
+                label="Category"
+                name="category"
+                type="select"
+                required
+              >
+                <option>Select</option>
+              </InputField>
+            </div>
+          </section>
+
+          {/* Student Details */}
+          <section className="mb-8">
+            <SectionHeader icon="👤" title="Student Details" />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <InputField
+                label="First Name"
+                name="firstName"
+                icon={User}
+                required
+              />
+              <InputField
+                label="Last Name"
+                name="lastName"
+                icon={User}
+                required
+              />
+              <InputField label="Gender" name="gender" type="select">
+                <option value={"Male"}>Male</option>
+                <option value={"Female"}>Female</option>
+              </InputField>
+              <InputField
+                label="Date of Birth"
+                name="dateOfBirth"
+                type="date"
+              />
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <InputField
+                label="Present Address"
+                name="presentAddress"
+                type="textarea"
+                rows={3}
+              />
+              <InputField
+                label="Permanent Address"
+                name="permanentAddress"
+                type="textarea"
+                rows={3}
+              />
+            </div>
+            <ImageUpload
+              label="Profile Picture"
+              name="profilePicture"
+              image={showProfilePicture}
+              onChange={(file) =>
+                setShowProfilePicture(URL.createObjectURL(file))
+              }
+            />
+          </section>
+
+          {/* Guardian Details */}
+          <section className="mb-8">
+            <SectionHeader icon="👥" title="Guardian Details" />
+            <div className="mb-4">
+              <label className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  name="guardianExists"
+                  className="rounded border-gray-300"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  Guardian Already Exist
+                </span>
+              </label>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <InputField label="Name" name="guardianName" required />
+              <InputField label="Relation" name="guardianRelation" required />
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <InputField label="Father Name" name="fatherName" />
+              <InputField label="Mother Name" name="motherName" />
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <InputField
+                label="Occupation"
+                name="guardianOccupation"
+                required
+              />
+              <InputField label="Education" name="guardianEducation" required />
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <InputField label="City" name="guardianCity" />
+              <InputField label="State" name="guardianState" />
+              <InputField
+                label="Mobile No"
+                name="guardianMobile"
+                icon={Phone}
+                required
+              />
+              <InputField
+                label="Email"
+                name="guardianEmail"
+                icon={Mail}
+                type="email"
+                required
+              />
+            </div>
+            <ImageUpload
+              label="Guardian Picture"
+              name="guardianPicture"
+              image={showGuardianPicture}
+              onChange={(file) =>
+                setShowGuardianPicture(URL.createObjectURL(file))
+              }
+            />
+          </section>
+
+          {/* Previous School Details */}
+          <section className="mb-8">
+            <SectionHeader
+              icon={<School className="mr-2 h-6 w-6" />}
+              title="Previous School Details"
+            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <InputField label="School Name" name="previousSchoolName" />
+              <InputField
+                label="Qualification"
+                name="previousSchoolQualification"
+              />
+            </div>
+            <div className="mt-4">
+              <InputField
+                label="Remarks"
+                name="remarks"
+                type="textarea"
+                rows={3}
+              />
+            </div>
+          </section>
+
+          {/* Form actions */}
+          <div className="flex justify-end space-x-4">
+            <button
+              type="button"
+              className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default AdmissionForm;

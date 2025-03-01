@@ -22,11 +22,12 @@ import com.schoolmanagement.student_service.service.StudentService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/students")
 @RequiredArgsConstructor
+@Slf4j
 public class StudentController {
     private final StudentService studentService;
 
@@ -51,6 +52,7 @@ public class StudentController {
     // Create a new student
     @PostMapping
     public ResponseEntity<StudentResponse> createStudent(@Valid @RequestBody StudentRequest request) {
+        log.info("Creating student: {}", request);
         Student student = StudentMapper.toEntity(request);
         Student createdStudent = studentService.createStudent(student);
         StudentResponse response = StudentMapper.toResponse(createdStudent);
