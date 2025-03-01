@@ -3,8 +3,8 @@ spring:
         name: academic_service
     datasource:
         url: jdbc:mysql://localhost:3306/Academic_Service
-        username: root
-        password: root
+        username: root  
+        password: FiRo@12345 
         driver-class-name: com.mysql.cj.jdbc.Driver
         hikari:
             minimum-idle: 5

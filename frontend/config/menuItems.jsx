@@ -4,25 +4,22 @@ import {
   FiClock,
   FiPackage,
   FiSettings,
-<<<<<<< HEAD
-} from "react-icons/fi";
-import { FaSchool, FaRegPlusSquare } from "react-icons/fa";
-=======
   FiList,
   FiUserPlus,
   FiDownload,
   FiCamera,
   FiEye,
-} from "react-icons/fi";
-import {
   FaSchool,
   FaRegPlusSquare,
   FaUser,
   FaUsers,
   FaCalendarCheck,
   FaQrcode,
-} from "react-icons/fa";
->>>>>>> 81b6b4b (Staff Service added)
+  FaGraduationCap,
+  FaPlusCircle,
+  FaFileImport,
+  FaList,
+} from "react-icons/fi";
 
 export const MENU_ITEMS = [
   {
@@ -40,7 +37,6 @@ export const MENU_ITEMS = [
     roles: "",
   },
   {
-<<<<<<< HEAD
     id: "createschool",
     icon: FaRegPlusSquare,
     label: "Create School",
@@ -102,7 +98,6 @@ export const MENU_ITEMS = [
     ],
   },
   {
-=======
     id: "employee",
     icon: FaUsers,
     label: "Employees",
@@ -163,11 +158,34 @@ export const MENU_ITEMS = [
     ],
   },
   {
-    id: "createschool",
-    icon: FaRegPlusSquare,
-    label: "Create School",
-    href: "/school/createschool",
+    id: "student",
+    icon: FaGraduationCap,
+    label: "Student",
+    href: "/students",
     roles: "",
+    subItems: [
+      {
+        id: "studentlist",
+        icon: FaList,
+        label: "Student List",
+        href: "/students",
+        roles: "",
+      },
+      {
+        id: "createstudent",
+        icon: FaPlusCircle,
+        label: "Add Student",
+        href: "/students/create",
+        roles: "",
+      },
+      {
+        id: "importstudents",
+        icon: FaFileImport,
+        label: "Import Students",
+        href: "/students/import",
+        roles: "",
+      },
+    ],
   },
   {
     id: "subscription",
@@ -191,8 +209,7 @@ export const MENU_ITEMS = [
     roles: "",
   },
   {
->>>>>>> 81b6b4b (Staff Service added)
-    id: "setting",
+    id: 'setting',
     icon: FiSettings,
     label: "Settings",
     href: "/setting",

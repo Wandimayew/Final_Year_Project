@@ -1,54 +1,11 @@
 {
-<<<<<<< HEAD
-    "configurations": [
-        {
-            "type": "java",
-            "name": "AcademicServiceApplication",
-            "request": "launch",
-            "mainClass": "com.schoolmanagement.academic_service.AcademicServiceApplication",
-            "projectName": "academic_service"
-        },
-        {
-            "type": "java",
-            "name": "Spring Boot-TenantServiceApplication<tenant_service>",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "mainClass": "com.schoolmanagement.tenant_service.TenantServiceApplication",
-            "projectName": "tenant_service",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env"
-        },
-        {
-            "type": "java",
-            "name": "Spring Boot-KeyGen<User_Service>",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "mainClass": "com.schoolmanagement.User_Service.security.KeyGen",
-            "projectName": "User_Service",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env"
-        },
-        {
-            "type": "java",
-            "name": "Spring Boot-UserServiceApplication<User_Service>",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "mainClass": "com.schoolmanagement.User_Service.UserServiceApplication",
-            "projectName": "User_Service",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env"
-        }
-    ]
-}
-=======
   "configurations": [
     {
       "type": "java",
-      "name": "StaffServiceApplication",
+      "name": "AcademicServiceApplication",
       "request": "launch",
-      "mainClass": "com.schoolmanagement.Staff_Service.StaffServiceApplication",
-      "projectName": "Staff_Service",
-      "vmArgs": "-Xmx512m -XX:+UseG1GC"
+      "mainClass": "com.schoolmanagement.academic_service.AcademicServiceApplication",
+      "projectName": "academic_service"
     },
     {
       "type": "java",
@@ -58,8 +15,17 @@
       "mainClass": "com.schoolmanagement.tenant_service.TenantServiceApplication",
       "projectName": "tenant_service",
       "args": "",
-      "envFile": "${workspaceFolder}/.env",
-      "vmArgs": "-Xmx512m -XX:+UseG1GC"
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot-KeyGen<User_Service>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.schoolmanagement.User_Service.security.KeyGen",
+      "projectName": "User_Service",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
     },
     {
       "type": "java",
@@ -73,4 +39,3 @@
     }
   ]
 }
->>>>>>> 81b6b4b (Staff Service added)
