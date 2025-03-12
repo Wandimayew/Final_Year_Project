@@ -17,7 +17,7 @@ import {
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
-import { staffService } from "../../services/api";
+import { staffService } from "@/services/api";
 import StaffModal from "./StaffModal";
 import ConfirmDialog from "./ConfirmDialog";
 

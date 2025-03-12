@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from 'react';
 import { useReactTable, getCoreRowModel, flexRender, getSortedRowModel } from '@tanstack/react-table';
 import { Calendar, Search, ChevronDown, ChevronUp, Clock, Download } from 'lucide-react';
