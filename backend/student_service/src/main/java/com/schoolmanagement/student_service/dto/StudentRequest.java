@@ -11,7 +11,7 @@ public class StudentRequest {
 
     @NotBlank(message = "Student ID cannot be blank")
     @Size(max = 50, message = "Student ID cannot exceed 50 characters")
-    private String studentId;
+    private String registId;
 
     @NotNull(message = "User ID cannot be null")
     private Long userId;
@@ -58,9 +58,9 @@ public class StudentRequest {
     @NotNull(message = "Address cannot be null")
     private JsonNode address;
 
-    private boolean isActive;
+    private String isActive;
 
-    private boolean isPassed;
+    private String isPassed;
 
     @NotNull(message = "Admission date cannot be null")
     @PastOrPresent(message = "Admission date cannot be in the future")

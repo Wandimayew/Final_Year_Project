@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -19,9 +20,11 @@ import com.schoolmanagement.student_service.model.QRCode;
 import com.schoolmanagement.student_service.repository.QRCodeRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class QRCodeService {
     private final QRCodeRepository qrCodeRepository;
 
@@ -32,9 +35,36 @@ public class QRCodeService {
 
     // Get a QR code by ID
     public QRCode getQRCodeById(Long id) {
-        return qrCodeRepository.findById(id)
+        QRCode qrCode = qrCodeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("QR Code not found with id: " + id));
+                String qrCodeImageBase64;
+                try {
+                    // Assuming qrCodeImage is a file path; adjust if it's different
+                    byte[] imageBytes = Files.readAllBytes(Path.of(qrCode.getQrCodePath()));
+                    qrCodeImageBase64 = Base64.getEncoder().encodeToString(imageBytes);
+                } catch (Exception e) {
+                    log.error("Error converting QR Code image to Base64", e);
+                    throw new RuntimeException("Failed to convert QR Code image to Base64");
+                }
+                qrCode.setQrCodePath(qrCodeImageBase64);
+        return qrCode;
     }
+
+    public List<QRCode> getAllQRCodes(Long classId, Long sectionId) {
+        if (classId != null && sectionId != null) {
+            // Filter by both classId and sectionId
+            return qrCodeRepository.findByClassIdAndSectionId(classId, sectionId);
+        } else if (classId != null) {
+            // Filter by classId only
+            return qrCodeRepository.findByClassId(classId);
+        } else if (sectionId != null) {
+            // Filter by sectionId only
+            return qrCodeRepository.findBySectionId(sectionId);
+        } else {
+            // No filters applied, return all QR codes
+            return qrCodeRepository.findAll();
+        }
+    }   
 
     // Create a new QR code
     public QRCode createQRCode(QRCode qrCode) {
@@ -68,27 +98,27 @@ public class QRCodeService {
         qrCodeRepository.delete(qrCode);
     }
     
-    public QRCode generateQRCode(Long schoolId, Long classId, Long sectionId, String generatedBy) throws WriterException, IOException {
+    public QRCode generateQRCode(QRCode qrCode) throws WriterException, IOException {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiryTime = now.plusHours(1);
-        String sessionToken = "TOKEN-" + sectionId + "-" + now.toString();
+        LocalDateTime expiryTime = now.plusHours(10);
+        String sessionToken = "TOKEN-" + qrCode.getSectionId() + "-" + now.toString();
 
         // Generate QR code
-        String qrCodeText = "SchoolID:" + schoolId + ",ClassID:" + classId + ",SectionID:" + sectionId + ",Token:" + sessionToken;
+        String qrCodeText = "SchoolID:" + qrCode.getSchoolId() + ",ClassID:" + qrCode.getClassId() + ",SectionID:" + qrCode.getSectionId() + ",Token:" + sessionToken;
         String qrCodePath = generateQRCodeImage(qrCodeText, 200, 200);
 
-        QRCode qrCode = new QRCode();
-        qrCode.setSchoolId(schoolId);
-        qrCode.setClassId(classId);
-        qrCode.setSectionId(sectionId);
-        qrCode.setGeneratedTime(now);
-        qrCode.setExpiryTime(expiryTime);
-        qrCode.setSessionToken(sessionToken);
-        qrCode.setGeneratedBy(generatedBy);
-        qrCode.setQrCodePath(qrCodePath);
-        qrCode.setStatus(QRCode.QRCodeStatus.ACTIVE);
+        QRCode newQRCode = new QRCode();
+        newQRCode.setSchoolId(qrCode.getSchoolId());
+        newQRCode.setClassId(qrCode.getClassId());
+        newQRCode.setSectionId(qrCode.getSectionId());
+        newQRCode.setGeneratedTime(now);
+        newQRCode.setExpiryTime(expiryTime);
+        newQRCode.setSessionToken(sessionToken);
+        newQRCode.setGeneratedBy(qrCode.getGeneratedBy());
+        newQRCode.setQrCodePath(qrCodePath);
+        newQRCode.setStatus(QRCode.QRCodeStatus.ACTIVE);
 
-        return qrCodeRepository.save(qrCode);
+        return qrCodeRepository.save(newQRCode);
     }
 
     public String generateQRCodeImage(String text, int width, int height) throws WriterException, IOException {

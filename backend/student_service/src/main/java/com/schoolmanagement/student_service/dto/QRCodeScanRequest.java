@@ -6,7 +6,7 @@ import lombok.Data;
 public class QRCodeScanRequest {
     private Long schoolId;
     private Long classId;
-    private String studentId;
+    private Long studentId;
     private Long qrCodeId;
     private String recordedBy;
 }

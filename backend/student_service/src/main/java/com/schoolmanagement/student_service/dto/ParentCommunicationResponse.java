@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 @Data
 public class ParentCommunicationResponse {
 
-    private Long id;
+    private Long Id;
+    private Long studentId;
     private Long schoolId;
     private LocalDateTime sentAt;
     private String message;

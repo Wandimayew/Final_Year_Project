@@ -10,7 +10,7 @@ public class AttendanceResponse {
     private Long attendanceId;
     private Long schoolId;
     private Long classId;
-    private String studentId;
+    private Long studentId;
     private Long qrCodeId;
     private LocalDateTime attendanceDate;
     private String recordedBy;

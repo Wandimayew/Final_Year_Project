@@ -10,7 +10,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/User_Service  
     username: root  
-    password: FiRo@12345 
+    password: toor 
     driver-class-name: com.mysql.cj.jdbc.Driver  
     hikari:
       minimum-idle: 5
@@ -18,7 +18,7 @@ spring:
       idle-timeout: 600000
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect  

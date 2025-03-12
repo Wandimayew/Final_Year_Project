@@ -21,7 +21,8 @@ public class Attendance {
     private Long classId;
 
     @NotBlank(message = "Student ID cannot be blank")
-    private String studentId;
+    @Column(name = "studentId", nullable = false)
+    private Long studentId;
 
     @NotNull(message = "QR Code ID cannot be null")
     private Long qrCodeId;
@@ -37,6 +38,7 @@ public class Attendance {
     private String remarks;
 
     @ManyToOne
-    @JoinColumn(name = "studentId", insertable = false, updatable = false)
+    @JoinColumn(name = "studentId", insertable=false, updatable=false)
+    @NotNull(message = "Student cannot be null")
     private Student student;
 }

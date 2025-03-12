@@ -17,6 +17,12 @@ public class PromotionRequest {
     @NotNull(message = "New class ID cannot be null")
     private Long newClassId;
 
+    @NotNull(message = "Section ID cannot be null")
+    private Long sectionId;
+
+    @NotNull(message = "Is passed cannot be null")
+    private boolean isPassed;
+
     @NotNull(message = "Promotion date cannot be null")
     @PastOrPresent(message = "Promotion date must be in the past or present")
     private LocalDate promotionDate;
@@ -25,5 +31,5 @@ public class PromotionRequest {
     private String remark;
 
     @NotNull(message = "Student ID cannot be null")
-    private String studentId;
+    private Long studentId;
 }
