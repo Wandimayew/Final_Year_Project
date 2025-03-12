@@ -1,47 +1,53 @@
 "use client";
 
-import api from "@/lib/utils";
+// import userApi from "@/lib/config";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/auth";
+import axios from "axios";
 
-
+const userService = axios.create({
+  baseURL: 'http://localhost:8082/api', // Adjust the base URL as needed
+  // headers: {
+  //   'Content-Type': 'application/json',
+  // },
+});
 // ================== AUTH API FUNCTIONS ==================
-export const authApi = {
+const authApi = {
   login: async (credentials) => {
-    const { data } = await api.post("/auth/login", credentials);
+    const { data } = await userService.post("/auth/login", credentials);
     return data;
   },
 
   register: async (userData) => {
-    const { data } = await api.post("/auth/register", userData);
+    const { data } = await userService.post("/auth/register", userData);
     return data;
   },
 
   logout: async () => {
     localStorage.removeItem("token");
-    await api.post("/auth/logout");
+    await userService.post("/auth/logout");
   },
 };
 
 // ================== USER API FUNCTIONS ==================
-export const userApi = {
+const userApi = {
   register: async (userData) => {
-    const { data } = await api.post("/auth/register", userData);
+    const { data } = await userService.post("/auth/register", userData);
     return data;
   },
 
   getUsers: async () => {
-    const { data } = await api.get("/users");
+    const { data } = await userService.get("/users");
     return data;
   },
 
   getUser: async (id) => {
-    const { data } = await api.get(`/users/${id}`);
+    const { data } = await userService.get(`/users/${id}`);
     return data;
   },
 
   updateUser: async (id, userData) => {
-    const { data } = await api.patch(`/users/${id}`, {
+    const { data } = await userService.patch(`/users/${id}`, {
       ...userData,
       avator: userData.avator,
     });
@@ -49,7 +55,7 @@ export const userApi = {
   },
 
   deleteUser: async (id) => {
-    await api.delete(`/users/${id}`);
+    await userService.delete(`/users/${id}`);
   },
 };
 
@@ -62,7 +68,7 @@ export function useAuth() {
     mutationFn: authApi.login,
     onSuccess: ({ user, token }) => {
       setAuth(user, token);
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      userApi.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     },
   });
 

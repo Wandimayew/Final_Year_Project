@@ -1,8 +1,13 @@
 "use client";
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Mail, User, Phone, School } from "lucide-react";
-import { useCreateStudent } from "@/lib/api/students";
-import { useAuth } from "@/lib/api/users";
+import { useCreateStudent } from "@/lib/api/studentService/students";
+import {
+  useParentGuardianByContact,
+  useCreateParentGuardian,
+  useParentGuardians
+} from "@/lib/api/studentService/parentGuardian";
+import { useCreateUser } from "@/lib/api/users";
 import InputField from "@/components/InputField";
 import ImageUpload from "@/components/ImageUpload";
 import SectionHeader from "@/components/SectionHeader";
@@ -10,58 +15,91 @@ import SectionHeader from "@/components/SectionHeader";
 const AdmissionForm = () => {
   const [showProfilePicture, setShowProfilePicture] = useState(null);
   const [showGuardianPicture, setShowGuardianPicture] = useState(null);
+  const [guardianExists, setGuardianExists] = useState(false);
+  const [parentId, setParentId] = useState(null);
 
-  const { registerUser, error } = useAuth();
-  const { mutate: createStudent } = useCreateStudent();
+  const createUserMutation = useCreateUser();
+  const createParentGuardianMutation = useCreateParentGuardian();
+  const {
+    data: parentData,
+    refetch,
+  } = useParentGuardians();
+  const { mutateAsync: createStudent } = useCreateStudent();
 
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   const formData = new FormData(e.target);
-  //   createStudent(formData);
-  // };
+  useEffect(() => {
+    if (guardianExists) {
+      refetch();
+    }
+  }, [guardianExists]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("start handleSubmit");
     // Step 1: Register the User
     const userData = {
-      fullName: e.target.firstName.value + " " + e.target.lastName.value,
+      schoolId: 1,
       username:
         e.target.firstName.value.toLowerCase() +
         e.target.lastName.value.charAt(0).toLowerCase(),
-      email: e.target.guardianEmail.value,
+      email: e.target.firstName.value.toLowerCase() + "@student.com",
       password:
         e.target.firstName.value.toLowerCase() + e.target.registerNo.value,
-      userAddress: e.target.userAddress.value,
-      phoneNumber: "+251 956 56 56 56",
       roles: ["STUDENT"],
     };
 
     try {
-      console.log("start registerUser");
-      const userResponse = await registerUser(userData);
-      const userId = userResponse.id; // Assuming the response contains the userId
+      const userResponse = await createUserMutation.mutateAsync(userData);
 
-      // Step 2: Create the Student
-      const studentFormData = new FormData(e.target);
-      studentFormData.append("userId", userId); // Include the userId in the student data
+      let guardianId;
+      if(!guardianExists) {
+        const parentGuardianData = {
+          schoolId: 1,
+          fatherName: e.target.fatherName.value,
+          motherName: e.target.motherName.value,
+          otherFamilyMemberName: e.target.guardianName.value,
+          relation: e.target.guardianRelation.value,
+          occupation: e.target.guardianOccupation.value,
+          education: e.target.guardianEducation.value,
+          phoneNumber: e.target.guardianMobile.value,
+          email: e.target.guardianEmail.value,
+          address: {
+            city: e.target.guardianCity.value,
+            state: e.target.guardianState.value,
+          },
+        };
+        const parentGuardianResponse =
+          await createParentGuardianMutation.mutateAsync(parentGuardianData);
+        guardianId = parentGuardianResponse.parentId;
+      }
 
-      console.log("start createStudent");
       await createStudent({
-        ...studentFormData,
+        schoolId: 1,
+        userId: userResponse.userId,
+        registId: e.target.registerNo.value,
+        roll: e.target.roll.value,
+        admissionDate: e.target.admissionDate.value,
+        classId: e.target.class.value,
+        sectionId: e.target.section.value,
+        category: e.target.category.value,
+        firstName: e.target.firstName.value,
+        lastName: e.target.lastName.value
+          ? e.target.lastName.value
+          : e.target.firstName.value,
+        nationalId: e.target.registerNo.value,
+        dateOfBirth: e.target.dateOfBirth.value,
+        gender: e.target.gender.value,
+        contactInfo: "+251987654321",
         address: { city: "Addis Ababa", state: "Addis Ababa" },
         username:
           e.target.firstName.value.toLowerCase() +
           e.target.lastName.value.charAt(0).toLowerCase(),
-        isActive: true,
-        isPassed: false,
-        parentId: 1,
+        isActive: "ACTIVE",
+        isPassed: "PASSED",
+        parentId: guardianExists ? parentId : guardianId,
       });
 
-      alert("Student created successfully!");
     } catch (error) {
       console.error("Error:", error);
-      alert("Failed to create student.");
     }
   };
 
@@ -183,53 +221,80 @@ const AdmissionForm = () => {
                   type="checkbox"
                   name="guardianExists"
                   className="rounded border-gray-300"
+                  onChange={(e) => setGuardianExists(!guardianExists)}
+                  checked={guardianExists}
                 />
                 <span className="ml-2 text-sm text-gray-700">
                   Guardian Already Exist
                 </span>
               </label>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <InputField label="Name" name="guardianName" required />
-              <InputField label="Relation" name="guardianRelation" required />
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <InputField label="Father Name" name="fatherName" />
-              <InputField label="Mother Name" name="motherName" />
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <InputField
-                label="Occupation"
-                name="guardianOccupation"
-                required
-              />
-              <InputField label="Education" name="guardianEducation" required />
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <InputField label="City" name="guardianCity" />
-              <InputField label="State" name="guardianState" />
-              <InputField
-                label="Mobile No"
-                name="guardianMobile"
-                icon={Phone}
-                required
-              />
-              <InputField
-                label="Email"
-                name="guardianEmail"
-                icon={Mail}
-                type="email"
-                required
-              />
-            </div>
-            <ImageUpload
-              label="Guardian Picture"
-              name="guardianPicture"
-              image={showGuardianPicture}
-              onChange={(file) =>
-                setShowGuardianPicture(URL.createObjectURL(file))
-              }
-            />
+            {guardianExists &&  (
+              <div className="mt-4">
+                <InputField label="Select Guardian" name="parentId" type="select" onChange={(e) => setParentId(e.target.value)}>
+                  <option value="">Select a guardian</option>
+                  {parentData.map((parent) => (
+                    <option key={parent.parentId} value={parent.parentId}>
+                      {parent.fatherName} & {parent.motherName}
+                    </option>
+                  ))}
+              </InputField>
+              </div>
+            )}
+
+            {!guardianExists && (
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <InputField label="Name" name="guardianName" required />
+                  <InputField
+                    label="Relation"
+                    name="guardianRelation"
+                    required
+                  />
+                </div>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <InputField label="Father Name" name="fatherName" />
+                  <InputField label="Mother Name" name="motherName" />
+                </div>
+                <div className="mt-4 grid gap-4 md:grid-cols-3">
+                  <InputField
+                    label="Occupation"
+                    name="guardianOccupation"
+                    required
+                  />
+                  <InputField
+                    label="Education"
+                    name="guardianEducation"
+                    required
+                  />
+                </div>
+                <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <InputField label="City" name="guardianCity" />
+                  <InputField label="State" name="guardianState" />
+                  <InputField
+                    label="Mobile No"
+                    name="guardianMobile"
+                    icon={Phone}
+                    required
+                  />
+                  <InputField
+                    label="Email"
+                    name="guardianEmail"
+                    icon={Mail}
+                    type="email"
+                    required
+                  />
+                </div>
+                <ImageUpload
+                  label="Guardian Picture"
+                  name="guardianPicture"
+                  image={showGuardianPicture}
+                  onChange={(file) =>
+                    setShowGuardianPicture(URL.createObjectURL(file))
+                  }
+                />
+              </>
+            )}
           </section>
 
           {/* Previous School Details */}

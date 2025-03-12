@@ -1,4 +1,3 @@
-import { User, Phone, Mail } from "lucide-react";
 
 const InputField = ({
   label,

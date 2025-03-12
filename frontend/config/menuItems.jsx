@@ -1,17 +1,6 @@
 import {
-  FiGrid,
-  FiDollarSign,
-  FiClock,
-  FiPackage,
-  FiSettings,
-  FiList,
-  FiUserPlus,
-  FiDownload,
-  FiCamera,
-  FiEye,
   FaSchool,
   FaRegPlusSquare,
-  FaUser,
   FaUsers,
   FaCalendarCheck,
   FaQrcode,
@@ -19,7 +8,8 @@ import {
   FaPlusCircle,
   FaFileImport,
   FaList,
-} from "react-icons/fi";
+} from "react-icons/fa";
+import { FiClock, FiDollarSign, FiEye, FiGrid, FiList, FiPackage, FiSettings, FiUserPlus, FiCamera } from "react-icons/fi";
 
 export const MENU_ITEMS = [
   {
@@ -186,27 +176,6 @@ export const MENU_ITEMS = [
         roles: "",
       },
     ],
-  },
-  {
-    id: "subscription",
-    icon: FiDollarSign,
-    label: "Subscription",
-    href: "/subscription",
-    roles: "",
-  },
-  {
-    id: "pandingrequest",
-    icon: FiClock,
-    label: "Pending Request",
-    href: "/pandingrequest",
-    roles: "",
-  },
-  {
-    id: "package",
-    icon: FiPackage,
-    label: "Package",
-    href: "/package",
-    roles: "",
   },
   {
     id: 'setting',
