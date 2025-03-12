@@ -64,11 +64,11 @@ import com.vladmihalcea.hibernate.type.json.JsonType;
 public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long studentId;
 
     @NotBlank(message = "Student ID cannot be blank")
     @Size(max = 50, message = "Student ID cannot exceed 50 characters")
-    private String studentId;
+    private String registNo;
 
     @NotNull(message = "User ID cannot be null")
     private Long userId;
@@ -121,9 +121,19 @@ public class Student {
     @NotNull(message = "Address cannot be null")
     private JsonNode address;
 
-    private boolean isActive;
+    private Status isActive;
 
-    private boolean isPassed;
+    public enum Status {
+        ACTIVE,
+        INACTIVE
+    }
+
+    private PassedOrFail isPassed;
+
+    public enum PassedOrFail {
+        PASSED,
+        FAILED
+    }
 
     @NotNull(message = "Admission date cannot be null")
     @PastOrPresent(message = "Admission date cannot be in the future")

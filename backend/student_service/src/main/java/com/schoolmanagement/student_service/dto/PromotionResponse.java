@@ -8,10 +8,11 @@ import java.time.LocalDate;
 public class PromotionResponse {
 
     private Long id;
+    private Long studentId;
     private Long schoolId;
     private Long previousClassId;
     private Long newClassId;
     private LocalDate promotionDate;
     private String remark;
-    private String studentId;
+    private String registNo;
 }

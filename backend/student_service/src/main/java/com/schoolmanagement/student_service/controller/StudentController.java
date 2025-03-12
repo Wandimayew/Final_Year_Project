@@ -12,12 +12,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.schoolmanagement.student_service.dto.StudentRequest;
 import com.schoolmanagement.student_service.dto.StudentResponse;
 import com.schoolmanagement.student_service.mapper.StudentMapper;
 import com.schoolmanagement.student_service.model.Student;
+import com.schoolmanagement.student_service.model.Student.PassedOrFail;
 import com.schoolmanagement.student_service.service.StudentService;
 
 import jakarta.validation.Valid;
@@ -33,8 +35,24 @@ public class StudentController {
 
     // Get all students
     @GetMapping
-    public ResponseEntity<List<StudentResponse>> getAllStudents() {
-        List<Student> students = studentService.getAllStudents();
+    public ResponseEntity<List<StudentResponse>> getAllStudents(
+            @RequestParam(required = false) Long classId,
+            @RequestParam(required = false) Long sectionId) {
+        List<Student> students = studentService.getAllStudents(classId, sectionId);
+        List<StudentResponse> response = students.stream()
+                .map(StudentMapper::toResponse)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    
+    // Get all passed students
+    @GetMapping("/passed")
+    public ResponseEntity<List<StudentResponse>> getAllPassedStudents(
+            @RequestParam(required = false) Long classId,
+            @RequestParam(required = false) Long sectionId, 
+            @RequestParam(required = false) String passed) {
+                PassedOrFail passedStatus = PassedOrFail.valueOf(passed.toUpperCase());
+        List<Student> students = studentService.getAllPassedStudents(classId, sectionId, passedStatus);
         List<StudentResponse> response = students.stream()
                 .map(StudentMapper::toResponse)
                 .collect(Collectors.toList());

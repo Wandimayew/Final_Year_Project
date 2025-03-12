@@ -63,7 +63,7 @@ public class AttendanceService {
         attendanceRepository.delete(attendance);
     }
 
-    public void validateAndMarkAttendance(Long qrCodeId, String studentId) {
+    public void validateAndMarkAttendance(Long qrCodeId, Long studentId) {
     // Fetch the QR Code
     QRCode qrCode = qrCodeRepository.findById(qrCodeId)
             .orElseThrow(() -> new IllegalArgumentException("QR Code not found."));
@@ -74,7 +74,7 @@ public class AttendanceService {
     }
 
     // Fetch the student
-    Student student = studentRepository.findByStudentId(studentId)
+    Student student = studentRepository.findById(studentId)
             .orElseThrow(() -> new IllegalArgumentException("Student not found."));
 
     // Validate that the student belongs to the same school, class, and section

@@ -15,7 +15,7 @@ public class AttendanceRequest {
     private Long classId;
 
     @NotBlank(message = "Student ID cannot be blank")
-    private String studentId;
+    private Long studentId;
 
     @NotNull(message = "QR Code ID cannot be null")
     private Long qrCodeId;

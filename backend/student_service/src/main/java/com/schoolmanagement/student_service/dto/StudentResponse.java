@@ -8,8 +8,8 @@ import java.time.LocalDate;
 @Data
 public class StudentResponse {
 
-    private Long id;
-    private String studentId;
+    private Long studentId;
+    private String registId;
     private Long userId;
     private Long schoolId;
     private Long classId;
@@ -24,8 +24,8 @@ public class StudentResponse {
     private String contactInfo;
     private String photo;
     private JsonNode address;
-    private boolean isActive;
-    private boolean isPassed;
+    private boolean active;
+    private boolean passed;
     private LocalDate admissionDate;
     private Long parentId;
 }
