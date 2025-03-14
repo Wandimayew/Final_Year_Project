@@ -54,6 +54,7 @@ public class ClassService {
         newClass.setClassName(classRequest.getClassName());
         newClass.setStream(Collections.singleton(optionalStream.get()));
         newClass.setActive(true);
+        newClass.setStatus(true);
         newClass.setCreated_at(LocalDateTime.now());
         newClass.setCreated_by("Admin");
         newClass.setSections(new HashSet<>());
@@ -152,6 +153,23 @@ public class ClassService {
         return ResponseEntity.ok(classes.stream().map(this::convertToClassResponse).collect(Collectors.toList()));
     }
 
+    public ResponseEntity<ClassResponse> updateStatus(String schoolId, Long classId) {
+        Optional<Class> optionalClass = Optional.ofNullable(classRepository.findBySchoolAndClassId(schoolId, classId));
+        
+        if (optionalClass.isEmpty()) {
+            log.error("Class not found with id {} for school {}", classId, schoolId);
+            return ResponseEntity.notFound().build();
+        }
+        
+        Class existingClass = optionalClass.get();
+        existingClass.setStatus(!existingClass.isStatus());
+    
+        Class savedClass = classRepository.save(existingClass);
+    
+        return ResponseEntity.ok(convertToClassResponse(savedClass));
+    }
+    
+
     @Transactional
     public ResponseEntity<ClassResponse> assignSubjectsToClass(String schoolId, Long classId, List<Long> subjectIds) {
         log.debug("Starting assignment of subjects to class");
@@ -201,6 +219,8 @@ public class ClassService {
                 .classId(classResp.getClassId())
                 .className(classResp.getClassName())
                 .academicYear(classResp.getAcademicYear())
+                .schoolId(classResp.getSchoolId())
+                .status(classResp.isStatus())
                 .stream(classResp.getStream())
                 .sections(sectionsSet.stream()
                         .map(section -> SectionResponse.builder()
@@ -231,6 +251,7 @@ Set<Subject> subjectsSet = subject != null ? new HashSet<>(subject)
         .academicYear(class1.getAcademicYear())
         .schoolId(class1.getSchoolId())
         .className(class1.getClassName())
+        .status(class1.isStatus())
         .stream(class1.getStream())
         .sections(sectionsSet.stream()
                 .map(section1 -> SectionResponse.builder()

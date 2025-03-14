@@ -76,6 +76,9 @@ public class Class {
     @Column(nullable = false)
     private boolean isActive;
 
+    @Column(nullable = true)
+    private boolean status;
+
     @PrePersist
     protected void onCreate() {
         created_at = LocalDateTime.now();

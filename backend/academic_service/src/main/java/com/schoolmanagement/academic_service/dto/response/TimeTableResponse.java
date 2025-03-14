@@ -27,5 +27,7 @@ public class TimeTableResponse {
         private String startTime;
         private String endTime;
     }
+
+    
 }
 

@@ -1,0 +1,50 @@
+spring:
+    application: 
+        name: communication_service
+    datasource:
+        url: jdbc:mysql://localhost:3306/Communication_Service
+        username: root
+        password: root
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        hikari:
+            minimum-idle: 5
+            maximum-pool-size: 10
+            idle-timeout: 600000
+    jpa:
+        hibernate:
+            ddl-auto: update
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.MySQLDialect
+    profiles:
+        active: dev
+    mail:
+        host: smtp.gmail.com
+        port: 587
+        username: wandimayew8@gmail.com
+        password: jrbt rotv xjwz tfqk
+        properties:
+            mail:
+                smtp:
+                    auth: true
+                    starttls:
+                        enable: true
+                debug: true
+    rabbitmq:
+        host: localhost
+        port: 5672
+        username: guest
+        password: guest
+        virtual-host: /
+server:
+  port: 8086
+
+user:
+    management:
+        service:
+            url: http://localhost:8082 # Replace with actual service URL or use service discovery
+
+cloudinary:
+  cloud-name: dcpehgnee
+  api-key: 843599552916561
+  api-secret: D6q2oDpQf-NJdyqhKv8NJhl6k9k

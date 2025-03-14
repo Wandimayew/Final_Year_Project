@@ -22,11 +22,13 @@ import com.schoolmanagement.student_service.service.StudentService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 
 @RestController
 @RequestMapping("/api/students")
 @RequiredArgsConstructor
+@Slf4j
 public class StudentController {
     private final StudentService studentService;
 
@@ -42,9 +44,12 @@ public class StudentController {
 
     // Get a student by ID
     @GetMapping("/{id}")
-    public ResponseEntity<StudentResponse> getStudentById(@PathVariable Long id) {
+    public ResponseEntity<StudentResponse> getStudentById(@PathVariable String id) {
+        log.info("in conroller class");
         Student student = studentService.getStudentById(id);
+        log.info("Student info {}",id);
         StudentResponse response = StudentMapper.toResponse(student);
+        log.info("Student response {}", response);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

@@ -23,17 +23,12 @@ import java.util.Set;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "user_id", updatable = false, nullable = false)
-    private Long userId;
+    private String userId;  // Manually generated
 
     @NotNull(message = "School ID cannot be null")
     @Column(name = "school_id", nullable = false)
-    private Long schoolId;
-
-    // @NotBlank(message = "Full name cannot be blank")
-    // @Size(max = 50, message = "Full name cannot exceed 50 characters")
-    // private String fullName;
+    private String schoolId;
 
     @NotBlank(message = "Username cannot be blank")
     @Size(min = 5, max = 30, message = "Username must be between 5 and 30 characters")
@@ -51,13 +46,6 @@ public class User {
     @NotNull(message = "Active status cannot be null")
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
-
-    // @Size(max = 255, message = "Address cannot exceed 255 characters")
-    // private String userAddress;
-
-    // @Lob
-    // @Column(columnDefinition = "BLOB")
-    // private String userPhoto;
 
     private LocalDateTime lastLogin;
 
@@ -79,12 +67,4 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
-    // @NotBlank(message = "Phone number cannot be blank")
-    // @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Phone number must be between 10 and 15 digits and may optionally start with a '+'")
-    // private String phoneNumber;
-
-    // @NotBlank(message = "Gender cannot be blank")
-    // @Pattern(regexp = "MALE|FEMALE", message = "Invalid gender. Allowed values are MALE or FEMALE.")
-    // @Column(nullable = false)
-    // private String gender;
 }

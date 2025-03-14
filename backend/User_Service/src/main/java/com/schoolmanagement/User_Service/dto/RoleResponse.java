@@ -12,9 +12,9 @@ import lombok.Builder;
 @Data
 @Builder
 public class RoleResponse {
-    private Long roleId;
+    private String roleId;
 
-    private Long schoolId;
+    private String schoolId;
 
     private String name;
 
