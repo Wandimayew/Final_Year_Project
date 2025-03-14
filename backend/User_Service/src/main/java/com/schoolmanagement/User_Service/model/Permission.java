@@ -1,4 +1,5 @@
 package com.schoolmanagement.User_Service.model;
+
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -34,7 +35,7 @@ public class Permission {
     @Size(max = 255, message = "Description cannot exceed 255 characters")
     private String description;
 
-     @CreationTimestamp
+    @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

@@ -37,14 +37,23 @@ spring:
         password: guest
         virtual-host: /
 server:
-  port: 8086
+  port: 0
 
 user:
     management:
         service:
-            url: http://localhost:8082 # Replace with actual service URL or use service discovery
+            url: http://userService # Replace with actual service URL or use service discovery
 
 cloudinary:
   cloud-name: dcpehgnee
   api-key: 843599552916561
   api-secret: D6q2oDpQf-NJdyqhKv8NJhl6k9k
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://10.194.61.74:8761/eureka/  # URL of the Eureka Server
+    registerWithEureka: true  # Register this client with Eureka
+    fetchRegistry: true  # Fetch the registry to discover other services
+  instance:
+    preferIpAddress: true  # Use IP address instead of hostname (optional but recommended)

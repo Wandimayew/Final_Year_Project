@@ -1,25 +1,15 @@
 import {
-  FiGrid,
-  FiDollarSign,
-  FiClock,
-  FiPackage,
-  FiSettings,
-} from "react-icons/fi";
-import {
-  FiList,
-  FiUserPlus,
-  FiDownload,
-  FiCamera,
-  FiEye,
-} from "react-icons/fi";
-import {
   FaSchool,
   FaRegPlusSquare,
-  FaUser,
   FaUsers,
   FaCalendarCheck,
   FaQrcode,
+  FaGraduationCap,
+  FaPlusCircle,
+  FaFileImport,
+  FaList,
 } from "react-icons/fa";
+import { FiClock, FiDollarSign, FiEye, FiGrid, FiList, FiPackage, FiSettings, FiUserPlus, FiCamera } from "react-icons/fi";
 
 export const MENU_ITEMS = [
   {
@@ -216,6 +206,36 @@ export const MENU_ITEMS = [
         id: "notification",
         label: "Notification",
         href: "/communication/notification",
+        roles: "",
+      },
+    ],
+  },
+  {
+    id: "student",
+    icon: FaGraduationCap,
+    label: "Student",
+    href: "/students",
+    roles: "",
+    subItems: [
+      {
+        id: "studentlist",
+        icon: FaList,
+        label: "Student List",
+        href: "/students",
+        roles: "",
+      },
+      {
+        id: "createstudent",
+        icon: FaPlusCircle,
+        label: "Add Student",
+        href: "/students/create",
+        roles: "",
+      },
+      {
+        id: "importstudents",
+        icon: FaFileImport,
+        label: "Import Students",
+        href: "/students/import",
         roles: "",
       },
     ],

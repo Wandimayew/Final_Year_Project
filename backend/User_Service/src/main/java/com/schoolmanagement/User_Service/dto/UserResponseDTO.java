@@ -21,9 +21,6 @@ public class UserResponseDTO {
     private String schoolId;
     private String username;
     private String email;
-    private String fullName;
-    private String userAddress;
-    private String phoneNumber;
     private String password;
     @JsonProperty("roles")
     private Set<Role> roles;

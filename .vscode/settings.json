@@ -1,11 +1,5 @@
 {
-  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.configuration.updateBuildConfiguration": "interactive",
   "java.compile.nullAnalysis.mode": "automatic",
-  "cSpell.words": [
-    "kebele",
-    "LONGTEXT",
-    "qrcodes"
-  ],
-  "java.debug.settings.onBuildFailureProceed": true,
-  "java.jdt.ls.vmargs": "-Xmx2G -XX:+UseParallelGC"
+  "java.configuration.updateBuildConfiguration": "interactive"
 }

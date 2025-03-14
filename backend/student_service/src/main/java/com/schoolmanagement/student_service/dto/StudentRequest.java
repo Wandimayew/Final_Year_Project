@@ -11,13 +11,13 @@ public class StudentRequest {
 
     @NotBlank(message = "Student ID cannot be blank")
     @Size(max = 50, message = "Student ID cannot exceed 50 characters")
-    private String studentId;
+    private String registId;
 
     @NotNull(message = "User ID cannot be null")
-    private Long userId;
+    private String userId;
 
     @NotNull(message = "School ID cannot be null")
-    private Long schoolId;
+    private String schoolId;
 
     @NotNull(message = "Class ID cannot be null")
     private Long classId;
@@ -36,8 +36,6 @@ public class StudentRequest {
     @Size(max = 100, message = "Last name cannot exceed 100 characters")
     private String lastName;
 
-    @NotBlank(message = "National ID cannot be blank")
-    @Size(max = 20, message = "National ID cannot exceed 20 characters")
     private String nationalId;
 
     @NotBlank(message = "Username cannot be blank")
@@ -49,11 +47,9 @@ public class StudentRequest {
     private LocalDate dateOfBirth;
 
     @NotBlank(message = "Gender cannot be blank")
-    @Pattern(regexp = "Male|Female|Other", message = "Gender must be Male, Female, or Other")
+    @Pattern(regexp = "Male|Female", message = "Gender must be Male, Female, or Other")
     private String gender;
 
-    @NotBlank(message = "Contact info cannot be blank")
-    @Size(max = 255, message = "Contact info cannot exceed 255 characters")
     private String contactInfo;
 
     @Size(max = 255, message = "Photo URL cannot exceed 255 characters")
@@ -62,9 +58,9 @@ public class StudentRequest {
     @NotNull(message = "Address cannot be null")
     private JsonNode address;
 
-    private boolean isActive;
+    private String isActive;
 
-    private boolean isPassed;
+    private String isPassed;
 
     @NotNull(message = "Admission date cannot be null")
     @PastOrPresent(message = "Admission date cannot be in the future")
