@@ -3,8 +3,8 @@ spring:
         name: academic_service
     datasource:
         url: jdbc:mysql://localhost:3306/Academic_Service
-        username: root
-        password: root
+        username: root  
+        password: toor 
         driver-class-name: com.mysql.cj.jdbc.Driver
         hikari:
             minimum-idle: 5
@@ -19,4 +19,13 @@ spring:
     profiles:
         active: dev
 server:
-  port: 8084
+  port: 0
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://10.194.61.74:8761/eureka/  # URL of the Eureka Server
+    registerWithEureka: true  # Register this client with Eureka
+    fetchRegistry: true  # Fetch the registry to discover other services
+  instance:
+    preferIpAddress: true  # Use IP address instead of hostname (optional but recommended)

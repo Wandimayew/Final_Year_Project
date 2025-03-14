@@ -20,7 +20,7 @@ public class ParentGuardian {
     private Long parentId;
 
     @NotNull(message = "School ID cannot be null")
-    private Long schoolId;
+    private String schoolId;
 
     @Size(max = 100, message = "Father name cannot exceed 100 characters")
     private String fatherName;

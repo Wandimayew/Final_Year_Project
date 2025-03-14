@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { staffService } from "../../services/api";
+import { staffService } from "@/services/api";
 import { useRouter } from "next/navigation";
 
 export default function EditForm({ staff, activeTab }) {

@@ -8,7 +8,7 @@ import java.time.LocalDate;
 public class EnrollmentResponse {
 
     private Long id;
-    private Long schoolId;
+    private String schoolId;
     private Long classId;
     private String academicYear;
     private LocalDate enrollmentDate;

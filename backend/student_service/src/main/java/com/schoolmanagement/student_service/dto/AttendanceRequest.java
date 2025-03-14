@@ -9,13 +9,13 @@ import java.time.LocalDateTime;
 public class AttendanceRequest {
 
     @NotNull(message = "School ID cannot be null")
-    private Long schoolId;
+    private String schoolId;
 
     @NotNull(message = "Class ID cannot be null")
     private Long classId;
 
     @NotBlank(message = "Student ID cannot be blank")
-    private String studentId;
+    private Long studentId;
 
     @NotNull(message = "QR Code ID cannot be null")
     private Long qrCodeId;
