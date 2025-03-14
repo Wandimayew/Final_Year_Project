@@ -78,6 +78,12 @@ export const MENU_ITEMS = [
         roles: "",
       },
       {
+        id: "subject-class",
+        label: "Subject Class",
+        href: "/academic/subject/class",
+        roles: "",
+      },
+      {
         id: "class",
         label: "Class",
         href: "/academic/class",
@@ -157,34 +163,63 @@ export const MENU_ITEMS = [
       },
     ],
   },
-  // {
-  //   id: "createschool",
-  //   icon: FaRegPlusSquare,
-  //   label: "Create School",
-  //   href: "/school/createschool",
-  //   roles: "",
-  // },
-  // {
-  //   id: "subscription",
-  //   icon: FiDollarSign,
-  //   label: "Subscription",
-  //   href: "/subscription",
-  //   roles: "",
-  // },
-  // {
-  //   id: "pandingrequest",
-  //   icon: FiClock,
-  //   label: "Pending Request",
-  //   href: "/pandingrequest",
-  //   roles: "",
-  // },
-  // {
-  //   id: "package",
-  //   icon: FiPackage,
-  //   label: "Package",
-  //   href: "/package",
-  //   roles: "",
-  // },
+  {
+    id: "announcementandevent",
+    icon: FiSettings,
+    label: "Announcements",
+    href: "/communication/event",
+    roles: "", // Roles can be updated later for access control (e.g., "admin,teacher")
+    subItems: [
+      {
+        id: "event",
+        label: "Events",
+        href: "/communication/event",
+        roles: "",
+      },
+      {
+        id: "allEvents",
+        label: "All Events",
+        href: "/communication/event",
+        roles: "",
+      },
+      {
+        id: "createEvent",
+        label: "Create Event",
+        href: "/communication/event/create",
+        roles: "",
+      },
+      {
+        id: "pendingApprovals",
+        label: "Pending Approvals",
+        href: "/communication/event/pending-approval",
+        roles: "", // Restrict to admins; adjust based on your role system
+      },
+      {
+        id: "myAnnouncement",
+        label: "My Announcement",
+        href: "/communication/event/my-pending",
+        roles: "", // Available to all creators
+      },
+      {
+        id: "draft",
+        label: "My Draft",
+        href: "/communication/event/draft",
+        roles: "", // Available to all creators
+      },
+      {
+        id: "email",
+        label: "Email",
+        href: "/communication/email",
+        roles: "",
+      },
+      {
+        id: "notification",
+        label: "Notification",
+        href: "/communication/notification",
+        roles: "",
+      },
+    ],
+  },
   {
     id: "setting",
     icon: FiSettings,
@@ -194,8 +229,8 @@ export const MENU_ITEMS = [
     subItems: [
       {
         id: "system",
-        label: "System Setting",
-        href: "/setting/system",
+        label: "Communication Setting",
+        href: "/setting/communication/preference",
         roles: "",
       },
       {

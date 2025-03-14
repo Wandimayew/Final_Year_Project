@@ -5,212 +5,210 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import TimeTableList from "./TimeTableList";
+import Breadcrumb from "@/components/constant/Breadcrumb";
 
-/**
- * A reusable table component for selecting items.
- * It renders a header checkbox for "select all" and a row per item.
- */
-
+// Updated mock teacher data with sufficient capacities
 const mockTeachers = [
   {
     teacherName: "John Doe",
     teacherId: "T1",
-    subjectIds: [1, 2],
+    subjectIds: [1],
     classNames: ["nine", "ten"],
-    maxClassesPerWeek: 12,
-    maxClassesPerDay: 6,
-  },
-  {
-    teacherName: "Jane Smith",
-    teacherId: "T2",
-    subjectIds: [3, 4],
-    classNames: ["nine", "ten"],
-    maxClassesPerWeek: 10,
-    maxClassesPerDay: 5,
-  },
-  {
-    teacherName: "Emily Johnson",
-    teacherId: "T3",
-    subjectIds: [3, 4],
-    classNames: ["ten", "wandi"],
-    maxClassesPerWeek: 18,
-    maxClassesPerDay: 6,
-  },
-  {
-    teacherName: "Michael Brown",
-    teacherId: "T4",
-    subjectIds: [4, 2],
-    classNames: ["wandi", "nine"],
-    maxClassesPerWeek: 25,
-    maxClassesPerDay: 6,
-  },
-  {
-    teacherName: "Sarah Davis",
-    teacherId: "T5",
-    subjectIds: [2, 4, 3],
-    classNames: ["12", "nine"],
     maxClassesPerWeek: 20,
     maxClassesPerDay: 6,
   },
   {
     teacherName: "David Wilson",
-    teacherId: "T6",
-    subjectIds: [1, 3],
-    classNames: ["12", "wandi"],
-    maxClassesPerWeek: 24,
+    teacherId: "T2",
+    subjectIds: [1],
+    classNames: ["12", "10"],
+    maxClassesPerWeek: 20,
     maxClassesPerDay: 6,
   },
   {
-    teacherName: "Olivia Taylor",
-    teacherId: "T7",
-    subjectIds: [53, 3],
-    classNames: ["wandi", "12"],
-    maxClassesPerWeek: 19,
+    teacherName: "Nina Patel",
+    teacherId: "T23",
+    subjectIds: [1],
+    classNames: ["nine", "wandi"],
+    maxClassesPerWeek: 20,
     maxClassesPerDay: 6,
   },
   {
-    teacherName: "James Martinez",
-    teacherId: "T8",
-    subjectIds: [52, 3],
-    classNames: ["ten", "12"],
-    maxClassesPerWeek: 11,
+    teacherName: "Michael Brown",
+    teacherId: "T3",
+    subjectIds: [2],
+    classNames: ["nine", "wandi"],
+    maxClassesPerWeek: 30,
     maxClassesPerDay: 6,
   },
   {
-    teacherName: "Sophia Garcia",
-    teacherId: "T9",
-    subjectIds: [52, 53],
-    classNames: ["ten", "nine"],
-    maxClassesPerWeek: 23,
+    teacherName: "Sarah Davis",
+    teacherId: "T4",
+    subjectIds: [2],
+    classNames: ["12", "nine"],
+    maxClassesPerWeek: 30,
     maxClassesPerDay: 6,
   },
   {
     teacherName: "Liam Rodriguez",
-    teacherId: "T10",
-    subjectIds: [53, 1, 3],
-    classNames: ["wandi", "12"],
-    maxClassesPerWeek: 26,
+    teacherId: "T5",
+    subjectIds: [2],
+    classNames: ["ten", "10"],
+    maxClassesPerWeek: 30,
     maxClassesPerDay: 6,
   },
   {
-    teacherName: "Johnh Doe",
-    teacherId: "T11",
-    subjectIds: [1, 2],
-    classNames: ["nine", "ten"],
-    maxClassesPerWeek: 12,
+    teacherName: "Anna Taylor",
+    teacherId: "T6",
+    subjectIds: [2],
+    classNames: ["nine", "12"],
+    maxClassesPerWeek: 30,
     maxClassesPerDay: 6,
   },
   {
-    teacherName: "Janeh Smith",
-    teacherId: "T12",
-    subjectIds: [2, 4],
-    classNames: ["nine", "ten"],
-    maxClassesPerWeek: 20,
-    maxClassesPerDay: 6,
-  },
-  {
-    teacherName: "Emilhy Johnson",
-    teacherId: "T13",
-    subjectIds: [3, 4],
+    teacherName: "Mark Lee",
+    teacherId: "T7",
+    subjectIds: [2],
     classNames: ["ten", "wandi"],
-    maxClassesPerWeek: 18,
+    maxClassesPerWeek: 30,
     maxClassesPerDay: 6,
   },
   {
-    teacherName: "Michhael Brown",
-    teacherId: "T14",
-    subjectIds: [4, 2],
-    classNames: ["wandi", "nine"],
-    maxClassesPerWeek: 15,
-    maxClassesPerDay: 4,
-  },
-  {
-    teacherName: "Sarahh Davis",
-    teacherId: "T15",
-    subjectIds: [2, 4],
-    classNames: ["12", "nine"],
-    maxClassesPerWeek: 20,
+    teacherName: "Jane Smith",
+    teacherId: "T8",
+    subjectIds: [3],
+    classNames: ["nine", "ten"],
+    maxClassesPerWeek: 40,
     maxClassesPerDay: 6,
   },
   {
-    teacherName: "Davhid Wilson",
-    teacherId: "T16",
-    subjectIds: [4, 3],
-    classNames: ["12", "wandi"],
-    maxClassesPerWeek: 14,
+    teacherName: "Emily Johnson",
+    teacherId: "T9",
+    subjectIds: [3],
+    classNames: ["ten", "wandi"],
+    maxClassesPerWeek: 40,
     maxClassesPerDay: 6,
   },
   {
-    teacherName: "Olihvia Taylor",
-    teacherId: "T17",
-    subjectIds: [53, 3],
+    teacherName: "Olivia Taylor",
+    teacherId: "T10",
+    subjectIds: [3],
     classNames: ["wandi", "12"],
-    maxClassesPerWeek: 20,
+    maxClassesPerWeek: 40,
     maxClassesPerDay: 6,
   },
   {
-    teacherName: "Jamehs Martinez",
-    teacherId: "T18",
-    subjectIds: [52, 3],
+    teacherName: "James Martinez",
+    teacherId: "T11",
+    subjectIds: [3],
     classNames: ["ten", "12"],
-    maxClassesPerWeek: 21,
+    maxClassesPerWeek: 40,
     maxClassesPerDay: 6,
   },
   {
-    teacherName: "Sophhia Garcia",
-    teacherId: "T19",
-    subjectIds: [52, 2, 53],
-    classNames: ["ten", "nine"],
-    maxClassesPerWeek: 23,
+    teacherName: "Lisa White",
+    teacherId: "T12",
+    subjectIds: [3],
+    classNames: ["nine", "10"],
+    maxClassesPerWeek: 40,
     maxClassesPerDay: 6,
   },
   {
-    teacherName: "Liamh Rodriguez",
-    teacherId: "T20",
-    subjectIds: [53, 2, 3],
-    classNames: ["wandi", "12"],
-    maxClassesPerWeek: 23,
-    maxClassesPerDay: 6,
-  },
-  {
-    teacherName: "Sophina Garcia",
-    teacherId: "T29",
-    subjectIds: [1, 2],
-    classNames: ["ten", "nine"],
-    maxClassesPerWeek: 23,
-    maxClassesPerDay: 5,
-  },
-  {
-    teacherName: "Liamn Rodriguez",
-    teacherId: "T32",
-    subjectIds: [2, 1],
-    classNames: ["wandi", "12"],
-    maxClassesPerWeek: 26,
-    maxClassesPerDay: 6,
-  },
-  {
-    teacherName: "Liamm Rodriguez",
-    teacherId: "T23",
-    subjectIds: [2],
-    classNames: ["wandi", "12"],
-    maxClassesPerWeek: 26,
-    maxClassesPerDay: 6,
-  },
-  {
-    teacherName: "Sophiam Garcia",
+    teacherName: "Sam Carter",
     teacherId: "T24",
-    subjectIds: [2],
-    classNames: ["ten", "nine"],
-    maxClassesPerWeek: 23,
+    subjectIds: [3],
+    classNames: ["12", "10"],
+    maxClassesPerWeek: 40,
     maxClassesPerDay: 6,
   },
   {
-    teacherName: "Liamo Rodriguez",
-    teacherId: "T42",
-    subjectIds: [2],
+    teacherName: "Robert Green",
+    teacherId: "T13",
+    subjectIds: [4],
+    classNames: ["nine", "ten"],
+    maxClassesPerWeek: 20,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Susan Black",
+    teacherId: "T14",
+    subjectIds: [4],
     classNames: ["wandi", "12"],
-    maxClassesPerWeek: 16,
-    maxClassesPerDay: 5,
+    maxClassesPerWeek: 20,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Tom Harris",
+    teacherId: "T15",
+    subjectIds: [4],
+    classNames: ["10", "nine"],
+    maxClassesPerWeek: 20,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Zoe King",
+    teacherId: "T25",
+    subjectIds: [4],
+    classNames: ["ten", "nine"],
+    maxClassesPerWeek: 20,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Sophia Garcia",
+    teacherId: "T16",
+    subjectIds: [52],
+    classNames: ["ten", "nine"],
+    maxClassesPerWeek: 10,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Peter Clark",
+    teacherId: "T17",
+    subjectIds: [52],
+    classNames: ["12", "10"],
+    maxClassesPerWeek: 10,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Emma Turner",
+    teacherId: "T18",
+    subjectIds: [53],
+    classNames: ["wandi", "12"],
+    maxClassesPerWeek: 10,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Laura Evans",
+    teacherId: "T19",
+    subjectIds: [53],
+    classNames: ["ten", "nine"],
+    maxClassesPerWeek: 10,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Chris Adams",
+    teacherId: "T20",
+    subjectIds: [102],
+    classNames: ["10", "nine"],
+    maxClassesPerWeek: 20,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Kelly Moore",
+    teacherId: "T21",
+    subjectIds: [102],
+    classNames: ["nine", "ten"],
+    maxClassesPerWeek: 20,
+    maxClassesPerDay: 6,
+  },
+  {
+    teacherName: "Brian Scott",
+    teacherId: "T22",
+    subjectIds: [102],
+    classNames: ["12", "wandi"],
+    maxClassesPerWeek: 20,
+    maxClassesPerDay: 6,
   },
 ];
 
@@ -257,19 +255,80 @@ const SelectionTable = ({
   );
 };
 
-// Utility functions to normalize data into { id, name } format
-const normalizeClasses = (classes = []) =>
-  classes.map((cls) => ({
-    id: cls.classId.toString(),
-    name: cls.className,
-  }));
+const TeacherSelectionTable = ({
+  title,
+  teachers,
+  selectedTeacherIds,
+  onToggleTeacher,
+  onSelectAllTeachers,
+  allSubjects,
+}) => {
+  const allSelected =
+    teachers.length > 0 && selectedTeacherIds.length === teachers.length;
+  const getSubjectNames = (subjectIds) => {
+    return subjectIds
+      .map((id) => {
+        const subject = allSubjects.find((sub) => sub.subjectId === id);
+        return subject ? subject.subjectName : `Unknown (${id})`;
+      })
+      .join(", ");
+  };
 
+  return (
+    <div className="mb-6">
+      <h3 className="font-semibold mb-4 text-blue-700">{title}</h3>
+      <div className="border border-gray-300 rounded-lg shadow-sm overflow-hidden">
+        <table className="min-w-full">
+          <thead>
+            <tr className="bg-blue-100">
+              <th className="p-3">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={(e) => onSelectAllTeachers(e.target.checked)}
+                  className="cursor-pointer"
+                />
+              </th>
+              <th className="p-3 text-left text-blue-700 font-semibold">
+                Teacher Name
+              </th>
+              <th className="p-3 text-left text-blue-700 font-semibold">
+                Subjects
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {teachers.map((teacher) => (
+              <tr
+                key={teacher.teacherId}
+                className="border-t hover:bg-blue-50 transition-colors"
+              >
+                <td className="p-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedTeacherIds.includes(teacher.teacherId)}
+                    onChange={() => onToggleTeacher(teacher.teacherId)}
+                    className="cursor-pointer"
+                  />
+                </td>
+                <td className="p-3">{teacher.teacherName}</td>
+                <td className="p-3">{getSubjectNames(teacher.subjectIds)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+const normalizeClasses = (classes = []) =>
+  classes.map((cls) => ({ id: cls.classId.toString(), name: cls.className }));
 const normalizeSections = (sections = []) =>
   sections.map((section) => ({
     id: section.sectionId.toString(),
     name: section.sectionName,
   }));
-
 const normalizeSubjects = (subjects = []) =>
   subjects.map((subject) => ({
     id: subject.subjectId.toString(),
@@ -277,34 +336,24 @@ const normalizeSubjects = (subjects = []) =>
   }));
 
 const TimetableConfigurator = () => {
-  // School details
-  const [schoolName, setSchoolName] = useState("");
-  const [academicYear, setAcademicYear] = useState("");
-
-  // Streams configuration
+  const [schoolName, setSchoolName] = useState("wandi");
+  const [schoolId, setSchoolId] = useState("new");
+  const [academicYear, setAcademicYear] = useState("2017");
   const [streams, setStreams] = useState([]);
   const [selectedStreamIds, setSelectedStreamIds] = useState([]);
   const [streamConfigs, setStreamConfigs] = useState({});
   const [classesByStream, setClassesByStream] = useState({});
   const [classDetails, setClassDetails] = useState({});
-
-  // Teacher configuration (for now, we leave this as is)
   const [teachers, setTeachers] = useState([]);
   const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
-
-  // Timetable settings state
-  const [maxSubjectsPerDay, setMaxSubjectsPerDay] = useState("");
-  const [breakDurationInMinutes, setBreakDurationInMinutes] = useState("");
-  const [breakAfterSubjects, setBreakAfterSubjects] = useState("");
-  const [schoolStartTime, setSchoolStartTime] = useState("");
-  const [schoolEndTime, setSchoolEndTime] = useState("");
-
-  // Subject settings: fetch all subjects in the school from DB
+  const [maxSubjectsPerDay, setMaxSubjectsPerDay] = useState("6");
+  const [breakDurationInMinutes, setBreakDurationInMinutes] = useState("10");
+  const [schoolStartTime, setSchoolStartTime] = useState("02:00");
+  const [schoolEndTime, setSchoolEndTime] = useState("07:00");
   const [allSubjects, setAllSubjects] = useState([]);
-  // This object will store the updated constraints per subject, keyed by subjectId.
   const [subjectConstraints, setSubjectConstraints] = useState({});
+  const [timeTableData, setTimeTableData] = useState(null);
 
-  // Fetch streams on mount
   useEffect(() => {
     axios
       .get("http://localhost:8084/academic/api/new/getAllStreamBySchool")
@@ -312,16 +361,11 @@ const TimetableConfigurator = () => {
       .catch((error) => console.error("Failed to fetch streams:", error));
   }, []);
 
-  // Fetch teachers on component mount (simulated with mock data)
   useEffect(() => {
-    // Simulating a fetch from an API (e.g., axios.get("..."))
-    // For now, we are using mock data
-    console.log("setting");
-
     setTeachers(mockTeachers);
+    setSelectedTeacherIds(mockTeachers.map((t) => t.teacherId));
   }, []);
 
-  // Fetch all subjects for subject settings
   useEffect(() => {
     axios
       .get("http://localhost:8084/academic/api/new/getAllSubjectBySchool")
@@ -332,8 +376,13 @@ const TimetableConfigurator = () => {
           initialConstraints[subject.subjectId] = {
             subjectName: subject.subjectName,
             subjectId: subject.subjectId,
-            subjectDurationInMinutes: subject.subjectDurationInMinutes || "",
-            subjectFrequencyPerWeek: subject.subjectFrequencyPerWeek || "",
+            subjectDurationInMinutes: "40",
+            subjectFrequencyPerWeek:
+              subject.subjectId === 2 || subject.subjectId === 3
+                ? "5"
+                : subject.subjectId === 52 || subject.subjectId === 53
+                ? "1"
+                : "3",
           };
         });
         setSubjectConstraints(initialConstraints);
@@ -341,7 +390,6 @@ const TimetableConfigurator = () => {
       .catch((err) => console.error("Error fetching all subjects:", err));
   }, []);
 
-  // When a stream is selected
   const handleSelectStream = (e) => {
     const streamId = e.target.value;
     if (!streamId) return;
@@ -363,8 +411,6 @@ const TimetableConfigurator = () => {
         );
     }
   };
-
-  // === Classes Selection Functions ===
 
   const toggleClassSelection = (streamId, classId) => {
     setStreamConfigs((prev) => {
@@ -450,8 +496,6 @@ const TimetableConfigurator = () => {
     }
   };
 
-  // === Sections Selection Functions ===
-
   const toggleSectionSelection = (streamId, classId, sectionId) => {
     setStreamConfigs((prev) => {
       const current = prev[streamId]?.classConfigs[classId]?.sections || [];
@@ -491,8 +535,6 @@ const TimetableConfigurator = () => {
       },
     }));
   };
-
-  // === Subjects Selection Functions ===
 
   const toggleSubjectSelection = (streamId, classId, subjectId) => {
     setStreamConfigs((prev) => {
@@ -534,32 +576,29 @@ const TimetableConfigurator = () => {
     }));
   };
 
-  // Handle teacher selection (left as is)
-  const handleSelectTeachers = (e) => {
-    const options = e.target.options;
-    let selected = [];
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) selected.push(options[i].value);
-    }
-    setSelectedTeacherIds(selected);
+  const handleToggleTeacher = (teacherId) => {
+    setSelectedTeacherIds((prev) =>
+      prev.includes(teacherId)
+        ? prev.filter((id) => id !== teacherId)
+        : [...prev, teacherId]
+    );
   };
 
-  // Handler to update constraint values for a subject
+  const handleSelectAllTeachers = (checked) => {
+    setSelectedTeacherIds(checked ? teachers.map((t) => t.teacherId) : []);
+  };
+
   const handleSubjectConstraintChange = (subjectId, field, value) => {
     setSubjectConstraints((prev) => ({
       ...prev,
-      [subjectId]: {
-        ...prev[subjectId],
-        [field]: value,
-      },
+      [subjectId]: { ...prev[subjectId], [field]: value },
     }));
   };
 
   const saveJsonToFile = (jsonData, filename = "timetable.json") => {
-    const jsonString = JSON.stringify(jsonData, null, 2); // Pretty format JSON
+    const jsonString = JSON.stringify(jsonData, null, 2);
     const blob = new Blob([jsonString], { type: "application/json" });
     const link = document.createElement("a");
-
     link.href = URL.createObjectURL(blob);
     link.download = filename;
     document.body.appendChild(link);
@@ -570,136 +609,142 @@ const TimetableConfigurator = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Build classConfigs: For each selected stream and its selected classes,
-    // derive a ClassConfig with className, sections, and subjectIds.
     const classConfigs = [];
     selectedStreamIds.forEach((streamId) => {
       const streamClassIds = streamConfigs[streamId]?.classes || [];
       streamClassIds.forEach((classId) => {
-        // Get class name from classesByStream
         const classData = classesByStream[streamId]?.find(
           (cls) => cls.classId.toString() === classId
         );
-        const className = classData ? classData.className : classId;
-        // Build sections: for each selected section id, lookup sectionName.
-        const sectionIds =
-          streamConfigs[streamId]?.classConfigs[classId]?.sections || [];
-        const sections = [];
-        if (classDetails[classId]?.sections) {
-          sectionIds.forEach((secId) => {
-            const secData = classDetails[classId]?.sections.find(
-              (sec) => sec.sectionId.toString() === secId
-            );
-            if (secData) {
-              sections.push({
-                sectionName: secData.sectionName,
-                streamId: parseInt(streamId), // use parent's streamId
-              });
-            }
+        const sections = (
+          streamConfigs[streamId]?.classConfigs[classId]?.sections || []
+        ).map((sectionId) => {
+          const sectionData = classDetails[classId]?.sections.find(
+            (s) => s.sectionId.toString() === sectionId
+          );
+          return {
+            sectionId: Number(sectionId),
+            sectionName: sectionData
+              ? sectionData.sectionName
+              : `Section-${sectionId}`,
+            streamId: Number(streamId),
+          };
+        });
+        const subjectIds = (
+          streamConfigs[streamId]?.classConfigs[classId]?.subjects || []
+        ).map((id) => Number(id));
+        if (sections.length > 0 && subjectIds.length > 0) {
+          classConfigs.push({
+            classId: Number(classId),
+            className: classData ? classData.className : `Class-${classId}`,
+            sections,
+            subjectIds,
           });
         }
-        // Build subjectIds for the class
-        const subjectIds =
-          streamConfigs[streamId]?.classConfigs[classId]?.subjects || [];
-        const parsedSubjectIds = subjectIds.map((id) => parseInt(id));
-        classConfigs.push({
-          className,
-          sections,
-          subjectIds: parsedSubjectIds,
-        });
       });
     });
 
-    // Build streamConfigs (as expected by the server): for each stream,
-    // include the streamName and a list of classNames selected in that stream.
-    const streamConfigList = [];
-    selectedStreamIds.forEach((streamId) => {
-      const streamData = streams.find((s) => s.streamId === streamId);
-      const streamName = streamData ? streamData.streamName : streamId;
+    const streamConfigsList = selectedStreamIds.map((streamId) => {
+      const streamData = streams.find(
+        (s) => s.streamId.toString() === streamId
+      );
       const classIds = streamConfigs[streamId]?.classes || [];
-      const classNames = [];
-      classIds.forEach((classId) => {
+      const classNames = classIds.map((classId) => {
         const classData = classesByStream[streamId]?.find(
           (cls) => cls.classId.toString() === classId
         );
-        if (classData) {
-          classNames.push(classData.className);
-        }
+        return classData ? classData.className : `Class-${classId}`;
       });
-      streamConfigList.push({
-        streamName,
+      return {
+        streamName: streamData ? streamData.streamName : `Stream-${streamId}`,
         classNames,
-      });
+      };
     });
 
-    // Build subjectConfigs from subjectConstraints (for all school subjects)
     const subjectConfigs = Object.values(subjectConstraints).map((sub) => ({
       subjectName: sub.subjectName,
-      subjectId: parseInt(sub.subjectId),
-      subjectDurationInMinutes: parseInt(sub.subjectDurationInMinutes),
-      subjectFrequencyPerWeek: parseInt(sub.subjectFrequencyPerWeek),
+      subjectId: Number(sub.subjectId),
+      subjectDurationInMinutes: Number(sub.subjectDurationInMinutes) || 0,
+      subjectFrequencyPerWeek: Number(sub.subjectFrequencyPerWeek) || 0,
     }));
 
-    // Build timetableConstraints
     const timetableConstraints = {
-      maxSubjectsPerDay: parseInt(maxSubjectsPerDay),
-      breakDurationInMinutes: parseInt(breakDurationInMinutes),
-      breakAfterSubjects: parseInt(breakAfterSubjects),
+      maxSubjectsPerDay: Number(maxSubjectsPerDay) || 0,
+      breakDurationInMinutes: Number(breakDurationInMinutes) || 0,
       schoolStartTime,
       schoolEndTime,
     };
 
-    // Build teacherConfigs from all teachers
-    const teacherConfigs = teachers.map((teacher) => {
-      return {
-        teacherId: teacher.teacherId,
+    const teacherConfigs = teachers
+      .filter((teacher) => selectedTeacherIds.includes(teacher.teacherId))
+      .map((teacher) => ({
         teacherName: teacher.teacherName,
-        subjectIds: teacher.subjectIds, // You can map to actual subject details if needed
+        teacherId: teacher.teacherId,
+        subjectIds: teacher.subjectIds.map((id) => Number(id)),
         classNames: teacher.classNames,
         maxClassesPerWeek: teacher.maxClassesPerWeek,
         maxClassesPerDay: teacher.maxClassesPerDay,
-      };
-    });
+      }));
 
-    // Build final payload matching TimeTableRequest structure.
     const requestData = {
       schoolName,
+      schoolId,
       academicYear,
-      classConfigs, // List<ClassConfig>
-      teacherConfigs, // List<TeacherConfig> with all teachers
-      subjectConfigs, // List<SubjectConfig>
-      streamConfigs: streamConfigList, // List<StreamConfig>
-      timetableConstraints, // TimetableConstraints
+      classConfigs,
+      teacherConfigs,
+      subjectConfigs,
+      streamConfigs: streamConfigsList,
+      timetableConstraints,
     };
 
     console.log("Submitting configuration:", requestData);
 
     try {
       const response = await axios.post(
-        `http://localhost:8084/academic/api/new/addNewTimeTable`,
+        "http://localhost:8084/academic/api/new/addNewTimeTable",
         requestData
       );
-      console.log(" generated response is ", response.data);
+      console.log("Generated response is:", response.data);
       saveJsonToFile(response.data);
-    } catch (error) {}
-    // Send requestData to your server here.
-    // Example: axios.post("/your/api/endpoint", requestData);
+      setTimeTableData(response.data);
+    } catch (error) {
+      console.error("Error submitting timetable:", error);
+    }
   };
+
+  const handleConfirm = (updatedTimetable) => {
+    console.log("Confirmed timetable:", updatedTimetable);
+  };
+
+  const handleCancel = () => {
+    console.log("Edit cancelled");
+  };
+
+  if (timeTableData) {
+    return (
+      <TimeTableList
+        timetable={timeTableData}
+        editable={true}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto relative top-20 p-6">
+      <Breadcrumb />
       <Card className="shadow-lg p-6 bg-white rounded-lg">
         <CardContent>
           <h2 className="text-3xl font-semibold mb-6 text-center text-blue-800">
             Timetable Configuration
           </h2>
           <form onSubmit={handleSubmit}>
-            {/* School Details */}
             <div className="mb-6">
               <h3 className="font-semibold mb-4 text-blue-700">
                 School Details
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-blue-700 font-semibold mb-1">
                     School Name
@@ -709,6 +754,18 @@ const TimetableConfigurator = () => {
                     value={schoolName}
                     onChange={(e) => setSchoolName(e.target.value)}
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-700 font-semibold mb-1">
+                    School ID
+                  </label>
+                  <input
+                    type="text"
+                    value={schoolId}
+                    onChange={(e) => setSchoolId(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                    placeholder="e.g., SCH001"
                   />
                 </div>
                 <div>
@@ -724,7 +781,6 @@ const TimetableConfigurator = () => {
                 </div>
               </div>
             </div>
-            {/* Streams Section */}
             <div className="mb-6">
               <h3 className="font-semibold mb-4 text-blue-700">
                 Select Stream
@@ -747,8 +803,8 @@ const TimetableConfigurator = () => {
                 >
                   <h4 className="font-semibold mb-2 text-blue-800">
                     Stream:{" "}
-                    {streams.find((s) => s.streamId == streamId)?.streamName ||
-                      streamId}
+                    {streams.find((s) => s.streamId.toString() === streamId)
+                      ?.streamName || streamId}
                     <span className="ml-2 text-blue-500">
                       <FaThumbsUp />
                     </span>
@@ -813,28 +869,14 @@ const TimetableConfigurator = () => {
                 </div>
               ))}
             </div>
-            {/* Teacher Configuration Section (left as is) */}
-            <div className="mb-6">
-              <h3 className="font-semibold mb-4 text-blue-700">
-                Teacher Configuration
-              </h3>
-              <select
-                multiple
-                onChange={handleSelectTeachers}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-gray-50"
-              >
-                {teachers.length > 0 ? (
-                  teachers.map((teacher) => (
-                    <option key={teacher.streamId} value={teacher.streamId}>
-                      {teacher.streamName}
-                    </option>
-                  ))
-                ) : (
-                  <option>Loading teachers...</option>
-                )}
-              </select>
-            </div>
-            {/* Timetable Settings Section */}
+            <TeacherSelectionTable
+              title="Teacher Configuration"
+              teachers={teachers}
+              selectedTeacherIds={selectedTeacherIds}
+              onToggleTeacher={handleToggleTeacher}
+              onSelectAllTeachers={handleSelectAllTeachers}
+              allSubjects={allSubjects}
+            />
             <div className="mb-6">
               <h3 className="font-semibold mb-4 text-blue-700">
                 Timetable Settings
@@ -866,18 +908,6 @@ const TimetableConfigurator = () => {
                 </div>
                 <div>
                   <label className="block text-blue-700 font-semibold mb-1">
-                    Break After Subjects
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={breakAfterSubjects}
-                    onChange={(e) => setBreakAfterSubjects(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-gray-50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-blue-700 font-semibold mb-1">
                     School Start Time
                   </label>
                   <input
@@ -900,10 +930,9 @@ const TimetableConfigurator = () => {
                 </div>
               </div>
             </div>
-            {/* Subject Settings Section */}
             <div className="mb-6">
               <h3 className="font-semibold mb-4 text-blue-700">
-                Subject Settings (All School Subjects)
+                Subject Settings
               </h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full border border-gray-300 rounded">

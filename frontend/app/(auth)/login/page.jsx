@@ -6,11 +6,14 @@ import schoolLogo from "@/public/schoolLogo.svg";
 import Image from "next/image";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import axios from "axios";
+import Typography from '@mui/material/Typography';
+
 
 const Login = ({ setLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
-  const [username, setUsername]= useState("");
+  const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const handlePasswordVisibilityToggle = () => {
@@ -19,48 +22,58 @@ const Login = ({ setLogin }) => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
 
     try {
-        
-        console.log("username and password ", username, password);
-        
-        const response = await axios.post(
-            "http://localhost:8082/api/auth/login",
-            { username, password }
-          );
-
-          if(response.status === 200){
-            let user={
-                name: response.data.username,
-                email: response.data.email,
-                role: response.data.roles,
-                userId: response.data.userId,
-                schoolId: response.data.schoolId,
-              }
-            //   user=JSON.stringify(user);
-            //   const token=JSON.stringify(response.data.token);
-            const token=response.data.token;
-
-              const data=JSON.stringify({token:token, user:user});
-            
-            localStorage.setItem("auth-store", data);
-            console.log(response.data);
-            router.push("/dashboard");
+      console.log(
+        "Logging in with username:",
+        username,
+        "and password:",
+        password
+      );
+      const response = await axios.post(
+        "http://localhost:8082/api/auth/login",
+        {
+          username,
+          password,
         }
-        
-    } catch (error) {
-        console.log(error);
-    }
+      );
 
+      if (response.status === 200) {
+        const {
+          token,
+          username: userName,
+          email,
+          roles,
+          userId,
+          schoolId,
+        } = response.data;
+        const user = { name: userName, email, role: roles, userId, schoolId };
+        const authData = { token, user };
+
+        localStorage.setItem("auth-store", JSON.stringify(authData));
+        console.log("Login successful:", response.data);
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+          "Login failed. Please check your credentials."
+      );
+      console.error("Login error:", error);
+    }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-indigo-500 to-blue-600 p-8">
       <div className="bg-white p-8 rounded-xl shadow-2xl max-w-lg w-full">
-        <div onClick={() => setLogin(false)} className="w-24 mx-auto mb-6 cursor-pointer">
+        <div
+          onClick={() => setLogin(false)}
+          className="w-24 mx-auto mb-6 cursor-pointer"
+        >
           <Image
             src={schoolLogo}
-            alt="logo"
+            alt="School Logo"
             width={96}
             height={96}
             className="rounded-full"
@@ -73,22 +86,28 @@ const Login = ({ setLogin }) => {
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label htmlFor="email" className="text-sm font-medium text-gray-700">
+            <label
+              htmlFor="username"
+              className="text-sm font-medium text-gray-700 block"
+            >
               Username or Email
             </label>
             <input
               type="text"
-              id="email"
+              id="username"
               placeholder="Enter your username or email"
               value={username}
-              onChange={(e)=> setUsername(e.target.value)}
+              onChange={(e) => setUsername(e.target.value)}
               className="mt-2 block w-full px-4 py-3 text-gray-800 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300 transition-all duration-200 hover:ring-2 hover:ring-blue-300"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="text-sm font-medium text-gray-700">
+            <label
+              htmlFor="password"
+              className="text-sm font-medium text-gray-700 block"
+            >
               Password
             </label>
             <div className="relative">
@@ -123,10 +142,19 @@ const Login = ({ setLogin }) => {
               />
               <span className="ml-2">Remember me</span>
             </label>
-            <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+            <a
+              href="/forgot-password"
+              className="text-sm text-blue-600 hover:underline"
+            >
               Forgot password?
             </a>
           </div>
+
+          {error && (
+            <Typography color="error" sx={{ textAlign: "center" }}>
+              {error}
+            </Typography>
+          )}
 
           <button
             type="submit"
@@ -135,7 +163,6 @@ const Login = ({ setLogin }) => {
             Login
           </button>
         </form>
-
       </div>
     </div>
   );

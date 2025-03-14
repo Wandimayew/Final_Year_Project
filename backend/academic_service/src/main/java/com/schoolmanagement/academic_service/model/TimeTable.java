@@ -1,12 +1,11 @@
 package com.schoolmanagement.academic_service.model;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
 
 import javax.validation.constraints.NotBlank;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -16,86 +15,42 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "timetable")
+@Table(name = "timetables")
 public class TimeTable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long timeTableId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long timetableId;
 
     @Column(nullable = false)
-    @NotBlank(message = "School ID must not be null or empty")
+    @NotBlank(message = "School Id must not be null or empty")
     private String schoolId;
 
-    @Column(nullable = false)
-    @NotBlank(message = "Day of week must not be null or empty")
-    private String dayOfWeek;
+    @ManyToOne
+    @JoinColumn(name = "class_id", nullable = false)
+    private Class classId;
 
-    @Column(nullable = false)
-    @NotNull(message = "Start time must not be null")
-    private LocalTime startTime;
-
-    @Column(nullable = false)
-    @NotNull(message = "End time must not be null")
-    private LocalTime endTime;
-
-    @OneToOne
-    @JoinColumn(name = "sectionId", referencedColumnName = "sectionId", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "section_id", nullable = false)
     private Section section;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "subject_timeTable", joinColumns = @JoinColumn(name = "timeTableId"), inverseJoinColumns = @JoinColumn(name = "subjectId"))
-    private List<Subject> subjects;
+    @ManyToOne
+    @JoinColumn(name = "stream_id", nullable = false)
+    private Stream stream;
 
-    // @OneToOne
-    // @JoinColumn(name = "teacherId", referencedColumnName = "teacherId", nullable
-    // = true)
-    @Column(nullable = false)
-    @NotBlank(message = "Teacher Id must not be null or empty")
-    private String teacher;
+    @OneToMany(mappedBy = "timeTable", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<TimeTableEntry> entries;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = true)
-    private LocalDateTime updatedAt;
-
-    @Column(nullable = false)
-    private String createdBy;
-
-    @Column(nullable = true)
-    private String updatedBy;
-
-    @Column(nullable = false)
-    private boolean isActive = true;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
-    public String getFormattedCreatedOn() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        return createdAt.format(formatter);
-    }
-
-    public String getFormattedUpdatedOn() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        return updatedAt.format(formatter);
-    }
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+    @JoinTable(name = "subject_timeTable", joinColumns = @JoinColumn(name = "subjectId"), inverseJoinColumns = @JoinColumn(name = "timetableId"))
+    private Set<Subject> subjects;
 }
+
+

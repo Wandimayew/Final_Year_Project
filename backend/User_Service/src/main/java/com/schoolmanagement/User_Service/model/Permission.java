@@ -24,7 +24,7 @@ public class Permission {
 
     @NotNull(message = "School ID cannot be null")
     @Column(name = "school_id", nullable = false)
-    private Long schoolId;
+    private String schoolId;
 
     @NotBlank(message = "Permission name cannot be blank")
     @Size(max = 50, message = "Permission name cannot exceed 50 characters")

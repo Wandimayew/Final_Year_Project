@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Data
 public class SignupRequest {
 
-    private Long schoolId;
+    private String schoolId;
 
     private String username;
 
