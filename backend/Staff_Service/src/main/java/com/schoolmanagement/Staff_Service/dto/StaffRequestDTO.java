@@ -17,9 +17,9 @@ import lombok.Data;
 @Data
 public class StaffRequestDTO {
 
-    private Long userId;
+    private String userId;
 
-    private Long schoolId;
+    private String schoolId;
 
     private String firstName;
 

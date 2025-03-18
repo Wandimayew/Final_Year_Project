@@ -25,7 +25,7 @@ public class TeacherAssignment {
     @JoinColumn(name = "teacher_id", referencedColumnName = "teacherId", nullable = false)
     private Teacher teacher;
 
-    private Long schoolId;
+    private String schoolId;
 
     private Long classId;
 

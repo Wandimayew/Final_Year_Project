@@ -33,7 +33,11 @@ import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.nio.file.Files;
+import java.util.Base64;
 import java.util.HashMap;
+import java.nio.file.Path;
+
 
 @Service
 @Slf4j
@@ -59,11 +63,19 @@ public class QRCodeService {
                 requestDTO.getEndTimeHour(),
                 requestDTO.getEndTimeMinute());
         log.info("Generating QR Code for school ID: {}", requestDTO.getSchoolId());
-        Long schoolId = requestDTO.getSchoolId();
+        String schoolId = requestDTO.getSchoolId();
 
         if (schoolId == null) {
             throw new BadRequestException("School ID is required.");
         }
+
+        qrCodeRepository.findActiveQRCode(schoolId, QRCodeStatus.ACTIVE, LocalDateTime.now())
+            .ifPresent(existingQR -> {
+                existingQR.setStatus(QRCodeStatus.EXPIRED);
+                existingQR.setIsActive(false);
+                qrCodeRepository.save(existingQR);
+                log.info("Deactivated existing QR Code with session token: {}", existingQR.getSessionToken());
+            });
 
         String sessionToken = generateSessionToken();
         String qrCodeImage = generateQRCodeImage(sessionToken, requestDTO.getSchoolId());
@@ -94,7 +106,7 @@ public class QRCodeService {
     }
     }
 
-    private String generateQRCodeImage(String sessionToken, Long schoolId) throws Exception {
+    private String generateQRCodeImage(String sessionToken, String schoolId) throws Exception {
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
         String qrContent = String.format("schoolId=%d&token=%s", schoolId, sessionToken);
 
@@ -117,7 +129,7 @@ public class QRCodeService {
 
         return filePath;
     }
-    public ResponseEntity<QRCodeResponseDTO> getActiveQRCode(Long schoolId) {
+    public ResponseEntity<QRCodeResponseDTO> getActiveQRCode(String schoolId) {
         log.info("Looking for an active QR Code for school ID: {}", schoolId);
 
         LocalDateTime currentTime = LocalDateTime.now();
@@ -137,7 +149,7 @@ public class QRCodeService {
      * @param sessionToken Session token of the QR code.
      * @return ResponseEntity containing the validated QR code details.
      */
-    public ResponseEntity<QRCodeResponseDTO> validateQRCode(Long schoolId, String sessionToken) {
+    public ResponseEntity<QRCodeResponseDTO> validateQRCode(String schoolId, String sessionToken) {
         log.info("Validating QR Code with session token: {}", sessionToken);
 
         QRCode qrCode = qrCodeRepository.findBySessionToken(sessionToken)
@@ -201,6 +213,15 @@ public class QRCodeService {
      * @return QRCodeResponseDTO.
      */
     private QRCodeResponseDTO convertToResponseDTO(QRCode qrCode) {
+        String qrCodeImageBase64;
+        try {
+            // Assuming qrCodeImage is a file path; adjust if it's different
+            byte[] imageBytes = Files.readAllBytes(Path.of(qrCode.getQrCodeImage()));
+            qrCodeImageBase64 = Base64.getEncoder().encodeToString(imageBytes);
+        } catch (Exception e) {
+            log.error("Error converting QR Code image to Base64", e);
+            throw new RuntimeException("Failed to convert QR Code image to Base64");
+        }
         return QRCodeResponseDTO.builder()
                 .qrCodeId(qrCode.getQrCodeId())
                 .schoolId(qrCode.getSchoolId())
@@ -210,7 +231,7 @@ public class QRCodeService {
                 .endTimeMinute(qrCode.getEndTimeMinute())
                 .generatedTime(qrCode.getGeneratedTime())
                 .sessionToken(qrCode.getSessionToken())
-                .qrCodeImage(qrCode.getQrCodeImage())
+                .qrCodeImage(qrCodeImageBase64)
                 .status(qrCode.getStatus())
                 .generatedBy(qrCode.getGeneratedBy())
                 .createdAt(qrCode.getCreatedAt())

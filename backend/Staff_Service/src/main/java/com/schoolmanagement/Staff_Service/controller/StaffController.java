@@ -43,6 +43,12 @@ public class StaffController {
         return staffService.updateStaff(staffId, staffUpdateDTO);
     }
 
+    @GetMapping("/by-user/{userId}")
+public ResponseEntity<StaffResponseDTO> getStaffByUserId(@PathVariable String userId) {
+    return staffService.getStaffByUserId(userId);
+}
+
+
     @DeleteMapping("/{staffId}")
     public ResponseEntity<String> deleteStaff(@PathVariable Long staffId) {
         return staffService.deleteStaffById(staffId);

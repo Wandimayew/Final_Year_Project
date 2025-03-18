@@ -11,7 +11,7 @@ public class TeacherAssignmentRequestDTO {
 
     private Long teacherId;
 
-    private Long schoolId;
+    private String schoolId;
 
     private Long classId;
 

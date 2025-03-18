@@ -1,5 +1,6 @@
 {
-  "java.configuration.updateBuildConfiguration": "interactive",
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.server.launchMode": "Standard",
   "java.compile.nullAnalysis.mode": "automatic",
   "cSpell.words": [
     "kebele",
@@ -7,5 +8,5 @@
     "qrcodes"
   ],
   "java.debug.settings.onBuildFailureProceed": true,
-  "java.jdt.ls.vmargs": "-Xmx2G -XX:+UseParallelGC"
+  "java.jdt.ls.vmargs": "-Xmx1G -XX:+UseParallelGC"
 }

@@ -50,7 +50,7 @@ public class TeacherAssignmentController {
     // Get all assignments for a school and class
     @GetMapping("/school/{schoolId}/class/{classId}")
     public ResponseEntity<List<TeacherAssignmentResponseDTO>> getAssignmentsBySchoolAndClass(
-            @PathVariable Long schoolId, @PathVariable Long classId) {
+            @PathVariable String schoolId, @PathVariable Long classId) {
         return teacherAssignmentService.getAssignmentsBySchoolAndClass(schoolId, classId);
     }
 

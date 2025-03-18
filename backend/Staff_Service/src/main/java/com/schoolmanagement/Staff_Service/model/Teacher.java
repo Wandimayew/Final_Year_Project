@@ -27,7 +27,7 @@ public class Teacher {
     @JsonIgnore
     private Staff staff;
 
-    private Long schoolId;
+    private String schoolId;
 
     private Long streamId;
 

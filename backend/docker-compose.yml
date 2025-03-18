@@ -1,0 +1,84 @@
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql-container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: admin  # Root password
+      MYSQL_USER: admin                  # Custom username
+      MYSQL_PASSWORD: admin          # Custom user password
+    ports:
+      - "3306:3306"  # Expose MySQL to the host
+    volumes:
+      - mysql-data:/var/lib/mysql  # Persist database data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql 
+    networks:
+      - schoolmanagement-network
+
+  eureka-server:
+    image: schoolmanagement/eureka-server:latest
+    build:
+      context: ./Service_Registery
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    networks:
+      - schoolmanagement-network
+
+  api-gateway:
+    image: schoolmanagement/api-gateway:latest
+    build:
+      context: ./Api_Gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    networks:
+      - schoolmanagement-network
+
+  staff-service:
+    image: schoolmanagement/staff-service:latest
+    build:
+      context: ./Staff_Service
+      dockerfile: Dockerfile
+    depends_on:
+      - eureka-server
+      - mysql
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/Staff_Service
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_FILE_UPLOADS_PHOTOS_OUTPUT_PATH=/uploads/qrcodes
+    volumes:
+      - qrcode-data:/uploads/qrcodes
+    networks:
+      - schoolmanagement-network
+
+  assessment-service:
+    image: schoolmanagement/assesment-service:latest
+    build:
+      context: ./Assesment_Service
+      dockerfile: Dockerfile
+    depends_on:
+      - eureka-server
+      - mysql
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/Assessment_Service
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+    networks:
+      - schoolmanagement-network
+
+networks:
+  schoolmanagement-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  qrcode-data:

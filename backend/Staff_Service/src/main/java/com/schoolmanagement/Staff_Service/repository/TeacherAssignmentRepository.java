@@ -19,7 +19,7 @@ public interface TeacherAssignmentRepository extends JpaRepository<TeacherAssign
         List<TeacherAssignment> findByTeacherId(Long teacherId);
 
         // Find assignments by schoolId and classId
-        List<TeacherAssignment> findBySchoolIdAndClassId(Long schoolId, Long classId);
+        List<TeacherAssignment> findBySchoolIdAndClassId(String schoolId, Long classId);
 
         // Find active assignments by teacherId, status, and endDate
         @Query("SELECT ta FROM TeacherAssignment ta " +

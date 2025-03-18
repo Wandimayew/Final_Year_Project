@@ -4,25 +4,24 @@ import {
   FiClock,
   FiPackage,
   FiSettings,
-<<<<<<< HEAD
-} from "react-icons/fi";
-import { FaSchool, FaRegPlusSquare } from "react-icons/fa";
-=======
   FiList,
   FiUserPlus,
-  FiDownload,
   FiCamera,
   FiEye,
+  FiClipboard,
+  FiBarChart,
+  FiActivity,
+  FiTrendingUp,
+  FiUsers,
+  FiFileText,
 } from "react-icons/fi";
 import {
   FaSchool,
   FaRegPlusSquare,
-  FaUser,
   FaUsers,
   FaCalendarCheck,
   FaQrcode,
 } from "react-icons/fa";
->>>>>>> 81b6b4b (Staff Service added)
 
 export const MENU_ITEMS = [
   {
@@ -40,7 +39,6 @@ export const MENU_ITEMS = [
     roles: "",
   },
   {
-<<<<<<< HEAD
     id: "createschool",
     icon: FaRegPlusSquare,
     label: "Create School",
@@ -55,10 +53,10 @@ export const MENU_ITEMS = [
     roles: "",
   },
   {
-    id: "pandingrequest",
+    id: "pendingrequest",
     icon: FiClock,
     label: "Pending Request",
-    href: "/pandingrequest",
+    href: "/pendingrequest",
     roles: "",
   },
   {
@@ -88,7 +86,7 @@ export const MENU_ITEMS = [
         roles: "",
       },
       {
-        id: "stream ",
+        id: "stream",
         label: "Stream",
         href: "/academic/stream",
         roles: "",
@@ -102,7 +100,6 @@ export const MENU_ITEMS = [
     ],
   },
   {
-=======
     id: "employee",
     icon: FaUsers,
     label: "Employees",
@@ -110,14 +107,14 @@ export const MENU_ITEMS = [
     roles: "",
     subItems: [
       {
-        id: "employee_List",
+        id: "employee_list",
         icon: FiList,
         label: "Employee List",
         href: "/employee",
         roles: "",
       },
       {
-        id: "addEmployee",
+        id: "add_employee",
         icon: FiUserPlus,
         label: "Add Employee",
         href: "/employee/addemployee",
@@ -163,35 +160,51 @@ export const MENU_ITEMS = [
     ],
   },
   {
-    id: "createschool",
-    icon: FaRegPlusSquare,
-    label: "Create School",
-    href: "/school/createschool",
+    id: "assesment",
+    icon: FiClipboard,
+    label: "Assessment",
+    href: "/assesment",
     roles: "",
+    subItems: [
+      {
+        id: "assessment_list",
+        icon: FiBarChart,
+        label: "Assessment Entries",
+        href: "/assesment",
+        roles: "",
+      },
+      {
+        id: "createanalytics",
+        icon: FiActivity,
+        label: "Assessment Analytics",
+        href: "/assesment/analytics",
+        roles: "",
+      },
+      {
+        id: "progreess-trackers",
+        icon: FiTrendingUp,
+        label: "Progress Track",
+        href: "/assesment/progress-tracker",
+        roles: "",
+      },
+      {
+        id: "roster",
+        icon: FiUsers,
+        label: "Roster",
+        href: "/assesment/roster",
+        roles: "",
+      },
+      {
+        id: "report-card",
+        icon: FiFileText,
+        label: "Report Card",
+        href: "/assesment/reportcard",
+        roles: "",
+      },
+       
+    ],
   },
   {
-    id: "subscription",
-    icon: FiDollarSign,
-    label: "Subscription",
-    href: "/subscription",
-    roles: "",
-  },
-  {
-    id: "pandingrequest",
-    icon: FiClock,
-    label: "Pending Request",
-    href: "/pandingrequest",
-    roles: "",
-  },
-  {
-    id: "package",
-    icon: FiPackage,
-    label: "Package",
-    href: "/package",
-    roles: "",
-  },
-  {
->>>>>>> 81b6b4b (Staff Service added)
     id: "setting",
     icon: FiSettings,
     label: "Settings",
@@ -205,7 +218,7 @@ export const MENU_ITEMS = [
         roles: "",
       },
       {
-        id: "payment ",
+        id: "payment",
         label: "Payment Setting",
         href: "/setting/payment",
         roles: "",

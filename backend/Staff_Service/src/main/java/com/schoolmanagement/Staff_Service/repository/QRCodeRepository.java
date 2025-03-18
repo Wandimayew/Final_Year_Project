@@ -15,14 +15,18 @@ import com.schoolmanagement.Staff_Service.model.QRCode;
 public interface QRCodeRepository extends JpaRepository<QRCode, Long> {
     Optional<QRCode> findBySessionToken(String sessionToken);
 
-    @Query("SELECT q FROM QRCode q WHERE q.schoolId = :schoolId " +
-            "AND q.status = :status " +
-            "AND q.isActive = true " +
-            "AND FUNCTION('TIME', q.generatedTime) <= FUNCTION('TIME', :currentTime) " +
-            "AND FUNCTION('TIME', CONCAT(q.startTimeHour, ':', q.startTimeMinute)) <= FUNCTION('TIME', :currentTime) " +
-            "AND FUNCTION('TIME', CONCAT(q.endTimeHour, ':', q.endTimeMinute)) >= FUNCTION('TIME', :currentTime)")
-    Optional<QRCode> findActiveQRCode(@Param("schoolId") Long schoolId,
-            @Param("status") QRCodeStatus status,
-            @Param("currentTime") LocalDateTime currentTime);
-
+    @Query("SELECT q FROM QRCode q " +
+           "WHERE q.schoolId = :schoolId " +
+           "AND q.status = :status " +
+           "AND q.isActive = true " +
+           "AND TIME(q.generatedTime) <= TIME(:currentTime) " +
+           "AND TIME(CONCAT(q.startTimeHour, ':', q.startTimeMinute)) <= TIME(:currentTime) " +
+           "AND TIME(CONCAT(q.endTimeHour, ':', q.endTimeMinute)) >= TIME(:currentTime) " +
+           "ORDER BY q.generatedTime DESC LIMIT 1")
+    Optional<QRCode> findActiveQRCode(@Param("schoolId") String schoolId,
+    @Param("status") QRCodeStatus status,
+    @Param("currentTime") LocalDateTime currentTime);
 }
+
+   
+

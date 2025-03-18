@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: ApiGateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: user_service
+          uri: lb://user_service
+          predicates:
+            - Path=/auth/api/** 
+        - id: user-swagger
+          uri: lb://user_service
+          predicates:
+            - Path=/user/v3/api-docs
+        - id: academic_service
+          uri: lb://academic_service
+          predicates:
+            - Path=/academic/api/** 
+        - id: tenant_service
+          uri: lb://10.194.61.67:8084
+          predicates:
+            - Path=/tenant/api/**
+        - id: tenant-swagger
+          uri: lb://tenant_service
+          predicates:
+            - Path=/tenant/v3/api-docs
+        - id: communication_service
+          uri: lb://communication_service
+          predicates:
+            - Path=/communication/api/**
+        - id: communication-swagger
+          uri: lb://communication_service
+          predicates:
+            - Path=/communication/v3/api-docs
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://10.194.61.74:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    ip-address: 10.194.61.74
+    hostname: 10.194.61.74
+    non-secure-port: 8080
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /user/v3/api-docs
+        name: User Service
+      - url: /tenant/v3/api-docs
+        name: Tenant Service
+      - url: /communication/v3/api-docs
+        name: Communication Service
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: DEBUG
+    org.springdoc: DEBUG
+
+server:
+  port: 8080

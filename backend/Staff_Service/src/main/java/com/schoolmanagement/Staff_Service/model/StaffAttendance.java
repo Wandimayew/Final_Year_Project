@@ -30,7 +30,7 @@ public class StaffAttendance {
     @JoinColumn(name = "staff_id", nullable = false, referencedColumnName = "staffId")
     private Staff staff;
     
-    private Long schoolId;
+    private String schoolId;
 
     private String sessionToken;
     

@@ -7,7 +7,7 @@ public class TeacherRequestDTO {
 
     private Long staffId;
 
-    private Long schoolId;
+    private String schoolId;
 
     private Long streamId;
 

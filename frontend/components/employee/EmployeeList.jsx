@@ -1,28 +1,27 @@
 "use client";
-
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "react-toastify";
-import { FiArrowUp, FiArrowDown } from "react-icons/fi";
 import {
-  FiEdit,
-  FiTrash2,
-  FiEye,
-  FiDownload,
-  FiCopy,
-  FiPrinter,
-  FiFile,
-  FiFileText,
-} from "react-icons/fi";
+  ArrowUp,
+  ArrowDown,
+  Pencil,
+  Trash2,
+  Eye,
+  Download,
+  Copy,
+  Printer,
+  File,
+  FileText,
+} from "lucide-react";
 import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { staffService } from "../../services/api";
 import StaffModal from "./StaffModal";
 import ConfirmDialog from "./ConfirmDialog";
 
 export default function EmployeeList() {
-  // State declarations
   const [searchQuery, setSearchQuery] = useState("");
   const [staff, setStaff] = useState([]);
   const [filteredStaff, setFilteredStaff] = useState([]);
@@ -33,20 +32,15 @@ export default function EmployeeList() {
   const [staffToDelete, setStaffToDelete] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [sortConfig, setSortConfig] = useState({
-    key: null,
-    direction: "ascending",
-  });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "ascending" });
   const [filterStatus, setFilterStatus] = useState("all");
   const [activeTab, setActiveTab] = useState("staff");
   const [selectedTeacherDetails, setSelectedTeacherDetails] = useState(null);
 
-  // Fetch staff data
   const fetchStaffData = async () => {
     try {
       setLoading(true);
       let response = [];
-
       if (activeTab === "teacher") {
         response = await staffService.getAllTeachersAll();
       } else {
@@ -57,22 +51,24 @@ export default function EmployeeList() {
         response = [...staffResponse.data, ...teacherResponse.data];
       }
 
-      console.log("Fetched Data:", response); // Debugging
-
-      const formattedData = response.map((item) => ({
-        id: item.staffId,
-        firstName: item.firstName,
-        middleName: item.middleName,
-        lastName: item.lastName,
-        email: item.email,
-        status: item.status,
-      }));
+      const formattedData = response
+        .filter((item) => item.isActive) // Filter out inactive staff
+        .map((item) => ({
+          id: item.staffId,
+          photo: item.photo,
+          firstName: item.firstName,
+          middleName: item.middleName,
+          lastName: item.lastName,
+          email: item.email,
+          status: item.status,
+          isActive: item.isActive, // Include isActive for reference
+        }));
 
       setStaff(formattedData);
       setFilteredStaff(formattedData);
     } catch (error) {
-      toast.error("Failed to fetch teachers");
-      console.error("Error fetching teachers:", error);
+      toast.error("Failed to fetch staff data");
+      console.error("Error fetching staff:", error);
     } finally {
       setLoading(false);
     }
@@ -82,17 +78,25 @@ export default function EmployeeList() {
     fetchStaffData();
   }, [activeTab]);
 
-  // Handle staff deletion
   const handleDelete = async (id) => {
     try {
-      await (activeTab === "teacher"
-        ? staffService.deleteTeacher(id)
-        : staffService.deleteStaff(id));
+      // Optimistically update the UI by marking as inactive
+      const updatedStaff = staff.map((item) =>
+        item.id === id ? { ...item, isActive: false } : item
+      );
+      setStaff(updatedStaff);
+      setFilteredStaff(updatedStaff.filter((item) => item.isActive));
+
+      // Perform the soft delete
+      await (activeTab === "teacher" ? staffService.deleteTeacher(id) : staffService.deleteStaff(id));
       toast.success("Staff member deleted successfully");
-      fetchStaffData();
+
+      // Fetch fresh data to ensure consistency
+      await fetchStaffData();
     } catch (error) {
       toast.error("Failed to delete staff member");
       console.error("Error deleting staff:", error);
+      await fetchStaffData(); // Revert on failure
     }
   };
 
@@ -115,86 +119,110 @@ export default function EmployeeList() {
     }
   };
 
-  // Export functions
   const exportToExcel = () => {
-    if (filteredStaff.length === 0) {
-      alert("No data available export to Excel.");
-      return;
-    }
-    const ws = XLSX.utils.json_to_sheet(filteredStaff);
+    if (filteredStaff.length === 0) return toast.error("No data to export");
+  
+    const truncateText = (text, maxLength = 30000) => 
+      text && text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+  
+    const ws = XLSX.utils.json_to_sheet(
+      filteredStaff.map(({ id, firstName, middleName, lastName, email, status }) => ({
+        ID: id,
+        FullName: truncateText(`${firstName} ${middleName || ""} ${lastName}`.trim()),
+        Email: truncateText(email),
+        Status: truncateText(status),
+      }))
+    );
+  
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Teacher Data");
-    XLSX.writeFile(wb, `teacher_list_${activeTab}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "Staff Data");
+    XLSX.writeFile(wb, `staff_list_${activeTab}.xlsx`);
   };
-
+  
   const exportToPDF = () => {
-    if (filteredStaff.length === 0) {
-      alert("No data available export to PDF.");
-      return;
-    }
+    if (filteredStaff.length === 0) return toast.error("No data to export");
+  
     const doc = new jsPDF();
-    doc.autoTable({
-      head: [["ID", "FullName", "Email", "Status"]],
-      body: filteredStaff.map((staff) => [
-        staff.id,
-        `${staff.firstName} ${staff.middleName} ${staff.lastName}`,
-        staff.email,
-        staff.status,
+    
+    autoTable(doc, {
+      head: [["ID", "Full Name", "Email", "Status"]],
+      body: filteredStaff.map(({ id, firstName, middleName, lastName, email, status }) => [
+        id,
+        `${firstName} ${middleName || ""} ${lastName}`.trim(),
+        email,
+        status,
       ]),
     });
-    doc.save(`teacher_list_${activeTab}.pdf`);
+  
+    doc.save(`staff_list_${activeTab}.pdf`);
   };
-
+  
   const exportToCSV = () => {
-    if (filteredStaff.length === 0) {
-      alert("No data available export to CSV.");
-      return;
-    }
-    const ws = XLSX.utils.json_to_sheet(filteredStaff);
+    if (filteredStaff.length === 0) return toast.error("No data to export");
+  
+    const ws = XLSX.utils.json_to_sheet(
+      filteredStaff.map(({ id, firstName, middleName, lastName, email, status }) => ({
+        ID: id,
+        FullName: `${firstName} ${middleName || ""} ${lastName}`.trim(),
+        Email: email,
+        Status: status,
+      }))
+    );
+  
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Staff Data");
     XLSX.writeFile(wb, `staff_list_${activeTab}.csv`);
   };
-
+  
   const printPage = () => {
-    if (filteredStaff.length === 0) {
-      alert("No data available for print.");
-      return;
-    }
-    window.print();
+    if (filteredStaff.length === 0) return toast.error("No data to print");
+  
+    const table = document.getElementById("staffTable"); // Make sure your table has this ID
+    if (!table) return toast.error("Table not found");
+  
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Staff List</title>
+          <style>
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid black; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+          </style>
+        </head>
+        <body>
+          ${table.outerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
   };
-
+  
   const copyToClipboard = () => {
-    if (filteredStaff.length === 0) {
-      alert("No data available copied to clipboard.");
-      return;
-    }
+    if (filteredStaff.length === 0) return toast.error("No data to copy");
+  
     const textToCopy = filteredStaff
-      .map((staff) => {
-        return `${staff.firstName} ${staff.middleName} ${staff.lastName} - ${staff.email} - ${staff.status}`;
-      })
+      .map(({ firstName, middleName, lastName, email, status }) =>
+        `${firstName} ${middleName || ""} ${lastName} - ${email} - ${status}`.trim()
+      )
       .join("\n");
-
-    navigator.clipboard
-      .writeText(textToCopy)
-      .then(() => {
-        toast.success("Data copied to clipboard!");
-      })
-      .catch((err) => {
-        toast.error("Failed to copy data.");
-      });
+  
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => toast.success("Data copied to clipboard!"))
+      .catch(() => toast.error("Failed to copy data!"));
   };
-  // Sorting function
+
   const handleSort = (key) => {
     let direction = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    }
+    if (sortConfig.key === key && sortConfig.direction === "ascending") direction = "descending";
     setSortConfig({ key, direction });
 
     const sorted = [...filteredStaff].sort((a, b) => {
       let aValue, bValue;
-
       if (key === "fullName") {
         aValue = `${a.firstName} ${a.middleName || ""} ${a.lastName}`.trim();
         bValue = `${b.firstName} ${b.middleName || ""} ${b.lastName}`.trim();
@@ -202,16 +230,13 @@ export default function EmployeeList() {
         aValue = a[key];
         bValue = b[key];
       }
-
       if (aValue < bValue) return direction === "ascending" ? -1 : 1;
       if (aValue > bValue) return direction === "ascending" ? 1 : -1;
       return 0;
     });
-
     setFilteredStaff(sorted);
   };
 
-  // Search and filter effect
   useEffect(() => {
     const filtered = staff.filter((member) => {
       const searchString = searchQuery.toLowerCase();
@@ -220,101 +245,66 @@ export default function EmployeeList() {
         member.middleName?.toLowerCase().includes(searchString) ||
         member.lastName?.toLowerCase().includes(searchString) ||
         member.email?.toLowerCase().includes(searchString);
-
-      const matchesStatus =
-        filterStatus === "all" ? true : member.status === filterStatus;
-
-      return matchesSearch && matchesStatus;
+      const matchesStatus = filterStatus === "all" ? true : member.status === filterStatus;
+      return matchesSearch && matchesStatus && member.isActive; // Only active staff
     });
     setFilteredStaff(filtered);
     setCurrentPage(1);
   }, [searchQuery, staff, filterStatus]);
 
-  // Pagination calculations
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredStaff.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredStaff.length / itemsPerPage);
 
   return (
-    <div className="container mx-auto px-4 py-8 mt-12">
+    <div className="container mx-auto px-4 py-8">
       {/* Header and Controls */}
-      <div className="mb-8">
-        {/* Tabs */}
-        <div className="flex mb-4 space-x-4">
+      <div className="mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="flex gap-2">
           <button
             onClick={() => setActiveTab("all")}
-            className={`px-4 py-2 rounded ${
-              activeTab === "all"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-black"
-            }`}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === "all" ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
           >
             All
           </button>
           <button
             onClick={() => setActiveTab("teacher")}
-            className={`px-4 py-2 rounded ${
-              activeTab === "teacher"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-black"
-            }`}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === "teacher" ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
           >
             Teachers
           </button>
         </div>
-
-        {/* Export buttons */}
-        <div className="flex justify-end space-x-2">
-          <button
-            onClick={exportToExcel}
-            className="px-4 py-2 bg-green-500 text-white rounded"
-            title="Export to Excel"
-          >
-            <FiFileText className="mr-1" />
+        <div className="flex gap-2 flex-wrap justify-center">
+          <button onClick={exportToExcel} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600" title="Export to Excel">
+            <FileText size={20} />
           </button>
-          <button
-            onClick={exportToPDF}
-            className="px-4 py-2 bg-red-500 text-white rounded"
-            title="Export to PDF"
-          >
-            <FiDownload className="mr-1" />
+          <button onClick={exportToPDF} className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600" title="Export to PDF">
+            <Download size={20} />
           </button>
-          <button
-            onClick={exportToCSV}
-            className="flex items-center px-4 py-2 bg-gray-500 text-white rounded"
-            title="Export to CSV"
-          >
-            <FiFile className="mr-2" />
+          <button onClick={exportToCSV} className="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600" title="Export to CSV">
+            <File size={20} />
           </button>
-          <button
-            onClick={printPage}
-            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded"
-            title="Print Page"
-          >
-            <FiPrinter className="mr-2" />
+          <button onClick={printPage} className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" title="Print Page">
+            <Printer size={20} />
           </button>
-          <button
-            onClick={copyToClipboard}
-            className="flex items-center px-4 py-2 bg-yellow-500 text-white rounded"
-            title="Copy to Clipboard"
-          >
-            <FiCopy className="mr-2" />
+          <button onClick={copyToClipboard} className="p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600" title="Copy to Clipboard">
+            <Copy size={20} />
           </button>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-wrap justify-end gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row justify-end gap-4 mb-6">
         <input
           type="text"
-          placeholder="Search..."
-          className="px-4 py-2 border rounded text-black"
+          placeholder="Search staff..."
+          className="w-full sm:w-64 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-gray-800"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
         <select
-          className="px-4 py-2 border rounded text-black"
+          className="w-full sm:w-40 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-gray-800"
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
         >
@@ -325,108 +315,89 @@ export default function EmployeeList() {
       </div>
 
       {/* Staff Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white text-black">
-          <thead>
+      <div className="overflow-x-auto bg-white rounded-lg shadow-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-indigo-50">
             <tr>
               <th
-                className="px-6 py-3 border-b cursor-pointer text-center"
+                className="px-6 py-3 text-center text-sm font-semibold text-indigo-700 cursor-pointer"
                 onClick={() => handleSort("id")}
               >
-                ID{" "}
-                {sortConfig.key === "id" &&
-                sortConfig.direction === "ascending" ? (
-                  <FiArrowUp className="ml-1 inline" />
-                ) : (
-                  <FiArrowDown className="ml-1 inline" />
-                )}
+                ID {sortConfig.key === "id" && (sortConfig.direction === "ascending" ? <ArrowUp size={14} className="inline" /> : <ArrowDown size={14} className="inline" />)}
               </th>
+              <th className="px-6 py-3 text-center text-sm font-semibold text-indigo-700">Photo</th>
               <th
-                className="px-6 py-3 border-b cursor-pointer"
+                className="px-6 py-3 text-center text-sm font-semibold text-indigo-700 cursor-pointer"
                 onClick={() => handleSort("fullName")}
               >
-                Full Name{" "}
-                {sortConfig.key === "fullName" &&
-                sortConfig.direction === "ascending" ? (
-                  <FiArrowUp className="ml-1 inline" />
-                ) : (
-                  <FiArrowDown className="ml-1 inline" />
-                )}
+                Full Name {sortConfig.key === "fullName" && (sortConfig.direction === "ascending" ? <ArrowUp size={14} className="inline" /> : <ArrowDown size={14} className="inline" />)}
               </th>
               <th
-                className="px-6 py-3 border-b cursor-pointer"
+                className="px-6 py-3 text-center text-sm font-semibold text-indigo-700 cursor-pointer"
                 onClick={() => handleSort("email")}
               >
-                Email{" "}
-                {sortConfig.key === "email" &&
-                sortConfig.direction === "ascending" ? (
-                  <FiArrowUp className="ml-1 inline" />
-                ) : (
-                  <FiArrowDown className="ml-1 inline" />
-                )}
+                Email {sortConfig.key === "email" && (sortConfig.direction === "ascending" ? <ArrowUp size={14} className="inline" /> : <ArrowDown size={14} className="inline" />)}
               </th>
-              <th className="px-6 py-3 border-b cursor-pointer">Status</th>
-              <th className="px-6 py-3 border-b">Actions</th>
+              <th className="px-6 py-3 text-center text-sm font-semibold text-indigo-700">Status</th>
+              <th className="px-6 py-3 text-center text-sm font-semibold text-indigo-700">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-200">
             {loading ? (
               <tr>
-                <td colSpan="5" className="text-center py-4">
-                  <div className="spinner-border" role="status">
-                    <span className="sr-only">Loading...</span>
-                  </div>
+                <td colSpan="6" className="text-center py-8 text-gray-500">
+                  <div className="animate-spin inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full" />
+                  <span className="ml-2">Loading...</span>
                 </td>
+              </tr>
+            ) : currentItems.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="text-center py-8 text-gray-500">No active staff found</td>
               </tr>
             ) : (
               currentItems.map((item) => (
-                <tr key={item.id}>
-                  <td className="px-6 py-4 border-b text-center">{item.id}</td>
-                  <td className="px-6 py-4 border-b text-center">
-                    {`${item.firstName} ${item.middleName || ""} ${
-                      item.lastName
-                    }`}
+                <tr key={item.id} className="hover:bg-gray-50 transition-colors duration-200">
+                  <td className="px-6 py-4 text-center text-gray-700">{item.id}</td>
+                  <td className="px-6 py-4 text-center">
+                    {item.photo ? (
+                      <img
+                        src={item.photo.startsWith("data:image") ? item.photo : `data:image/png;base64,${item.photo}`}
+                        alt={`${item.firstName}'s photo`}
+                        className="w-10 h-10 rounded-full object-cover mx-auto"
+                        onError={(e) => (e.target.src = "https://via.placeholder.com/40?text=N/A")}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mx-auto">
+                        <span className="text-gray-500 text-sm">N/A</span>
+                      </div>
+                    )}
                   </td>
-                  <td className="px-6 py-4 border-b text-center">
-                    {item.email}
-                  </td>
-                  <td className="px-6 py-4 border-b text-center">
+                  <td className="px-6 py-4 text-center text-gray-700">{`${item.firstName} ${item.middleName || ""} ${item.lastName}`}</td>
+                  <td className="px-6 py-4 text-center text-gray-700">{item.email}</td>
+                  <td className="px-6 py-4 text-center">
                     <span
-                      className={`px-2 py-1 rounded-full text-sm ${
-                        item.status === "ACTIVE"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
                     >
                       {item.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 border-b items-center">
-                    <div className="flex justify-center space-x-2">
-                      <button
-                        onClick={() => fetchCompleteDetails(item.id)}
-                        className="text-blue-500"
-                        title="View Details"
-                      >
-                        <FiEye />
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex justify-center gap-3">
+                      <button onClick={() => fetchCompleteDetails(item.id)} className="text-indigo-500 hover:text-indigo-700" title="View Details">
+                        <Eye size={18} />
                       </button>
-
-                      <Link
-                        href={`/staff/edit/${item.id}`}
-                        className="text-yellow-500"
-                        title="Edit Staff"
-                      >
-                        <FiEdit />
+                      <Link href={`/employee/edit/${item.id}`} className="text-yellow-500 hover:text-yellow-700" title="Edit Staff">
+                        <Pencil size={18} />
                       </Link>
                       <button
                         onClick={() => {
-                          setStaffToDelete(item.id);
+                          setStaffToDelete(item);
                           setShowConfirmDialog(true);
                         }}
-                        className="text-red-500"
+                        className="text-red-500 hover:text-red-700"
                         title="Delete Staff"
                       >
-                        <FiTrash2 />
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </td>
@@ -438,26 +409,22 @@ export default function EmployeeList() {
       </div>
 
       {/* Pagination */}
-      <div className="mt-4 flex justify-between items-center text-black">
+      <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-700">
         <span>
-          Showing {indexOfFirstItem + 1} to{" "}
-          {Math.min(indexOfLastItem, filteredStaff.length)} of{" "}
-          {filteredStaff.length} entries
+          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredStaff.length)} of {filteredStaff.length} entries
         </span>
-        <div className="flex space-x-2">
+        <div className="flex gap-2">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-4 py-2 border rounded disabled:opacity-50 bg-lime-300"
+            className="px-4 py-2 bg-indigo-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-indigo-600 transition-colors"
           >
             Previous
           </button>
           <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 border rounded disabled:opacity-50 bg-green-500"
+            className="px-4 py-2 bg-indigo-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-indigo-600 transition-colors"
           >
             Next
           </button>
@@ -477,11 +444,10 @@ export default function EmployeeList() {
           isTeacher={activeTab === "teacher"}
         />
       )}
-
       {showConfirmDialog && (
         <ConfirmDialog
           title="Confirm Delete"
-          message={`Are you sure you want to delete ${staffToDelete.firstName} ${staffToDelete.middleName}?`}
+          message={`Are you sure you want to delete ${staffToDelete.firstName} ${staffToDelete.middleName || ""} ${staffToDelete.lastName}?`}
           onConfirm={() => {
             handleDelete(staffToDelete.id);
             setShowConfirmDialog(false);
