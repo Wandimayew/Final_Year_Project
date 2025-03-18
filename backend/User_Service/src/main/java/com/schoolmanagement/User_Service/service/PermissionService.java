@@ -45,8 +45,8 @@ public class PermissionService {
         permission.setCreatedAt(LocalDateTime.now());
         permission.setUpdatedAt(LocalDateTime.now());
         permission.setCreatedBy(currentUser);
-        permission.setSchoolId(permissionRequest.getSchoolId());
         permission.setDescription(permissionRequest.getDescription());
+        permission.setSchoolId(permissionRequest.getSchoolId());
         permission.setName(permissionRequest.getName());
         Permission savedPermission = permissionRepository.save(permission);
         log.info("we are at permission  ");

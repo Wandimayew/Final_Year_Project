@@ -3,6 +3,7 @@ package com.schoolmanagement.Staff_Service.service;
 import com.schoolmanagement.Staff_Service.dto.StaffRequestDTO;
 import com.schoolmanagement.Staff_Service.dto.StaffResponseDTO;
 import com.schoolmanagement.Staff_Service.dto.StaffUpdateDTO;
+import com.schoolmanagement.Staff_Service.dto.TeacherResponseDTO;
 import com.schoolmanagement.Staff_Service.exception.BadRequestException;
 import com.schoolmanagement.Staff_Service.file.FileStorageService;
 import com.schoolmanagement.Staff_Service.file.FileUtils;
@@ -157,6 +158,17 @@ public class StaffService {
         return ResponseEntity.ok(convertToStaffResponse(staff));
     }
 
+    public ResponseEntity<StaffResponseDTO> getStaffByUserId(String userId) {
+        Staff staff = staffRepository.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Staff not found with user ID:: " + userId));
+    
+        if (!staff.getIsActive()) {
+            throw new BadRequestException("Account is inactive");
+        }
+    
+        return ResponseEntity.ok(convertToStaffResponse(staff));
+    }
+
     // Method to change staff password
     public ResponseEntity<StaffResponseDTO> changePassword(Long staffId, String currentPassword, String newPassword) {
         Staff staff = staffRepository.findById(staffId)
@@ -183,28 +195,39 @@ public class StaffService {
 
     // Helper method to convert Staff entity to StaffResponseDTO
     private StaffResponseDTO convertToStaffResponse(Staff staff) {
-        return StaffResponseDTO.builder()
-                .staffId(staff.getStaffId())
-                .userId(staff.getUserId())
-                .schoolId(staff.getSchoolId())
-                .firstName(staff.getFirstName())
-                .middleName(staff.getMiddleName())
-                .lastName(staff.getLastName())
-                .username(staff.getUsername())
-                .dateOfJoining(staff.getDateOfJoining())
-                .email(staff.getEmail())
-                .password(staff.getPassword())
-                .roles(staff.getRoles())
-                .phoneNumber(staff.getPhoneNumber())
-                .status(staff.getStatus())
-                .dob(staff.getDob())
-                .gender(staff.getGender())
-                .addressJson(staff.getAddressJson())
-                .isActive(staff.getIsActive())
-                .photo(FileUtils.readFileFromLocation(staff.getPhoto()))
-                .createdAt(staff.getCreatedAt())
-                .updatedAt(staff.getUpdatedAt())
+        TeacherResponseDTO teacherDTO = null;
+        if (staff.getTeacher() != null) {
+            teacherDTO = TeacherResponseDTO.builder()
+                .teacherId(staff.getTeacher().getTeacherId())
+                .streamId(staff.getTeacher().getStreamId())
+                .experience(staff.getTeacher().getExperience())
+                .qualification(staff.getTeacher().getQualification())
+                .subjectSpecialization(staff.getTeacher().getSubjectSpecialization())
                 .build();
-
+        }
+    
+        return StaffResponseDTO.builder()
+            .staffId(staff.getStaffId())
+            .userId(staff.getUserId())
+            .schoolId(staff.getSchoolId())
+            .firstName(staff.getFirstName())
+            .middleName(staff.getMiddleName())
+            .lastName(staff.getLastName())
+            .username(staff.getUsername())
+            .dateOfJoining(staff.getDateOfJoining())
+            .email(staff.getEmail())
+            .password(staff.getPassword())
+            .roles(staff.getRoles())
+            .phoneNumber(staff.getPhoneNumber())
+            .status(staff.getStatus())
+            .dob(staff.getDob())
+            .gender(staff.getGender())
+            .addressJson(staff.getAddressJson())
+            .isActive(staff.getIsActive())
+            .photo(FileUtils.readFileFromLocation(staff.getPhoto()))
+            .createdAt(staff.getCreatedAt())
+            .updatedAt(staff.getUpdatedAt())
+            .teacher(teacherDTO) 
+            .build();
     }
 }

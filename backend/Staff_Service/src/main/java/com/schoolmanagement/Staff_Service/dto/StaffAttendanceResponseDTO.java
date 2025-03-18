@@ -21,7 +21,7 @@ public class StaffAttendanceResponseDTO {
     
     private Long staffId;
     
-    private Long schoolId;
+    private String schoolId;
 
     private String sessionToken;
 

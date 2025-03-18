@@ -30,7 +30,7 @@ public class QRCode{
     @JoinColumn(name = "attendance_id")
     private StaffAttendance attendance;
     
-    private Long schoolId;
+    private String schoolId;
     
     private LocalDateTime generatedTime;
 

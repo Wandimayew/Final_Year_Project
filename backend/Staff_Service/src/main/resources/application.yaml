@@ -12,8 +12,8 @@ spring:
       enabled: ALWAYS
   datasource:
     url: jdbc:mysql://localhost:3306/Staff_Service
-    username: root
-    password: Tame123!
+    username: admin
+    password: admin
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       minimum-idle: 5
@@ -41,6 +41,15 @@ logging:
           descriptor:
             sql:
               BasicBinder: trace
+    org.springframework.cloud.loadbalancer: DEBUG
+    com.netflix.discovery: DEBUG
 server:
-  port: 8085
+  port: 0
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
 

@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class TeacherAssignmentResponseDTO {
     private Long id;
     private Long teacherId;
-    private Long schoolId;
+    private String schoolId;
     private Long classId;
     private Long subjectId;
     private Long sectionId;

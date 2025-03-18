@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 public class QRCodeRequestDTO {
 
-    private Long schoolId;
+    private String schoolId;
 
     @NotNull
     @Min(0) @Max(23)

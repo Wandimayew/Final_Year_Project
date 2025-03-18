@@ -138,10 +138,10 @@ const QRCodeGenerator = () => {
       {qrCodeData && (
         <div className="mt-8 border border-gray-300 rounded-lg p-6 bg-gray-50">
           <div className="text-center">
-            <p className="text-lg font-semibold">Generated QR Code:</p>
+            <p className="text-lg font-semibold text-black">Generated QR Code:</p>
             {qrCodeData.qrCodeImage ? (
                <img
-               src={`http://localhost:8085${qrCodeData.qrCodeImage.replace('.', '')}`}
+               src={`data:image/png;base64,${qrCodeData.qrCodeImage}`}
                alt="QR Code"
                className="mx-auto w-64 h-64 mt-4"
              />

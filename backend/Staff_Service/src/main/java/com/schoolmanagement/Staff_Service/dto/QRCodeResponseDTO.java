@@ -17,7 +17,7 @@ public class QRCodeResponseDTO {
 
     private Long qrCodeId;
 
-    private Long schoolId;
+    private String schoolId;
 
     private LocalDateTime generatedTime;
 

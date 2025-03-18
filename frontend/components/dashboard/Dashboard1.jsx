@@ -1,20 +1,7 @@
-"use client"
-
-// pages/dashboard.js
-import { useState } from 'react';
-import Link from 'next/link';
-import { 
-  FiGrid, 
-  FiBook, 
-  FiPlus, 
-  FiDollarSign,
-  FiClock,
-  FiPackage,
-  FiPlusCircle,
-  FiSettings,
-  FiMenu,
-  FiUser
-} from 'react-icons/fi';
+"use client";
+import { useState } from "react";
+import Link from "next/link";
+import { FiBook, FiDollarSign } from "react-icons/fi";
 import {
   LineChart,
   Line,
@@ -22,32 +9,30 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
-} from 'recharts';
+  ResponsiveContainer,
+} from "recharts";
 
 const subscriptionData = [
-  { month: 'Jan', amount: 0 },
-  { month: 'Feb', amount: 0 },
-  { month: 'Mar', amount: 0 },
-  { month: 'Apr', amount: 0 },
-  { month: 'May', amount: 0 },
-  { month: 'Jun', amount: 0 },
-  { month: 'Jul', amount: 0 },
-  { month: 'Aug', amount: 0 },
-  { month: 'Sep', amount: 0 },
-  { month: 'Oct', amount: 0 },
-  { month: 'Nov', amount: 1200 },
-  { month: 'Dec', amount: 0 },
+  { month: "Jan", amount: 0 },
+  { month: "Feb", amount: 0 },
+  { month: "Mar", amount: 0 },
+  { month: "Apr", amount: 0 },
+  { month: "May", amount: 0 },
+  { month: "Jun", amount: 0 },
+  { month: "Jul", amount: 0 },
+  { month: "Aug", amount: 0 },
+  { month: "Sep", amount: 0 },
+  { month: "Oct", amount: 0 },
+  { month: "Nov", amount: 1200 },
+  { month: "Dec", amount: 0 },
 ];
 
 const Dashboard1 = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
+  // Remove isMenuOpen from here since it's managed by Layout
   return (
-    <div className="flex min-h-screen top-20 relative bg-gray-50 p-6">     
-
+    <div className="bg-gray-50 p-6">
       {/* Main Content */}
-      <main className="flex-1 ml-0 md:ml-30 px-8">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-8 bg-white p-3 rounded-md">
           <h2 className="text-2xl font-semibold mb-4">Dashboard</h2>
           <p className="text-gray-600">Home / Dashboard</p>
@@ -101,9 +86,9 @@ const Dashboard1 = () => {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="amount" 
+                  <Line
+                    type="monotone"
+                    dataKey="amount"
                     stroke="#00bcd4"
                     strokeWidth={2}
                   />
@@ -112,16 +97,9 @@ const Dashboard1 = () => {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
-
-const SidebarLink = ({ icon, text, active }) => (
-  <Link href="#" className={`flex items-center space-x-3 p-2 rounded mb-2 ${active ? 'bg-blue-500' : 'hover:bg-gray-700'}`}>
-    {icon}
-    <span>{text}</span>
-  </Link>
-);
 
 export default Dashboard1;

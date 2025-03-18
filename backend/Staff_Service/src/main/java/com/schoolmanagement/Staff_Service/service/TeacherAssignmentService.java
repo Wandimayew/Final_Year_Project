@@ -119,7 +119,7 @@ public class TeacherAssignmentService {
     }
 
     // Get assignments by school and class
-    public ResponseEntity<List<TeacherAssignmentResponseDTO>> getAssignmentsBySchoolAndClass(Long schoolId,
+    public ResponseEntity<List<TeacherAssignmentResponseDTO>> getAssignmentsBySchoolAndClass(String schoolId,
             Long classId) {
         List<TeacherAssignment> assignments = assignmentRepository.findBySchoolIdAndClassId(schoolId, classId);
 

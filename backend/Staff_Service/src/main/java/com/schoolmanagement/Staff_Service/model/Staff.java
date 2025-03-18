@@ -47,9 +47,9 @@ public class Staff {
 
     @NotNull(message = "User ID cannot be null")
     @Column(name = "user_id", nullable = false, unique = true)
-    private Long userId;
+    private String userId;
 
-    private Long schoolId;
+    private String schoolId;
 
     @NotBlank(message = "First name is required.")
     private String firstName;

@@ -24,9 +24,9 @@ public class StaffResponseDTO {
 
     private Long staffId;
 
-    private Long userId;
+    private String userId;
 
-    private Long schoolId;
+    private String schoolId;
 
     private String firstName;
 
@@ -65,5 +65,7 @@ public class StaffResponseDTO {
     private String created_by;
 
     private Map<String, Object> addressJson;
+
+    private TeacherResponseDTO teacher;
 
 }

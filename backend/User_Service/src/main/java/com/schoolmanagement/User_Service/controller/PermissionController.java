@@ -26,10 +26,12 @@ public class PermissionController {
         return permissionService.getPermissionById(permissionId);
     }
 
+    
     // Get all permissions
     @GetMapping
     public ResponseEntity<List<Permission>> getAllPermissions() {
         return permissionService.getAllPermissions();
+
     }
 
     // Create a new permission

@@ -8,9 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.schoolmanagement.User_Service.model.Role;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -21,8 +19,6 @@ public class UserResponseDTO {
     private Long schoolId;
     private String username;
     private String email;
-    private String password;
-    @JsonProperty("roles")
     private Set<Role> roles;
     private boolean isActive;
     private LocalDateTime lastLogin;

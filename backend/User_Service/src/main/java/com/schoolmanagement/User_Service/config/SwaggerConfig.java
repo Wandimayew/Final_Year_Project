@@ -1,5 +1,5 @@
-// package com.schoolmanagement.User_Service.config;
+package com.schoolmanagement.User_Service.config;
 
-// public class SwaggerConfig {
+public class SwaggerConfig {
 
-// }
+}

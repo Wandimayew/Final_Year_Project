@@ -14,7 +14,8 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     Optional<Staff> findByUsername(String username);
     Optional<Staff> findByEmail(String email);
     Optional<Staff> findByStaffId(Long staffId);
-    List<Staff> findBySchoolId(Long schoolId);
+    Optional<Staff> findByUserId(String userId);
+    List<Staff> findBySchoolId(String schoolId);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     boolean existsByStaffId(Long staffId);

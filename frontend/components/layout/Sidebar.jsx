@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -32,8 +31,8 @@ const Sidebar = ({ isMenuOpen }) => {
         <div
           className={`
             flex items-center justify-between py-1 cursor-pointer font-bold
-            ${isItemActive ? "bg-navy-700 text-[#1672EE]" : "text-[#555] hover:text-[#1672EE]"}
-            rounded-lg transition-colors duration-150
+            ${isItemActive ? "bg-indigo-100 text-indigo-600" : "text-[#555] hover:text-indigo-600"}
+            rounded-lg transition-colors duration-150 px-2
           `}
           onClick={() => (hasSubItems ? toggleExpand(item.id) : null)}
         >
@@ -42,7 +41,7 @@ const Sidebar = ({ isMenuOpen }) => {
             className="flex items-center flex-1 gap-3"
             onClick={(e) => hasSubItems && e.preventDefault()}
           >
-            <span className="glassmorphism p-2 rounded-md text-[#1672EE]">
+            <span className="glassmorphism p-2 rounded-md text-indigo-600">
               <item.icon size={25} />
             </span>
             {isMenuOpen && <span className="text-sm">{item.label}</span>}
@@ -58,28 +57,25 @@ const Sidebar = ({ isMenuOpen }) => {
 
         {isMenuOpen && hasSubItems && isExpanded && (
           <div className="ml-8 mt-1 space-y-1">
-            <div className="max-h-60 overflow-y-auto">
-              {item.subItems.map((subItem) => (
-                <Link
-                  key={subItem.id}
-                  href={subItem.href}
-                  className={`
-                    flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-bold
-                    ${isActive(subItem.href)
-                      ? "bg-navy-700 text-[#1672EE]"
-                      : "text-[#555] hover:text-[#1672EE]"}
-                  `}
-                >
-                  {/* Render sub-item icon */}
-                  {subItem.icon && (
-                    <span className="text-[#1672EE]">
-                      <subItem.icon size={18} />
-                    </span>
-                  )}
-                  <span>{subItem.label}</span>
-                </Link>
-              ))}
-            </div>
+            {item.subItems.map((subItem) => (
+              <Link
+                key={subItem.id}
+                href={subItem.href}
+                className={`
+                  flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-bold
+                  ${isActive(subItem.href)
+                    ? "bg-indigo-100 text-indigo-600"
+                    : "text-[#555] hover:text-indigo-600"}
+                `}
+              >
+                {subItem.icon && (
+                  <span className="text-indigo-600">
+                    <subItem.icon size={18} />
+                  </span>
+                )}
+                <span>{subItem.label}</span>
+              </Link>
+            ))}
           </div>
         )}
       </div>
@@ -88,11 +84,11 @@ const Sidebar = ({ isMenuOpen }) => {
 
   return (
     <aside
-      className={`h-screen bg-[#fff] text-[#555] flex flex-col fixed left-0 top-20 transition-all duration-300 ${
+      className={`fixed left-0 top-20 bottom-0 transition-all duration-300 bg-white text-[#555] shadow-md z-10 ${
         isMenuOpen ? "w-64" : "w-16"
       }`}
     >
-      <nav className="flex-1 p-2 space-y-2 overflow-y-auto">
+      <nav className="h-full p-2 overflow-y-auto scroll-smooth">
         {MENU_ITEMS.map((menu) => renderMenuItem(menu))}
       </nav>
     </aside>

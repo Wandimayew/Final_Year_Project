@@ -4,7 +4,6 @@ import lombok.Data;
 
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Data
 public class SignupRequest {
@@ -17,7 +16,6 @@ public class SignupRequest {
 
     private String password;
 
-    @JsonProperty("roles")
     private Set<String> roles;
 
 }

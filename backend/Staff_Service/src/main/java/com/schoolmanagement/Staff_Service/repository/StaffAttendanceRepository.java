@@ -14,7 +14,7 @@ import com.schoolmanagement.Staff_Service.model.StaffAttendance;
 public interface StaffAttendanceRepository extends JpaRepository<StaffAttendance, Long> {
     @Query("SELECT sa FROM StaffAttendance sa WHERE sa.staff.id = :staffId AND sa.date BETWEEN :startDate AND :endDate")
     List<StaffAttendance> findByStaffIdAndDateBetween(@Param("staffId") Long staffId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
-    List<StaffAttendance> findBySchoolIdAndDate(Long schoolId, LocalDate date);
+    List<StaffAttendance> findBySchoolIdAndDate(String schoolId, LocalDate date);
     
     @Query("SELECT sa FROM StaffAttendance sa WHERE sa.staff.id = :staffId " + "AND sa.date BETWEEN :startDate AND :endDate")
     List<StaffAttendance> findAttendanceHistory(@Param("staffId") Long staffId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
