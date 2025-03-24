@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -19,6 +20,7 @@ public class JwtResponse {
     private String username;
     private String email;
     private List<String> roles;
+    private Set<String> permissions;
     private String message;
 
 }

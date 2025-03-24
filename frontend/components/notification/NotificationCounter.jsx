@@ -66,7 +66,7 @@ const NotificationCounter = ({ schoolId, userId }) => {
     client.activate();
     setStompClient(client);
     return () => client.deactivate();
-  }, [auth?.token, userId, schoolId]);
+  }, [auth?.token, userId, schoolId,queryClient]);
 
   if (!notifications.length) return null;
 

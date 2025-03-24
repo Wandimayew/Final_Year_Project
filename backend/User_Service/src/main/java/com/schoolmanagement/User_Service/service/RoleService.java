@@ -4,21 +4,25 @@ import com.schoolmanagement.User_Service.dto.RoleRequest;
 import com.schoolmanagement.User_Service.exception.DuplicateResourceException;
 import com.schoolmanagement.User_Service.model.Permission;
 import com.schoolmanagement.User_Service.model.Role;
+import com.schoolmanagement.User_Service.model.User;
+import com.schoolmanagement.User_Service.model.UserRolePermission;
 import com.schoolmanagement.User_Service.repository.PermissionRepository;
 import com.schoolmanagement.User_Service.repository.RoleRepository;
+import com.schoolmanagement.User_Service.repository.UserRepository;
+import com.schoolmanagement.User_Service.repository.UserRolePermissionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -27,90 +31,190 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
+    private final UserRepository userRepository;
+    private final UserRolePermissionRepository userRolePermissionRepository;
+    private final PermissionService permissionService;
 
-    public ResponseEntity<Role> getRoleById(Long roleId) {
+    public ResponseEntity<Role> getRoleById(Long roleId, String schoolId) {
+        log.debug("Fetching role with ID: {} for schoolId: {}", roleId, schoolId);
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new EntityNotFoundException("Role not found with id " + roleId));
+                .filter(r -> r.getSchoolId().equals(schoolId))
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Role not found with ID: " + roleId + " in school: " + schoolId));
         return ResponseEntity.ok(role);
     }
 
-    public ResponseEntity<List<Role>> getAllRoles() {
-        List<Role> roles = roleRepository.findAll();
+    public ResponseEntity<List<Role>> getAllRoles(String schoolId) {
+        log.debug("Fetching all roles for schoolId: {}", schoolId);
+        List<Role> roles = roleRepository.findBySchoolId(schoolId);
+        if (roles.isEmpty()) {
+            throw new EntityNotFoundException("No roles found for schoolId: " + schoolId);
+        }
         return ResponseEntity.ok(roles);
     }
 
-    public ResponseEntity<Role> createRole(RoleRequest roleRequest) {
-        Optional<Role> existingRole = roleRepository.findBySchoolIdAndName(roleRequest.getSchoolId(), roleRequest.getName());
-        if (existingRole.isPresent()) {
-            throw new DuplicateResourceException("Role with name '" + roleRequest.getName() + "' already exists.");
+    public ResponseEntity<Role> createRole(RoleRequest roleRequest, String userId) {
+        log.info("Creating role with name: {} for schoolId: {}", roleRequest.getName(), roleRequest.getSchoolId());
+        if (roleRepository.existsByNameAndSchoolId(roleRequest.getName(), roleRequest.getSchoolId())) {
+            throw new DuplicateResourceException("Role with name '" + roleRequest.getName()
+                    + "' already exists in school: " + roleRequest.getSchoolId());
         }
-        Permission permission=permissionRepository.findById(roleRequest.getPermissions()).orElseThrow(null);
 
-        if (permission ==null) {
-            log.info("Permission not registered");
-            
-        }
-        Set<Permission> setPermissions=new HashSet<>();
-        setPermissions.add(permission);
-        log.info("saving a one role");
-        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-        Role role=new Role();
+        Role role = new Role();
         role.setCreatedAt(LocalDateTime.now());
         role.setUpdatedAt(LocalDateTime.now());
-        role.setCreatedBy(currentUser);
+        role.setCreatedBy(userId);
         role.setDescription(roleRequest.getDescription());
         role.setName(roleRequest.getName());
         role.setSchoolId(roleRequest.getSchoolId());
-        role.setPermissions(setPermissions);
-        log.info("saving a role");
+        role.setIsActive(true); // Default to active
+
         Role savedRole = roleRepository.save(role);
+        log.info("Role created with ID: {} for schoolId: {}", savedRole.getRoleId(), roleRequest.getSchoolId());
         return ResponseEntity.ok(savedRole);
     }
 
-    public ResponseEntity<Role> updateRole(Long roleId, Role roleDetails) {
+    public ResponseEntity<Role> updateRole(Long roleId, RoleRequest roleRequest, String schoolId, String userId) {
+        log.info("Updating role with ID: {} for schoolId: {}", roleId, schoolId);
         Role existingRole = roleRepository.findById(roleId)
-                .orElseThrow(() -> new EntityNotFoundException("Role not found with id " + roleId));
+                .filter(r -> r.getSchoolId().equals(schoolId) && r.getIsActive())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Role not found with ID: " + roleId + " in school: " + schoolId));
 
-        existingRole.setName(roleDetails.getName());
-        existingRole.setDescription(roleDetails.getDescription());
+        if (!existingRole.getName().equals(roleRequest.getName()) &&
+                roleRepository.existsByNameAndSchoolId(roleRequest.getName(), schoolId)) {
+            throw new DuplicateResourceException(
+                    "Role with name '" + roleRequest.getName() + "' already exists in school: " + schoolId);
+        }
+
+        existingRole.setName(roleRequest.getName());
+        existingRole.setDescription(roleRequest.getDescription());
         existingRole.setUpdatedAt(LocalDateTime.now());
-        existingRole.setCreatedBy(roleDetails.getCreatedBy());
+        existingRole.setUpdatedBy(userId);
 
         Role updatedRole = roleRepository.save(existingRole);
+        log.info("Role updated with ID: {} for schoolId: {}", roleId, schoolId);
         return ResponseEntity.ok(updatedRole);
     }
 
-    public ResponseEntity<String> deleteRole(Long roleId) {
+    public ResponseEntity<String> deleteRole(Long roleId, String schoolId, String userId) {
+        log.info("Deleting role with ID: {} for schoolId: {}", roleId, schoolId);
         Role existingRole = roleRepository.findById(roleId)
-                .orElseThrow(() -> new EntityNotFoundException("Role not found with id " + roleId));
+                .filter(r -> r.getSchoolId().equals(schoolId) && r.getIsActive())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Role not found with ID: " + roleId + " in school: " + schoolId));
 
-        roleRepository.delete(existingRole);
-        return ResponseEntity.ok("Role deleted successfully.");
+        existingRole.setIsActive(false);
+        existingRole.setUpdatedAt(LocalDateTime.now());
+        existingRole.setUpdatedBy(userId);
+
+        roleRepository.save(existingRole);
+        log.info("Role with ID: {} marked as inactive for schoolId: {}", roleId, schoolId);
+        return ResponseEntity.ok("Role with ID: " + roleId + " in school: " + schoolId + " deleted successfully.");
     }
 
-    public ResponseEntity<Role> addPermissionToRole(Long roleId, Long permissionId) {
+    public ResponseEntity<User> assignRoleToUser(Long roleId, String userId, String schoolId, String userToUpdate) {
+        log.info("Assigning role with ID: {} to userId: {} in schoolId: {}", roleId, userId, schoolId);
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new EntityNotFoundException("Role not found with id " + roleId));
+                .filter(r -> r.getSchoolId().equals(schoolId) && r.getIsActive())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Role not found with ID: " + roleId + " in school: " + schoolId));
 
-        Permission permission = permissionRepository.findById(permissionId)
-                .orElseThrow(() -> new EntityNotFoundException("Permission not found with id " + permissionId));
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getSchoolId().equals(schoolId) && u.getIsActive())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "User with ID: " + userId + " not found in school: " + schoolId));
 
-        role.getPermissions().add(permission);
-        roleRepository.save(role);
+        user.getRoles().add(role);
+        user.setUpdatedBy(userToUpdate);
+        user.setUpdatedAt(LocalDateTime.now());
 
-        return ResponseEntity.ok(role);
+        User updatedUser = userRepository.save(user);
+        permissionService.evictUserPermissionsCache(userId, schoolId); // Evict cache
+        log.info("Role with ID: {} assigned to userId: {} in schoolId: {}", roleId, userId, schoolId);
+        return ResponseEntity.ok(updatedUser);
     }
 
-    public ResponseEntity<Role> removePermissionFromRole(Long roleId, Long permissionId) {
+    public ResponseEntity<String> assignPermissionsToUserForRole(String userId, Long roleId, Set<Long> permissionIds,
+            String schoolId, String userIdUpdater) {
+        log.info("Assigning permissions to userId: {} for roleId: {} in schoolId: {}", userId, roleId, schoolId);
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getSchoolId().equals(schoolId) && u.getIsActive())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "User not found with ID: " + userId + " in school: " + schoolId));
+
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new EntityNotFoundException("Role not found with id " + roleId));
+                .filter(r -> r.getSchoolId().equals(schoolId) && r.getIsActive())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Role not found with ID: " + roleId + " in school: " + schoolId));
 
-        Permission permission = permissionRepository.findById(permissionId)
-                .orElseThrow(() -> new EntityNotFoundException("Permission not found with id " + permissionId));
+        if (!user.getRoles().contains(role)) {
+            throw new IllegalArgumentException("User does not have the role with ID: " + roleId);
+        }
 
-        role.getPermissions().remove(permission);
-        roleRepository.save(role);
+        // userRolePermissionRepository.softDeleteByUserAndRole(userId, roleId,
+        // schoolId); // Soft delete existing
+        // permissions
 
-        return ResponseEntity.ok(role);
+        Set<UserRolePermission> newAssignments = permissionIds.stream()
+                .map(permissionId -> {
+                    Permission permission = permissionRepository.findById(permissionId)
+                            .filter(p -> p.getSchoolId().equals(schoolId) && p.getIsActive())
+                            .orElseThrow(() -> new EntityNotFoundException(
+                                    "Permission not found with ID: " + permissionId + " in school: " + schoolId));
+                    UserRolePermission urp = new UserRolePermission();
+                    urp.setUser(user);
+                    urp.setRole(role);
+                    urp.setPermission(permission);
+                    urp.setType("assigned");
+                    urp.setSchoolId(schoolId);
+                    urp.setCreatedAt(LocalDateTime.now());
+                    urp.setUpdatedAt(LocalDateTime.now());
+                    urp.setCreatedBy(userIdUpdater);
+                    urp.setIsActive(true);
+                    return urp;
+                })
+                .collect(Collectors.toSet());
+
+        userRolePermissionRepository.saveAll(newAssignments);
+        permissionService.evictUserPermissionsCache(userId, schoolId); // Evict cache
+        log.info("Assigned {} permissions to userId: {} for roleId: {} in schoolId: {}", permissionIds.size(), userId,
+                roleId, schoolId);
+        return ResponseEntity.ok("Permissions assigned successfully.");
+    }
+
+    public ResponseEntity<User> removeRoleFromUser(String userId, String schoolId, String userUpdater) {
+        log.info("Changing role to ROLE_USER for userId: {} in schoolId: {}", userId, schoolId);
+
+        // Step 1: Find the "ROLE_USER" role by name and validate it exists, is active,
+        // and belongs to the school
+        Role userRole = roleRepository.findByNameAndSchoolId("ROLE_USER", schoolId)
+                .filter(Role::getIsActive)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Role 'ROLE_USER' not found in school: " + schoolId));
+
+        // Step 2: Find the user by ID and validate they exist, are active, and belong
+        // to the school
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getSchoolId().equals(schoolId) && u.getIsActive())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "User with ID: " + userId + " not found in school: " + schoolId));
+
+        // Step 3: Clear existing roles and assign "ROLE_USER"
+        user.getRoles().clear(); // Remove all current roles
+        user.getRoles().add(userRole); // Assign the "ROLE_USER" role
+
+        // Step 4: Update user metadata
+        user.setUpdatedBy(userUpdater);
+        user.setUpdatedAt(LocalDateTime.now());
+
+        // Step 5: Save the updated user
+        User updatedUser = userRepository.save(user);
+
+        // Step 6: Evict permissions cache (since roles affect permissions)
+        permissionService.evictUserPermissionsCache(userId, schoolId);
+
+        log.info("Role 'ROLE_USER' assigned to userId: {} in schoolId: {}", userId, schoolId);
+        return ResponseEntity.ok(updatedUser);
     }
 }

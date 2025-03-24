@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react"; // Added useCallback
 import Link from "next/link";
 import { toast } from "react-toastify";
-import { FiArrowUp, FiArrowDown } from "react-icons/fi";
 import {
+  FiArrowUp,
+  FiArrowDown,
   FiEdit,
   FiTrash2,
   FiEye,
@@ -22,7 +23,6 @@ import StaffModal from "./StaffModal";
 import ConfirmDialog from "./ConfirmDialog";
 
 export default function EmployeeList() {
-  // State declarations
   const [searchQuery, setSearchQuery] = useState("");
   const [staff, setStaff] = useState([]);
   const [filteredStaff, setFilteredStaff] = useState([]);
@@ -41,12 +41,11 @@ export default function EmployeeList() {
   const [activeTab, setActiveTab] = useState("staff");
   const [selectedTeacherDetails, setSelectedTeacherDetails] = useState(null);
 
-  // Fetch staff data
-  const fetchStaffData = async () => {
+  // Fetch staff data with useCallback
+  const fetchStaffData = useCallback(async () => {
     try {
       setLoading(true);
       let response = [];
-
       if (activeTab === "teacher") {
         response = await staffService.getAllTeachersAll();
       } else {
@@ -76,13 +75,13 @@ export default function EmployeeList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]); // Dependency: activeTab
 
   useEffect(() => {
     fetchStaffData();
-  }, [activeTab]);
+  }, [fetchStaffData,activeTab]); // Dependency: fetchStaffData
 
-  // Handle staff deletion
+  // Rest of the code remains unchanged...
   const handleDelete = async (id) => {
     try {
       await (activeTab === "teacher"
@@ -115,7 +114,6 @@ export default function EmployeeList() {
     }
   };
 
-  // Export functions
   const exportToExcel = () => {
     if (filteredStaff.length === 0) {
       alert("No data available export to Excel.");
@@ -170,31 +168,24 @@ export default function EmployeeList() {
       return;
     }
     const textToCopy = filteredStaff
-      .map((staff) => {
-        return `${staff.firstName} ${staff.middleName} ${staff.lastName} - ${staff.email} - ${staff.status}`;
-      })
+      .map(
+        (staff) =>
+          `${staff.firstName} ${staff.middleName} ${staff.lastName} - ${staff.email} - ${staff.status}`
+      )
       .join("\n");
-
     navigator.clipboard
       .writeText(textToCopy)
-      .then(() => {
-        toast.success("Data copied to clipboard!");
-      })
-      .catch((err) => {
-        toast.error("Failed to copy data.");
-      });
+      .then(() => toast.success("Data copied to clipboard!"))
+      .catch(() => toast.error("Failed to copy data."));
   };
-  // Sorting function
+
   const handleSort = (key) => {
     let direction = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+    if (sortConfig.key === key && sortConfig.direction === "ascending")
       direction = "descending";
-    }
     setSortConfig({ key, direction });
-
     const sorted = [...filteredStaff].sort((a, b) => {
       let aValue, bValue;
-
       if (key === "fullName") {
         aValue = `${a.firstName} ${a.middleName || ""} ${a.lastName}`.trim();
         bValue = `${b.firstName} ${b.middleName || ""} ${b.lastName}`.trim();
@@ -202,16 +193,13 @@ export default function EmployeeList() {
         aValue = a[key];
         bValue = b[key];
       }
-
       if (aValue < bValue) return direction === "ascending" ? -1 : 1;
       if (aValue > bValue) return direction === "ascending" ? 1 : -1;
       return 0;
     });
-
     setFilteredStaff(sorted);
   };
 
-  // Search and filter effect
   useEffect(() => {
     const filtered = staff.filter((member) => {
       const searchString = searchQuery.toLowerCase();
@@ -220,17 +208,14 @@ export default function EmployeeList() {
         member.middleName?.toLowerCase().includes(searchString) ||
         member.lastName?.toLowerCase().includes(searchString) ||
         member.email?.toLowerCase().includes(searchString);
-
       const matchesStatus =
         filterStatus === "all" ? true : member.status === filterStatus;
-
       return matchesSearch && matchesStatus;
     });
     setFilteredStaff(filtered);
     setCurrentPage(1);
   }, [searchQuery, staff, filterStatus]);
 
-  // Pagination calculations
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredStaff.slice(indexOfFirstItem, indexOfLastItem);
@@ -238,9 +223,7 @@ export default function EmployeeList() {
 
   return (
     <div className="container mx-auto px-4 py-8 mt-12">
-      {/* Header and Controls */}
       <div className="mb-8">
-        {/* Tabs */}
         <div className="flex mb-4 space-x-4">
           <button
             onClick={() => setActiveTab("all")}
@@ -263,8 +246,6 @@ export default function EmployeeList() {
             Teachers
           </button>
         </div>
-
-        {/* Export buttons */}
         <div className="flex justify-end space-x-2">
           <button
             onClick={exportToExcel}
@@ -303,8 +284,6 @@ export default function EmployeeList() {
           </button>
         </div>
       </div>
-
-      {/* Search and Filters */}
       <div className="flex flex-wrap justify-end gap-4 mb-4">
         <input
           type="text"
@@ -323,8 +302,6 @@ export default function EmployeeList() {
           <option value="INACTIVE">Inactive</option>
         </select>
       </div>
-
-      {/* Staff Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white text-black">
           <thead>
@@ -382,11 +359,9 @@ export default function EmployeeList() {
               currentItems.map((item) => (
                 <tr key={item.id}>
                   <td className="px-6 py-4 border-b text-center">{item.id}</td>
-                  <td className="px-6 py-4 border-b text-center">
-                    {`${item.firstName} ${item.middleName || ""} ${
-                      item.lastName
-                    }`}
-                  </td>
+                  <td className="px-6 py-4 border-b text-center">{`${
+                    item.firstName
+                  } ${item.middleName || ""} ${item.lastName}`}</td>
                   <td className="px-6 py-4 border-b text-center">
                     {item.email}
                   </td>
@@ -410,7 +385,6 @@ export default function EmployeeList() {
                       >
                         <FiEye />
                       </button>
-
                       <Link
                         href={`/staff/edit/${item.id}`}
                         className="text-yellow-500"
@@ -436,8 +410,6 @@ export default function EmployeeList() {
           </tbody>
         </table>
       </div>
-
-      {/* Pagination */}
       <div className="mt-4 flex justify-between items-center text-black">
         <span>
           Showing {indexOfFirstItem + 1} to{" "}
@@ -463,8 +435,6 @@ export default function EmployeeList() {
           </button>
         </div>
       </div>
-
-      {/* Modals */}
       {showModal && (
         <StaffModal
           staff={selectedStaff}
@@ -477,7 +447,6 @@ export default function EmployeeList() {
           isTeacher={activeTab === "teacher"}
         />
       )}
-
       {showConfirmDialog && (
         <ConfirmDialog
           title="Confirm Delete"

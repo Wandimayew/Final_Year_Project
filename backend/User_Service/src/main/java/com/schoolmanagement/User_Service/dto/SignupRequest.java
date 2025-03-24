@@ -19,4 +19,7 @@ public class SignupRequest {
 
     @JsonProperty("roles")
     private Set<String> roles;
+
+    @JsonProperty("permissions")
+    private Set<String> permissions;
 }

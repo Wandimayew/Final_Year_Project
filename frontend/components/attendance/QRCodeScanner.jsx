@@ -4,6 +4,7 @@ import axios from 'axios';
 import ReactQRScanner from 'react-qr-scanner';
 import { isMobile } from 'react-device-detect';
 import { Smartphone, Laptop } from 'lucide-react';
+import Image from 'next/image';
 
 const QRCodeScanner = () => {
     const [schoolId, setSchoolId] = useState(null);
@@ -139,7 +140,7 @@ const QRCodeScanner = () => {
                     ) : (
                         qrCodeUrl && (
                             <div className="mb-6">
-                                <img src={qrCodeUrl} alt="QR Code" className="mx-auto w-48 h-48" />
+                                <Image src={qrCodeUrl} alt="QR Code" className="mx-auto w-48 h-48" />
                                 <p className="text-sm text-gray-600 mt-2">
                                     Scan this QR code using your mobile device.
                                 </p>

@@ -1,11 +1,13 @@
 "use client";
 
+import { useState, memo } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-import { useState } from "react";
 
-const Layout = ({ children }) => {
+// Memoize Layout to prevent unnecessary re-renders
+const Layout = memo(({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <div className="overflow-auto px-4 py-6">
@@ -23,6 +25,8 @@ const Layout = ({ children }) => {
       </div>
     </div>
   );
-};
+});
+
+Layout.displayName = "Layout";
 
 export default Layout;

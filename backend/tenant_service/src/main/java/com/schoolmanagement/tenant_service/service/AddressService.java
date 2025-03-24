@@ -26,7 +26,7 @@ public class AddressService {
     private final SchoolRepository schoolRepository;
 
 
-    public ResponseEntity<AddressResponse> addNewAddress(AddressRequest addressRequest, Long school_id){
+    public ResponseEntity<AddressResponse> addNewAddress(AddressRequest addressRequest, String school_id){
         School school=schoolRepository.findBySchool_id(school_id);
         if(school == null){
             log.error("School not found with id {}", school_id);
@@ -52,7 +52,7 @@ public class AddressService {
         
     }
 
-    public ResponseEntity<AddressResponse> editAddressById(AddressRequest addressRequest,Long school_id,Long address_id){
+    public ResponseEntity<AddressResponse> editAddressById(AddressRequest addressRequest,String school_id,Long address_id){
         School schoolExists=schoolRepository.findBySchool_id(school_id);
         if(schoolExists == null){
             log.error("School not found with id {}", school_id);
@@ -76,7 +76,7 @@ public class AddressService {
         return ResponseEntity.ok(convertToAddressResponse(savedAddress));
     }
 
-    public ResponseEntity<String> deleteAddressById(Long school_id, Long address_id){
+    public ResponseEntity<String> deleteAddressById(String school_id, Long address_id){
         School schoolExists=schoolRepository.findBySchool_id(school_id);
         if(schoolExists == null){
             log.error("School not found with id {}", school_id);
@@ -94,7 +94,7 @@ public class AddressService {
         return ResponseEntity.ok("Address with id "+ address_id + " deleted successfully.");
     }
     
-    public ResponseEntity<AddressResponse> getAddressById(Long school_id, Long address_id){
+    public ResponseEntity<AddressResponse> getAddressById(String school_id, Long address_id){
         School schoolExists=schoolRepository.findBySchool_id(school_id);
         if(schoolExists == null){
             log.error("School not found with id {}", school_id);
@@ -109,7 +109,7 @@ public class AddressService {
         return ResponseEntity.ok(convertToAddressResponse(addressExists));
     }
   
-    public ResponseEntity<List<AddressResponse>> getAllAddressesBySchoolId(Long school_id){
+    public ResponseEntity<List<AddressResponse>> getAllAddressesBySchoolId(String school_id){
         School schoolExists=schoolRepository.findBySchool_id(school_id);
         if(schoolExists == null){
             log.error("School not found with id {}", school_id);

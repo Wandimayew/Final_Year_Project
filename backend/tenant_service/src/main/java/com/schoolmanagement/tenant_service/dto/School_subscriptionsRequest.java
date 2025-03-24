@@ -12,7 +12,7 @@ import lombok.extern.java.Log;
 @Data
 public class School_subscriptionsRequest {
 
-    private Long school_id;
+    private String school_id;
 
     private Long subscriptionPlan;
 

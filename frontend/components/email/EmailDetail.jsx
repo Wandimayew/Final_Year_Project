@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import Image from "next/image";
 import {
   Box,
   Typography,
@@ -264,7 +265,7 @@ const EmailDetail = ({ emailId }) => {
     ) {
       markAsReadMutation.mutate();
     }
-  }, [email, auth, markAsReadMutation.isLoading, markAsReadMutation.isSuccess]);
+  }, [email, auth, markAsReadMutation.isLoading, markAsReadMutation.isSuccess,markAsReadMutation]);
 
   const handleDownloadAttachment = async (filePath, fileName) => {
     try {
@@ -487,7 +488,7 @@ const EmailDetail = ({ emailId }) => {
                         sx={{ backgroundColor: "#bbdefb", color: "#1976d2" }}
                       />
                       {attachment.fileType?.startsWith("image") && (
-                        <img
+                        <Image
                           src={attachment.filePath}
                           alt={attachment.fileName}
                           style={{

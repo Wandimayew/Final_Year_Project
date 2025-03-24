@@ -1,4 +1,5 @@
 import { Camera } from "lucide-react";
+import Image from "next/image";
 
 const ImageUpload = ({ label, image, onChange }) => {
   return (
@@ -6,7 +7,7 @@ const ImageUpload = ({ label, image, onChange }) => {
       <label className="text-sm font-medium text-gray-700">{label}</label>
       <label className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-6">
         {image ? (
-          <img
+          <Image
             src={image}
             alt="Uploaded"
             className="h-32 w-32 rounded-lg object-cover"
