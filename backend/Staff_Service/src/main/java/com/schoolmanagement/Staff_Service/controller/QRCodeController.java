@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/api/qrcodes")
+@RequestMapping("/staff/api/qrcodes")
 @RequiredArgsConstructor
 @Slf4j
 public class QRCodeController {
@@ -57,4 +57,6 @@ public class QRCodeController {
         log.info("Fetching active QR Code for school ID: {}", schoolId);
         return qrCodeService.getActiveQRCode(schoolId);
     }
+
+
 }

@@ -5,8 +5,7 @@ import lombok.Data;
 
 @Data
 public class RoleRequest {
-    
-    private Long schoolId;
+    private String schoolId;
 
     private String name;
 

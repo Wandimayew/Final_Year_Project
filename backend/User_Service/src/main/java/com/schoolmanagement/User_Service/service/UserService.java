@@ -3,29 +3,20 @@ package com.schoolmanagement.User_Service.service;
 import com.schoolmanagement.User_Service.dto.SignupRequest;
 import com.schoolmanagement.User_Service.dto.UserResponseDTO;
 import com.schoolmanagement.User_Service.exception.BadRequestException;
-import com.schoolmanagement.User_Service.model.Role;
 import com.schoolmanagement.User_Service.model.User;
-import com.schoolmanagement.User_Service.repository.RoleRepository;
 import com.schoolmanagement.User_Service.repository.UserRepository;
-import com.schoolmanagement.User_Service.file.FileStorageService;
-import com.schoolmanagement.User_Service.file.FileUtils;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
-
-import javax.naming.AuthenticationException;
 
 @Service
 @Slf4j
@@ -35,7 +26,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public ResponseEntity<UserResponseDTO> updateUser(SignupRequest updatedUserDetails, Long userId) {
+    public ResponseEntity<UserResponseDTO> updateUser(SignupRequest updatedUserDetails, String userId) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID:: " + userId));
         if(!existingUser.getIsActive()){
@@ -51,7 +42,7 @@ public class UserService {
         return ResponseEntity.ok(convertToUserResponse(updatedUser));
     }
 
-    public ResponseEntity<UserResponseDTO> getUserById(Long userId) {
+    public ResponseEntity<UserResponseDTO> getUserById(String userId) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID:: " + userId));
                 if(!existingUser.getIsActive()){
@@ -66,7 +57,7 @@ public class UserService {
 
     }
 
-    public ResponseEntity<String> deleteUserById(Long userId) {
+    public ResponseEntity<String> deleteUserById(String userId) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID:: " + userId));
 
@@ -75,7 +66,7 @@ public class UserService {
         return ResponseEntity.ok("User with id " + existingUser.getUserId()+ " deleted successfully.");
     }
 
-    public ResponseEntity<List<UserResponseDTO>> getUsersBySchool(Long schoolId) {
+    public ResponseEntity<List<UserResponseDTO>> getUsersBySchool(String schoolId) {
         List<User> users = userRepository.findBySchoolId(schoolId);
         return ResponseEntity.ok(users.stream().map(this::convertToUserResponse).collect(Collectors.toList()));
 
@@ -90,7 +81,7 @@ public class UserService {
     //     user.setUserPhoto(photoPath);
     //     userRepository.save(user);
     // }
-    public ResponseEntity<UserResponseDTO> changePassword(Long userId, String currentPassword, String newPassword) {
+    public ResponseEntity<UserResponseDTO> changePassword(String userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
@@ -117,4 +108,28 @@ public class UserService {
                 .updatedAt(user.getUpdatedAt())
                 .build();
     }
+
+    public String getEmailByUserId(String schoolId, String userId) {
+        User existingUser = userRepository.findBySchoolAndUserId("new", userId);
+
+        if (existingUser == null) { // Check if the existingUser is null
+            log.info("User not found for id {}", userId);
+            return null; // Or throw an exception if desired
+        }
+
+        return existingUser.getEmail();
+    }
+
+    public List<String> getUserIdsByRole(String role, String schoolId) {
+        log.info("school id {} and role name {}", schoolId, role);
+        List<User> users = userRepository.findByRoleAndSchoolId(role, schoolId);
+    
+        log.info("response from repository {}", users);
+    
+        return users.stream()
+            .map(user -> String.format("ID: %s, Email: %s", user.getUserId(), user.getEmail()))
+            .collect(Collectors.toList());
+    }
+    
+    
 }

@@ -3,6 +3,7 @@ package com.schoolmanagement.User_Service.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -24,15 +25,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) 
+            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui/index.html", "/favicon.ico").permitAll()
-                .requestMatchers("/api/**").permitAll()
-                
+                .requestMatchers(
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/v3/api-docs.yaml",
+                    "/swagger-ui.html",
+                    "/swagger-ui/index.html",
+                    "/swagger-resources/**",
+                    "/favicon.ico",
+                    "/error"
+                ).permitAll()
+                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/actuator/health").permitAll()
                 .anyRequest().authenticated()  
             )
-            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class);  // Ensure JwtAuthenticationFilter comes before the default UsernamePasswordAuthenticationFilter
-        
+            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 

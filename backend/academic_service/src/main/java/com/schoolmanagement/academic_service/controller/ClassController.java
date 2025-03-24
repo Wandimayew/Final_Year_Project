@@ -40,6 +40,11 @@ public class ClassController {
         return classService.editClassById(classRequest, school_id, class_id);
     }
 
+    @PutMapping("/{school_id}/editStatus/{class_id}")
+    public ResponseEntity<ClassResponse> editStatus(@PathVariable String school_id, @PathVariable Long class_id) {
+        return classService.updateStatus(school_id, class_id);
+    }
+
     @GetMapping("/{school_id}/getAllClassBySchool")
     public ResponseEntity<List<ClassResponse>> getAllClassBySchool(@PathVariable String school_id) {
         // return addressService.getAllAddressesBySchoolId(school_id);

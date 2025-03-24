@@ -19,7 +19,7 @@ import com.schoolmanagement.Staff_Service.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/attendance")
+@RequestMapping("/staff/api/attendance")
 @RequiredArgsConstructor
 public class AttendanceController {
 

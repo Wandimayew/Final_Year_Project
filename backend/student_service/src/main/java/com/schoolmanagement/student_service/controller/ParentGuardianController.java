@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.schoolmanagement.student_service.dto.ParentGuardianRequest;
@@ -23,9 +24,8 @@ import com.schoolmanagement.student_service.service.ParentGuardianService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-
 @RestController
-@RequestMapping("/api/parent-guardians")
+@RequestMapping("/student/api/parent-guardians")
 @RequiredArgsConstructor
 public class ParentGuardianController {
     private final ParentGuardianService parentGuardianService;
@@ -40,6 +40,25 @@ public class ParentGuardianController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<ParentGuardianResponse> getParentGuardianByContact(
+            @RequestParam(required = false) String phoneNumber,
+            @RequestParam(required = false) String email) {
+
+        if (phoneNumber == null && email == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        ParentGuardian parentGuardian = parentGuardianService.getParentGuardianByPhoneOrEmail(phoneNumber, email);
+
+        if (parentGuardian == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        ParentGuardianResponse response = ParentGuardianMapper.toResponse(parentGuardian);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     // Get a parent/guardian by ID
     @GetMapping("/{id}")
     public ResponseEntity<ParentGuardianResponse> getParentGuardianById(@PathVariable Long id) {
@@ -50,7 +69,8 @@ public class ParentGuardianController {
 
     // Create a new parent/guardian
     @PostMapping
-    public ResponseEntity<ParentGuardianResponse> createParentGuardian(@Valid @RequestBody ParentGuardianRequest request) {
+    public ResponseEntity<ParentGuardianResponse> createParentGuardian(
+            @Valid @RequestBody ParentGuardianRequest request) {
         ParentGuardian parentGuardian = ParentGuardianMapper.toEntity(request);
         ParentGuardian createdParentGuardian = parentGuardianService.createParentGuardian(parentGuardian);
         ParentGuardianResponse response = ParentGuardianMapper.toResponse(createdParentGuardian);

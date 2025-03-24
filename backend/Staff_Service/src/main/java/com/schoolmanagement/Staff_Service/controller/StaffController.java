@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/api/staff")
+@RequestMapping("/staff/api/staff")
 @RequiredArgsConstructor
 @Slf4j
 public class StaffController {

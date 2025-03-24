@@ -1,14 +1,7 @@
 package com.schoolmanagement.academic_service.service;
 
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -18,6 +11,10 @@ import com.schoolmanagement.academic_service.dto.request.TimeTableRequest;
 import com.schoolmanagement.academic_service.dto.request.TimeTableRequest.SubjectConfig;
 import com.schoolmanagement.academic_service.dto.request.TimeTableRequest.TeacherConfig;
 import com.schoolmanagement.academic_service.dto.response.TimeTableResponse;
+import com.schoolmanagement.academic_service.repository.ClassRepository;
+import com.schoolmanagement.academic_service.repository.SectionRepository;
+import com.schoolmanagement.academic_service.repository.StreamRepository;
+import com.schoolmanagement.academic_service.repository.SubjectRepository;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -26,238 +23,385 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
+@Slf4j
 public class ScheduleService {
-     private final Validator validator;
+
+    private final Validator validator;
+    private final ClassRepository classRepository;
+    private final SectionRepository sectionRepository;
+    private final StreamRepository streamRepository;
+    private final SubjectRepository subjectRepository;
+
+    private static final List<String> DAYS_OF_WEEK = Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday",
+            "Friday");
+
+    private static class TimeSlot {
+        String day;
+        LocalTime start;
+        LocalTime end;
+        String teacherId;
+        String subjectName;
+
+        TimeSlot(String day, LocalTime start, LocalTime end, String teacherId, String subjectName) {
+            this.day = day;
+            this.start = start;
+            this.end = end;
+            this.teacherId = teacherId;
+            this.subjectName = subjectName;
+        }
+
+        TimeSlot copy() {
+            return new TimeSlot(day, start, end, teacherId, subjectName);
+        }
+
+        boolean overlaps(TimeSlot other) {
+            return this.day.equals(other.day) && this.start.isBefore(other.end) && this.end.isAfter(other.start);
+        }
+    }
+
+    public static class AggregatedSchedule {
+        private int orderNo;
+        private String subjectTitle;
+        private String teacher;
+        private Map<String, String> schedule;
+
+        public AggregatedSchedule() {
+            schedule = new LinkedHashMap<>();
+            DAYS_OF_WEEK.forEach(day -> schedule.put(day, ""));
+        }
+
+        public int getOrderNo() {
+            return orderNo;
+        }
+
+        public void setOrderNo(int orderNo) {
+            this.orderNo = orderNo;
+        }
+
+        public String getSubjectTitle() {
+            return subjectTitle;
+        }
+
+        public void setSubjectTitle(String subjectTitle) {
+            this.subjectTitle = subjectTitle;
+        }
+
+        public String getTeacher() {
+            return teacher;
+        }
+
+        public void setTeacher(String teacher) {
+            this.teacher = teacher;
+        }
+
+        public Map<String, String> getSchedule() {
+            return schedule;
+        }
+
+        public void setSchedule(Map<String, String> schedule) {
+            this.schedule = schedule;
+        }
+    }
 
     public TimeTableResponse generateTimeTable(TimeTableRequest request) {
-        log.info("Starting timetable generation process.");
-
-        // Validate the request
-        log.info("Validating the request...");
+        log.info("Starting timetable generation process for school: {}", request.getSchoolName());
         validateRequest(request);
+        validateEntitiesExistence(request);
 
-        // Parse constraints and configurations
-        log.info("Parsing teacher configurations...");
-        Map<String, TeacherConfig> teacherConfigMap = buildTeacherConfigMap(request.getTeacherConfigs());
-        List<SubjectConfig> subjectConfigs = request.getSubjectConfigs();
+        Map<String, Map<String, List<TimeTableResponse.ScheduleSlot>>> rawTimetable = generateTimetableCSP(request);
+        Map<String, Map<String, List<AggregatedSchedule>>> aggregatedTimetable = aggregateTimetable(rawTimetable);
 
-        log.info("Building timetable...");
-        // Build the timetable
-        Map<String, Map<String, List<TimeTableResponse.ScheduleSlot>>> timetable = buildTimetable(
-                request.getClassConfigs(),
-                teacherConfigMap,
-                subjectConfigs,
-                request.getTimetableConstraints());
-
-        // Create and return response
-        log.info("Timetable generated successfully.");
         return TimeTableResponse.builder()
                 .schoolName(request.getSchoolName())
                 .academicYear(request.getAcademicYear())
-                .timetable(timetable)
+                .timetable(aggregatedTimetable)
                 .message("Timetable generated successfully")
                 .statusCode(200)
                 .build();
     }
 
-    private Map<String, Map<String, List<TimeTableResponse.ScheduleSlot>>> buildTimetable(
-            List<TimeTableRequest.ClassConfig> classConfigs,
-            Map<String, TeacherConfig> teacherConfigMap,
-            List<SubjectConfig> subjectConfigs,
-            TimeTableRequest.TimetableConstraints constraints) {
-        log.info("Building timetable...");
+    private Map<String, Map<String, List<TimeTableResponse.ScheduleSlot>>> generateTimetableCSP(
+            TimeTableRequest request) {
+        Map<String, TeacherConfig> teacherConfigMap = buildTeacherConfigMap(request.getTeacherConfigs());
+        Map<String, Map<String, Integer>> sectionSubjectFrequency = new HashMap<>();
+        Map<String, Map<String, List<TimeSlot>>> timetable = new HashMap<>();
 
-        Map<String, Map<String, List<TimeTableResponse.ScheduleSlot>>> timetable = new HashMap<>();
-
-        for (TimeTableRequest.ClassConfig classConfig : classConfigs) {
-            Map<String, List<TimeTableResponse.ScheduleSlot>> sectionTimetable = new HashMap<>();
+        // Initialize timetable and frequency map
+        for (TimeTableRequest.ClassConfig classConfig : request.getClassConfigs()) {
+            if (classConfig.getSections().isEmpty() || classConfig.getSubjectIds().isEmpty())
+                continue;
+            Map<String, List<TimeSlot>> sectionSchedules = new HashMap<>();
             for (TimeTableRequest.SectionConfig section : classConfig.getSections()) {
-                List<TimeTableResponse.ScheduleSlot> schedule = generateScheduleForSection(
-                        classConfig,
-                        section,
-                        teacherConfigMap,
-                        subjectConfigs,
-                        constraints);
-                sectionTimetable.put(section.getSectionName(), schedule);
+                String sectionKey = "Section-" + section.getSectionId();
+                sectionSchedules.put(sectionKey, new ArrayList<>());
+                Map<String, Integer> subjectFreq = new HashMap<>();
+                for (SubjectConfig sub : request.getSubjectConfigs()) {
+                    if (classConfig.getSubjectIds().contains(sub.getSubjectId())) {
+                        subjectFreq.put(sub.getSubjectName(), sub.getSubjectFrequencyPerWeek());
+                    }
+                }
+                sectionSubjectFrequency.put(sectionKey, subjectFreq);
             }
-            timetable.put(classConfig.getClassName(), sectionTimetable);
+            timetable.put("Class-" + classConfig.getClassId(), sectionSchedules);
         }
 
-        return timetable;
+        // CSP Backtracking
+        if (!assignSchedules(timetable, sectionSubjectFrequency, teacherConfigMap, request.getTimetableConstraints())) {
+            throw new RuntimeException("Failed to generate a valid timetable: No feasible solution found.");
+        }
+
+        // Convert to response format
+        Map<String, Map<String, List<TimeTableResponse.ScheduleSlot>>> rawTimetable = new HashMap<>();
+        for (Map.Entry<String, Map<String, List<TimeSlot>>> classEntry : timetable.entrySet()) {
+            Map<String, List<TimeTableResponse.ScheduleSlot>> sectionMap = new HashMap<>();
+            for (Map.Entry<String, List<TimeSlot>> sectionEntry : classEntry.getValue().entrySet()) {
+                List<TimeTableResponse.ScheduleSlot> slots = sectionEntry.getValue().stream()
+                        .map(slot -> TimeTableResponse.ScheduleSlot.builder()
+                                .subjectName(slot.subjectName)
+                                .teacherId(slot.teacherId)
+                                .sectionName(sectionEntry.getKey())
+                                .day(slot.day)
+                                .startTime(slot.start.toString())
+                                .endTime(slot.end.toString())
+                                .build())
+                        .collect(Collectors.toList());
+                sectionMap.put(sectionEntry.getKey(), slots);
+            }
+            rawTimetable.put(classEntry.getKey(), sectionMap);
+        }
+        return rawTimetable;
     }
 
-    private List<TimeTableResponse.ScheduleSlot> generateScheduleForSection(
-        TimeTableRequest.ClassConfig classConfig,
-        TimeTableRequest.SectionConfig sectionConfig,
-        Map<String, TeacherConfig> teacherConfigMap,
-        List<SubjectConfig> subjectConfigs,
-        TimeTableRequest.TimetableConstraints constraints) {
-        log.info("Generating schedule for section: {}", sectionConfig.getSectionName());
-    
-        List<TimeTableResponse.ScheduleSlot> schedule = new ArrayList<>();
-        Map<String, Integer> subjectFrequencyTracker = new HashMap<>();
-        Map<String, Integer> teacherLoadTracker = new HashMap<>();
-        Map<String, String> lastAssignedTeacherForSection = new HashMap<>();
-        LocalTime currentTime = LocalTime.parse(constraints.getSchoolStartTime());
-    
-        List<String> daysOfWeek = new ArrayList<>(Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"));
-        Map<String, Set<String>> assignedSubjectsPerDay = new HashMap<>();
-    
-        // Initialize the subjects tracker for each day
-        for (String day : daysOfWeek) {
-            assignedSubjectsPerDay.put(day, new HashSet<>());
-        }
-    
-        // Shuffle the subject list to vary the order
-        List<SubjectConfig> shuffledSubjects = new ArrayList<>(subjectConfigs);
-        Collections.shuffle(shuffledSubjects);
-    
-        for (SubjectConfig subject : shuffledSubjects) {
-            if (!classConfig.getSubjectIds().contains(subject.getSubjectId())) continue;
-    
-            int requiredSessions = subject.getSubjectFrequencyPerWeek();
-            subjectFrequencyTracker.put(subject.getSubjectName(), 0);
-    
-            for (int i = 0; i < requiredSessions; i++) {
-                // Find an available teacher
-                String assignedTeacherId = findAvailableTeacher(
-                    subject,
-                    classConfig,
-                    teacherConfigMap,
-                    teacherLoadTracker,
-                    constraints,
-                    lastAssignedTeacherForSection,
-                    sectionConfig.getSectionName());
-    
-                if (assignedTeacherId == null) {
-                    throw new RuntimeException("Unable to assign teacher for subject: " + subject.getSubjectName());
-                }
-    
-                // Shuffle the days to add randomness
-                Collections.shuffle(daysOfWeek);
-                String assignedDay = findAvailableDay(daysOfWeek, schedule, constraints, assignedSubjectsPerDay, subject);
-    
-                // Adjust current time with random offset for variability
-                currentTime = currentTime.plusMinutes((int) (Math.random() * 10));
-    
-                // Add the schedule slot
-                schedule.add(TimeTableResponse.ScheduleSlot.builder()
-                    .subjectName(subject.getSubjectName())
-                    .teacherId(assignedTeacherId)
-                    .sectionName(sectionConfig.getSectionName())
-                    .day(assignedDay)
-                    .startTime(currentTime.toString())
-                    .endTime(currentTime.plusMinutes(subject.getSubjectDurationInMinutes()).toString())
-                    .build());
-    
-                // Update trackers
-                currentTime = currentTime.plusMinutes(subject.getSubjectDurationInMinutes() + constraints.getBreakDurationInMinutes());
-                teacherLoadTracker.put(assignedTeacherId, teacherLoadTracker.getOrDefault(assignedTeacherId, 0) + 1);
-                subjectFrequencyTracker.put(subject.getSubjectName(),
-                    subjectFrequencyTracker.get(subject.getSubjectName()) + 1);
-    
-                // Respect daily limits
-                if (schedule.size() % constraints.getMaxSubjectsPerDay() == 0) {
-                    currentTime = LocalTime.parse(constraints.getSchoolStartTime()); // Start the next day
-                }
-    
-                // Reset time if past end time
-                if (currentTime.isAfter(LocalTime.parse(constraints.getSchoolEndTime()))) {
-                    currentTime = LocalTime.parse(constraints.getSchoolStartTime());
-                }
-            }
-        }
-    
-        return schedule;
-    }
-    
-
-
-    private String findAvailableDay(List<String> daysOfWeek, List<TimeTableResponse.ScheduleSlot> schedule,
-            TimeTableRequest.TimetableConstraints constraints, Map<String, Set<String>> assignedSubjectsPerDay,
-            SubjectConfig subject) {
-
-        // Try to assign the subject to a day that hasn't yet had this subject scheduled
-        for (String day : daysOfWeek) {
-            // Ensure no day exceeds the max subjects per day limit
-            long subjectsOnDay = schedule.stream()
-                    .filter(slot -> slot.getDay().equals(day))
-                    .count();
-
-            if (subjectsOnDay < constraints.getMaxSubjectsPerDay() &&
-                    !assignedSubjectsPerDay.get(day).contains(subject.getSubjectName())) {
-                assignedSubjectsPerDay.get(day).add(subject.getSubjectName());
-                return day;
-            }
-        }
-
-        // If all days have been exhausted, fallback to the first available day
-        return daysOfWeek.get(0); // If all days are full, fallback to the first day
-    }
-
-    private String findAvailableTeacher(
-            SubjectConfig subject,
-            TimeTableRequest.ClassConfig classConfig,
+    private boolean assignSchedules(
+            Map<String, Map<String, List<TimeSlot>>> timetable,
+            Map<String, Map<String, Integer>> sectionSubjectFrequency,
             Map<String, TeacherConfig> teacherConfigMap,
-            Map<String, Integer> teacherLoadTracker,
-            TimeTableRequest.TimetableConstraints constraints,
-            Map<String, String> lastAssignedTeacherForSection,
-            String sectionName) {
-        List<String> availableTeachers = new ArrayList<>();
+            TimeTableRequest.TimetableConstraints constraints) {
+        // Find the next unassigned subject
+        Optional<Map.Entry<String, Map.Entry<String, Integer>>> nextAssignment = sectionSubjectFrequency.entrySet()
+                .stream()
+                .flatMap(sectionEntry -> sectionEntry.getValue().entrySet().stream()
+                        .filter(freqEntry -> freqEntry.getValue() > 0)
+                        .map(freqEntry -> Map.entry(sectionEntry.getKey(), freqEntry)))
+                .findFirst();
 
-        for (TeacherConfig teacher : teacherConfigMap.values()) {
-            if (!teacher.getSubjectIds().contains(subject.getSubjectId()))
+        if (!nextAssignment.isPresent())
+            return true; // All subjects assigned
+
+        String sectionKey = nextAssignment.get().getKey();
+        String subjectName = nextAssignment.get().getValue().getKey();
+        String classKey = timetable.entrySet().stream()
+                .filter(entry -> entry.getValue().containsKey(sectionKey))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Class not found for section: " + sectionKey));
+        String className = classKey.replace("Class-", "");
+        SubjectConfig subjectConfig = getSubjectConfig(subjectName, sectionSubjectFrequency);
+
+        LocalTime schoolStart = LocalTime.parse(constraints.getSchoolStartTime());
+        LocalTime schoolEnd = LocalTime.parse(constraints.getSchoolEndTime());
+        int duration = subjectConfig.getSubjectDurationInMinutes();
+
+        for (String day : DAYS_OF_WEEK) {
+            List<TimeSlot> currentDaySchedule = timetable.get(classKey).get(sectionKey).stream()
+                    .filter(slot -> slot.day.equals(day))
+                    .sorted(Comparator.comparing(s -> s.start))
+                    .collect(Collectors.toList());
+
+            if (currentDaySchedule.size() >= constraints.getMaxSubjectsPerDay())
                 continue;
-            if (!teacher.getClassNames().contains(classConfig.getClassName()))
+
+            LocalTime currentTime = currentDaySchedule.isEmpty() ? schoolStart
+                    : currentDaySchedule.get(currentDaySchedule.size() - 1).end;
+            int subjectsToday = currentDaySchedule.size();
+
+            // Add break dynamically if needed (after 3 subjects or to fit schedule)
+            if (subjectsToday >= 3 && currentTime.plusMinutes(duration).isAfter(schoolEnd)) {
+                currentTime = currentTime.plusMinutes(constraints.getBreakDurationInMinutes());
+            }
+            LocalTime endTime = currentTime.plusMinutes(duration);
+            if (endTime.isAfter(schoolEnd))
                 continue;
 
-            int currentLoad = teacherLoadTracker.getOrDefault(teacher.getTeacherId(), 0);
+            List<TeacherConfig> availableTeachers = teacherConfigMap.values().stream()
+                    .filter(t -> t.getSubjectIds().contains(subjectConfig.getSubjectId()) &&
+                            t.getClassNames().contains(className))
+                    .collect(Collectors.toList());
 
-            // Check if teacher is overworked
-            if (currentLoad >= teacher.getMaxClassesPerDay()) {
-                log.info("Teacher {} exceeded max load: {}/{}", teacher.getTeacherName(), currentLoad,
-                        teacher.getMaxClassesPerDay());
-                continue; // Skip this teacher if they exceeded their load
+            for (TeacherConfig teacher : availableTeachers) {
+                int dailyLoad = timetable.values().stream()
+                        .flatMap(m -> m.values().stream())
+                        .flatMap(List::stream)
+                        .filter(slot -> slot.day.equals(day) && slot.teacherId.equals(teacher.getTeacherId()))
+                        .mapToInt(s -> 1)
+                        .sum();
+                int weeklyLoad = timetable.values().stream()
+                        .flatMap(m -> m.values().stream())
+                        .flatMap(List::stream)
+                        .filter(slot -> slot.teacherId.equals(teacher.getTeacherId()))
+                        .mapToInt(s -> 1)
+                        .sum();
+
+                if (dailyLoad >= teacher.getMaxClassesPerDay() || weeklyLoad >= teacher.getMaxClassesPerWeek())
+                    continue;
+
+                TimeSlot proposedSlot = new TimeSlot(day, currentTime, endTime, teacher.getTeacherId(), subjectName);
+                List<TimeSlot> sectionSchedule = timetable.get(classKey).get(sectionKey);
+
+                if (isSlotValid(proposedSlot, teacher.getTeacherId(), sectionSchedule, timetable)) {
+                    sectionSchedule.add(proposedSlot);
+                    sectionSubjectFrequency.get(sectionKey).put(subjectName,
+                            sectionSubjectFrequency.get(sectionKey).get(subjectName) - 1);
+
+                    if (assignSchedules(timetable, sectionSubjectFrequency, teacherConfigMap, constraints)) {
+                        return true;
+                    }
+
+                    sectionSchedule.remove(proposedSlot);
+                    sectionSubjectFrequency.get(sectionKey).put(subjectName,
+                            sectionSubjectFrequency.get(sectionKey).get(subjectName) + 1);
+                }
             }
+        }
+        return false;
+    }
 
-            // Ensure the teacher hasn't been assigned to the same section for this subject
-            // recently
-            if (lastAssignedTeacherForSection.containsKey(sectionName) &&
-                    lastAssignedTeacherForSection.get(sectionName).equals(teacher.getTeacherId())) {
-                log.info("Teacher {} already assigned to section {} for this subject.", teacher.getTeacherName(),
-                        sectionName);
-                continue; // Skip the teacher to avoid consecutive teaching of the same subject
-            }
+    private SubjectConfig getSubjectConfig(String subjectName,
+            Map<String, Map<String, Integer>> sectionSubjectFrequency) {
+        for (SubjectConfig config : sectionSubjectFrequency.values().iterator().next().keySet().stream()
+                .map(name -> new SubjectConfig() {
+                    {
+                        setSubjectName(name);
+                        setSubjectId(sectionSubjectFrequency.entrySet().stream()
+                                .flatMap(e -> e.getValue().entrySet().stream())
+                                .filter(e -> e.getKey().equals(name))
+                                .findFirst().map(e -> Long.valueOf(allSubjects().stream()
+                                        .filter(s -> s.getSubjectName().equals(name))
+                                        .findFirst().get().getSubjectId()))
+                                .orElse(0L));
+                        setSubjectDurationInMinutes(40);
+                        setSubjectFrequencyPerWeek(sectionSubjectFrequency.values().iterator().next().get(name));
+                    }
+                })
+                .collect(Collectors.toList())) {
+            if (config.getSubjectName().equals(subjectName))
+                return config;
+        }
+        throw new RuntimeException("Subject config not found for: " + subjectName);
+    }
 
-            // Add to the list of available teachers if they are eligible
-            availableTeachers.add(teacher.getTeacherId());
+    private List<SubjectConfig> allSubjects() {
+        return subjectRepository.findAll().stream()
+                .map(sub -> new SubjectConfig() {
+                    {
+                        setSubjectName(sub.getSubjectName());
+                        setSubjectId(sub.getSubjectId());
+                        setSubjectDurationInMinutes(40);
+                        setSubjectFrequencyPerWeek(0); // Placeholder, updated in CSP
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
+    private boolean isSlotValid(TimeSlot proposedSlot, String teacherId, List<TimeSlot> sectionSchedule,
+            Map<String, Map<String, List<TimeSlot>>> timetable) {
+        for (TimeSlot slot : sectionSchedule) {
+            if (slot.day.equals(proposedSlot.day) && slot.overlaps(proposedSlot))
+                return false;
         }
 
-        if (availableTeachers.isEmpty()) {
-            log.error("No teachers available for subject: {}", subject.getSubjectName());
-            throw new RuntimeException("Unable to assign teacher for subject: " + subject.getSubjectName());
+        for (Map<String, List<TimeSlot>> classSchedules : timetable.values()) {
+            for (List<TimeSlot> slots : classSchedules.values()) {
+                for (TimeSlot slot : slots) {
+                    if (slot.teacherId.equals(teacherId) && slot.overlaps(proposedSlot))
+                        return false;
+                }
+            }
         }
+        return true;
+    }
 
-        // Return the first available teacher (or use your preferred selection strategy)
-        String assignedTeacherId = availableTeachers.get(0);
-        lastAssignedTeacherForSection.put(sectionName, assignedTeacherId);
-        return assignedTeacherId;
+    private void validateEntitiesExistence(TimeTableRequest request) {
+        String schoolId = request.getSchoolId();
+        for (TimeTableRequest.ClassConfig classConfig : request.getClassConfigs()) {
+            if (classConfig.getSections().isEmpty() || classConfig.getSubjectIds().isEmpty())
+                continue;
+            if (classRepository.findBySchoolAndClassId(schoolId, classConfig.getClassId()) == null) {
+                throw new IllegalArgumentException(
+                        "Class ID " + classConfig.getClassId() + " does not exist for school " + schoolId);
+            }
+            for (TimeTableRequest.SectionConfig section : classConfig.getSections()) {
+                if (sectionRepository.findBySchoolAndSectionId(schoolId, section.getSectionId()) == null) {
+                    throw new IllegalArgumentException(
+                            "Section ID " + section.getSectionId() + " does not exist for school " + schoolId);
+                }
+                if (streamRepository.findBySchoolAndStreamId(schoolId, section.getStreamId()) == null) {
+                    throw new IllegalArgumentException(
+                            "Stream ID " + section.getStreamId() + " does not exist for school " + schoolId);
+                }
+            }
+            for (Long subjectId : classConfig.getSubjectIds()) {
+                if (subjectRepository.findBySchoolAndSubjectId(schoolId, subjectId) == null) {
+                    throw new IllegalArgumentException(
+                            "Subject ID " + subjectId + " does not exist for school " + schoolId);
+                }
+            }
+        }
+    }
+
+    private Map<String, Map<String, List<AggregatedSchedule>>> aggregateTimetable(
+            Map<String, Map<String, List<TimeTableResponse.ScheduleSlot>>> rawTimetable) {
+        Map<String, Map<String, List<AggregatedSchedule>>> aggregatedTimetable = new HashMap<>();
+        for (Map.Entry<String, Map<String, List<TimeTableResponse.ScheduleSlot>>> classEntry : rawTimetable
+                .entrySet()) {
+            Map<String, List<AggregatedSchedule>> sectionMap = new HashMap<>();
+            for (Map.Entry<String, List<TimeTableResponse.ScheduleSlot>> sectionEntry : classEntry.getValue()
+                    .entrySet()) {
+                sectionMap.put(sectionEntry.getKey(), aggregateScheduleSlots(sectionEntry.getValue()));
+            }
+            aggregatedTimetable.put(classEntry.getKey(), sectionMap);
+        }
+        return aggregatedTimetable;
+    }
+
+    private List<AggregatedSchedule> aggregateScheduleSlots(List<TimeTableResponse.ScheduleSlot> slots) {
+        Map<String, List<TimeTableResponse.ScheduleSlot>> grouped = slots.stream()
+                .collect(Collectors.groupingBy(slot -> slot.getSubjectName() + "_" + slot.getTeacherId()));
+        List<AggregatedSchedule> aggregatedList = new ArrayList<>();
+        for (Map.Entry<String, List<TimeTableResponse.ScheduleSlot>> entry : grouped.entrySet()) {
+            List<TimeTableResponse.ScheduleSlot> slotGroup = entry.getValue();
+            if (slotGroup.isEmpty())
+                continue;
+            AggregatedSchedule agg = new AggregatedSchedule();
+            agg.setSubjectTitle(slotGroup.get(0).getSubjectName());
+            agg.setTeacher(slotGroup.get(0).getTeacherId());
+            for (TimeTableResponse.ScheduleSlot slot : slotGroup) {
+                String timeRange = slot.getStartTime() + " - " + slot.getEndTime();
+                agg.getSchedule().put(slot.getDay(), timeRange);
+            }
+            aggregatedList.add(agg);
+        }
+        int order = 1;
+        for (AggregatedSchedule agg : aggregatedList) {
+            agg.setOrderNo(order++);
+        }
+        return aggregatedList;
     }
 
     private Map<String, TeacherConfig> buildTeacherConfigMap(List<TeacherConfig> teacherConfigs) {
-        log.info("Building teacher config map...");
         return teacherConfigs.stream().collect(Collectors.toMap(TeacherConfig::getTeacherId, Function.identity()));
     }
 
     private void validateRequest(TimeTableRequest request) {
-        log.info("Validating timetable request...");
-
         Set<ConstraintViolation<TimeTableRequest>> violations = validator.validate(request);
         if (!violations.isEmpty()) {
-            log.error("Request validation failed with violations: {}", violations);
             throw new ConstraintViolationException(violations);
+        }
+        LocalTime start = LocalTime.parse(request.getTimetableConstraints().getSchoolStartTime());
+        LocalTime end = LocalTime.parse(request.getTimetableConstraints().getSchoolEndTime());
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("School start time must be before end time");
         }
     }
 }

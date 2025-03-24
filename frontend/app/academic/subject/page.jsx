@@ -11,7 +11,7 @@ const SubjectPage = () => {
   const [assign, setAssign] = useState(false);
 
   return (
-    <Layout>
+    <>
       {subjectList ? (
         <SubjectList
           setSubjectListClicked={setSubjectList}
@@ -28,7 +28,7 @@ const SubjectPage = () => {
           setAssign={setAssign}
         />
       )}
-    </Layout>
+    </>
   );
 };
 

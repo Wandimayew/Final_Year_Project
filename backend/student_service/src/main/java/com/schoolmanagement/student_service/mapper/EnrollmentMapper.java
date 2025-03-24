@@ -18,7 +18,7 @@ public class EnrollmentMapper {
 
         // Set the student (assuming you have a Student entity)
         Student student = new Student();
-        student.setId(request.getStudentId());
+        student.setStudentId(request.getStudentId());
         enrollment.setStudent(student);
 
         return enrollment;
@@ -33,7 +33,7 @@ public class EnrollmentMapper {
         response.setEnrollmentDate(enrollment.getEnrollmentDate());
         response.setIsTransferred(enrollment.getIsTransferred());
         response.setTransferReason(enrollment.getTransferReason());
-        response.setStudentId(enrollment.getStudent() != null ? enrollment.getStudent().getId() : null);
+        response.setStudentId(enrollment.getStudent() != null ? enrollment.getStudent().getStudentId() : null);
         return response;
     }
 }

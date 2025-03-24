@@ -7,7 +7,7 @@ import lombok.Data;
 public class ParentGuardianResponse {
 
     private Long parentId;
-    private Long schoolId;
+    private String schoolId;
     private String fatherName;
     private String motherName;
     private String otherFamilyMemberName;

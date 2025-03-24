@@ -1,12 +1,7 @@
 import AddClass from "@/components/academic/AddClass";
-import Layout from "@/components/layout/Layout";
 
 const AddClassPage = () => {
-  return (
-    <Layout>
-      <AddClass />
-    </Layout>
-  );
+  return <AddClass />;
 };
 
 export default AddClassPage;

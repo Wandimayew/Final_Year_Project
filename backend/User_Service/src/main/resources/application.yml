@@ -1,6 +1,6 @@
 spring:
   application:
-    name: User_Service
+    name: USER_SERVICE
     file:
       uploads:
         photos-output-path: ./uploads
@@ -8,9 +8,9 @@ spring:
     ansi:
       enabled: ALWAYS
   datasource:
-    url: jdbc:mysql://localhost:3306/User_Service  
-    username: root  
-    password: Tame123! 
+    url: jdbc:mysql://mysql:3306/User_Service  
+    username: admin  
+    password: admin 
     driver-class-name: com.mysql.cj.jdbc.Driver  
     hikari:
       minimum-idle: 5
@@ -40,6 +40,9 @@ spring:
           auth: true
           starttls:
             enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
 app:
   password-reset:
@@ -47,10 +50,33 @@ app:
       expiration: 30 # minutes
   jwtSecret: zWR3i+mURw4kppEwVNhxZdqblotfvWseQGKI1SdLI9Y=
   jwtExpirationMs: 86400000
+  
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 
 server:
-  port: 8082
+  port: 8087
+
 eureka:
   client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka/  # URL of the Eureka Server
+    registerWithEureka: true  # Register this client with Eureka
+    fetchRegistry: true  # Fetch the registry to discover other services
+  instance:
+    preferIpAddress: true  # Use IP address instead of hostname (optional but recommended)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  health:
+    mail:
+      enabled: true
+  endpoint:
+    health:
+      show-details: when-authorized
+

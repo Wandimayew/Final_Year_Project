@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: COMMUNICATION_SERVICE
+  datasource:
+    url: jdbc:mysql://mysql:3306/Communication_Service
+    username: admin
+    password: admin
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 600000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  profiles:
+    active: dev
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:wandimayew8@gmail.com} # Use env var with default
+    password: ${MAIL_PASSWORD:jrbt rotv xjwz tfqk}  # Use env var with default (secure this!)
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        debug: true
+  rabbitmq:
+    host: rabbitmq # Use Docker service name
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+server:
+  port: 8083
+
+user:
+  management:
+    service:
+      url: http://user-service:8087
+
+cloudinary:
+  cloud-name: dcpehgnee
+  api-key: 843599552916561
+  api-secret: ${CLOUDINARY_API_SECRET:D6q2oDpQf-NJdyqhKv8NJhl6k9k} # Secure this via env var
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka/
+    registerWithEureka: true
+    fetchRegistry: true
+  instance:
+    preferIpAddress: true

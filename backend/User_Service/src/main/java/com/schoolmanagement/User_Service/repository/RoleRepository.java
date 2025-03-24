@@ -13,7 +13,7 @@ import com.schoolmanagement.User_Service.model.Role;
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
     Optional<Role> findByName(String name);
-    List<Role> findBySchoolId(Long schoolId);
+    List<Role> findBySchoolId(String schoolId);
     @Query("SELECT r FROM Role r WHERE LOWER(r.name) = LOWER(:name) AND r.schoolId = :schoolId")
-    Optional<Role> findBySchoolIdAndName(@Param("schoolId") Long schoolId, @Param("name") String name);
+    Optional<Role> findBySchoolIdAndName(@Param("schoolId") String schoolId, @Param("name") String name);
 }

@@ -15,8 +15,8 @@ import com.schoolmanagement.User_Service.model.Role;
 @AllArgsConstructor
 public class UserResponseDTO {
 
-    private Long userId;
-    private Long schoolId;
+    private String userId;
+    private String schoolId;
     private String username;
     private String email;
     private Set<Role> roles;

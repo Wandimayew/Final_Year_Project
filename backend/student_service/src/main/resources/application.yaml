@@ -1,6 +1,6 @@
 spring:
   application:
-    name: student_service
+    name: STUDENT_SERVICE
     file:
       uploads:
         photos-output-path: ./uploads
@@ -8,9 +8,9 @@ spring:
     ansi:
       enabled: ALWAYS
   datasource:
-    url: jdbc:mysql://localhost:3306/Student_Service
-    username: root
-    password: FiRo@12345
+    url: jdbc:mysql://mysql:3306/Student_Service
+    username: admin
+    password: admin
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       minimum-idle: 5
@@ -19,7 +19,7 @@ spring:
       pool-name: HikariCP # Optional for clarity in logs
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -30,6 +30,20 @@ spring:
       enabled: true
       max-file-size: 50MB
       max-request-size: 50MB
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 
 server:
-  port: 8083
+  port: 8085
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka/  # URL of the Eureka Server
+    registerWithEureka: true  # Register this client with Eureka
+    fetchRegistry: true  # Fetch the registry to discover other services
+  instance:
+    preferIpAddress: true  # Use IP address instead of hostname (optional but recommended)

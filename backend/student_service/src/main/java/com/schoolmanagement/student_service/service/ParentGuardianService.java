@@ -25,6 +25,11 @@ public class ParentGuardianService {
                 .orElseThrow(() -> new RuntimeException("Parent/Guardian not found with id: " + id));
     }
 
+    public ParentGuardian getParentGuardianByPhoneOrEmail(String phoneNumber, String email) {
+        return parentGuardianRepository.findByPhoneNumberOrEmail(phoneNumber, email)
+                .orElseThrow(() -> new RuntimeException("Parent/Guardian not found with phone number: " + phoneNumber + " or email: " + email));
+    }
+
     // Create a new parent/guardian
     public ParentGuardian createParentGuardian(ParentGuardian parentGuardian) {
         return parentGuardianRepository.save(parentGuardian);

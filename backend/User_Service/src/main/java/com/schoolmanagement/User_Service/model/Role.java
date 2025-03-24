@@ -23,7 +23,7 @@ public class Role {
 
     @NotNull(message = "School ID cannot be null")
     @Column(name = "school_id", nullable = false)
-    private Long schoolId;
+    private String schoolId;
 
     @NotBlank(message = "Role name cannot be blank")
     @Size(max = 50, message = "Role name cannot exceed 50 characters")
