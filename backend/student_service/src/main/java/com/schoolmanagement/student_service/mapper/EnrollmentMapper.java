@@ -33,7 +33,7 @@ public class EnrollmentMapper {
         response.setEnrollmentDate(enrollment.getEnrollmentDate());
         response.setIsTransferred(enrollment.getIsTransferred());
         response.setTransferReason(enrollment.getTransferReason());
-        response.setStudentId(enrollment.getStudent() != null ? enrollment.getStudent().getSchoolId() : null);
+        response.setStudentId(enrollment.getStudent() != null ? enrollment.getStudent().getStudentId() : null);
         return response;
     }
 }

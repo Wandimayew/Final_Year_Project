@@ -6,34 +6,29 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
+import com.schoolmanagement.User_Service.config.BooleanConverter;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = { "username", "school_id" }))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class User {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "user_id", updatable = false, nullable = false)
-    private Long userId;
+    @Column(unique = true, name = "user_id", updatable = false, nullable = false)
+    private String userId;
 
     @NotNull(message = "School ID cannot be null")
     @Column(name = "school_id", nullable = false)
-    private Long schoolId;
-
-    // @NotBlank(message = "Full name cannot be blank")
-    // @Size(max = 50, message = "Full name cannot exceed 50 characters")
-    // private String fullName;
+    private String schoolId;
 
     @NotBlank(message = "Username cannot be blank")
     @Size(min = 5, max = 30, message = "Username must be between 5 and 30 characters")
@@ -50,14 +45,8 @@ public class User {
 
     @NotNull(message = "Active status cannot be null")
     @Column(name = "is_active", nullable = false)
+    @Convert(converter = BooleanConverter.class)
     private Boolean isActive;
-
-    // @Size(max = 255, message = "Address cannot exceed 255 characters")
-    // private String userAddress;
-
-    // @Lob
-    // @Column(columnDefinition = "BLOB")
-    // private String userPhoto;
 
     private LocalDateTime lastLogin;
 
@@ -69,22 +58,19 @@ public class User {
     private LocalDateTime updatedAt;
 
     @NotBlank(message = "Created by cannot be blank")
+    @Column(nullable = false, name = "created_by")
     private String createdBy;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
+    @Column(nullable = true, name = "updated_by")
+    private String updatedBy;
+
+    @ManyToMany(fetch = FetchType.EAGER) // Use EAGER for now to ensure loading
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
-    // @NotBlank(message = "Phone number cannot be blank")
-    // @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Phone number must be between 10 and 15 digits and may optionally start with a '+'")
-    // private String phoneNumber;
-
-    // @NotBlank(message = "Gender cannot be blank")
-    // @Pattern(regexp = "MALE|FEMALE", message = "Invalid gender. Allowed values are MALE or FEMALE.")
-    // @Column(nullable = false)
-    // private String gender;
+    @Override
+    public String toString() {
+        return "User{userId='" + userId + "', username='" + username + "', schoolId='" + schoolId + "', isActive="
+                + isActive + "}";
+    }
 }

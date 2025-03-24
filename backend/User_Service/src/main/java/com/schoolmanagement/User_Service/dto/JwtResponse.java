@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -14,11 +15,12 @@ import java.util.List;
 public class JwtResponse {
     private String token;
     private String type = "Bearer";
-    private Long userId;
-    private Long schoolId;
+    private String userId;
+    private String schoolId;
     private String username;
     private String email;
     private List<String> roles;
+    private Set<String> permissions;
     private String message;
 
 }

@@ -31,10 +31,10 @@ public class StudentService {
             return studentRepository.findAll();
         }
     }
-    
+
     // Get all students
     public List<Student> getAllPassedStudents(Long classId, Long sectionId, PassedOrFail isPassed) {
-        
+
         if (classId != null && sectionId != null) {
             // Filter by both classId and sectionId
             return studentRepository.findByClassIdAndSectionIdAndIsPassed(classId, sectionId, isPassed);
@@ -51,8 +51,8 @@ public class StudentService {
     }
 
     // Get a student by ID
-    public Student getStudentById(Long id) {
-        return studentRepository.findById(id)
+    public Student getStudentById(String id) {
+        return studentRepository.findByStudentId(id)
                 .orElseThrow(() -> new RuntimeException("Student not found with id: " + id));
     }
 

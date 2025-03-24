@@ -1,98 +1,100 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+const fetchStreams = async (schoolId) => {
+  if (!schoolId) return []; // Avoid fetch if no schoolId
+  const response = await axios.get(
+    `http://localhost:8084/academic/api/new/getAllStreamBySchool`
+  );
+  return response.data;
+};
+
+const addClass = async (classData) => {
+  const response = await axios.post(
+    `http://localhost:8084/academic/api/new/add-class`, // Adjust endpoint as needed
+    classData
+  );
+  return response.data;
+};
 
 const AddClass = ({ setClassList, classListClicked }) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
   const [formData, setFormData] = useState({
     className: "",
     academicYear: "",
-    streamId: 0,
+    streamId: "",
   });
-
-  const [streams, setStreams] = useState([]);
-  const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
-
   const [schoolId, setSchoolId] = useState("");
 
-  // Fetch stream options
-  useEffect(() => {
-    const fetchStreams = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:8084/academic/api/new/getAllStreamBySchool`
-        );
-        console.log("stream data: {", response.data, "}.");
-
-        setStreams(response.data);
-      } catch (error) {
-        console.error("Failed to fetch streams:", error);
-      }
-    };
-
-    fetchStreams();
-  }, [schoolId]);
-
+  // Fetch schoolId from localStorage
   useEffect(() => {
     const userData = localStorage.getItem("auth-store");
     if (userData) {
       try {
-        // Parse the JSON data
         const parsedData = JSON.parse(userData);
-        setSchoolId(parsedData.user.schoolId);
-        console.log("parsed :", parsedData);
-        console.log("users :", parsedData.user);
-
-        // setToken(parsedData.token);
+        setSchoolId(parsedData.user?.schoolId || "");
       } catch (error) {
         console.error("Error parsing user data:", error);
       }
     }
   }, []);
 
-  // Handle form field changes
+  // Fetch streams using useQuery
+  const {
+    data: streams = [],
+    isLoading: streamsLoading,
+    error: streamsError,
+  } = useQuery({
+    queryKey: ["streams", schoolId],
+    queryFn: () => fetchStreams(schoolId),
+    enabled: !!schoolId, // Only fetch when schoolId is available
+  });
+
+  // Mutation for adding a class
+  const mutation = useMutation({
+    mutationFn: addClass,
+    onSuccess: (data) => {
+      setSuccessMessage("Class added successfully!");
+      setFormData({ className: "", academicYear: "", streamId: "" });
+      queryClient.invalidateQueries(["classes"]); // Invalidate class list if you fetch it elsewhere
+      setTimeout(() => setClassList(true), 2000);
+    },
+    onError: (error) => {
+      console.error("Error adding class:", error);
+    },
+  });
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post(
-        `http://localhost:8084/academic/api/new/addNewClass`,
-        formData
-      );
-      console.log("Response data: {", response, "}.");
-      console.log("class list before sucess :", classListClicked);
-
-      if (response.status === 200) {
-        setSuccessMessage("Class added successfully!");
-        setFormData({
-          className: "",
-          academicYear: "",
-          streamId: 0,
-        });
-        // Introduce a 1-minute delay
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        setClassList(true);
-      }
-    } catch (error) {
-      console.error("Error adding class:", error);
-      setError("Failed to add class. Please try again.");
-    }
+    setSuccessMessage("");
+    mutation.mutate(formData);
   };
 
   return (
     <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md relative top-20">
       <h2 className="text-2xl font-bold mb-4">Add Class</h2>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {streamsError && (
+        <p className="text-red-500 mb-4">Failed to load streams</p>
+      )}
+      {mutation.isError && (
+        <p className="text-red-500 mb-4">Error adding class</p>
+      )}
       {successMessage && (
         <p className="text-green-500 mb-4">{successMessage}</p>
       )}
+
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label
@@ -111,6 +113,7 @@ const AddClass = ({ setClassList, classListClicked }) => {
             required
           />
         </div>
+
         <div className="mb-4">
           <label
             className="block text-gray-700 font-medium mb-2"
@@ -128,6 +131,7 @@ const AddClass = ({ setClassList, classListClicked }) => {
             required
           />
         </div>
+
         <div className="mb-4">
           <label
             className="block text-gray-700 font-medium mb-2"
@@ -142,6 +146,7 @@ const AddClass = ({ setClassList, classListClicked }) => {
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
             required
+            disabled={streamsLoading}
           >
             <option value="">Select a Stream</option>
             {streams.map((stream) => (
@@ -151,17 +156,22 @@ const AddClass = ({ setClassList, classListClicked }) => {
             ))}
           </select>
         </div>
-        <div className="flex w-full justify-between ">
-        <Link href="/academic/class" 
-          className=" bg-gray-300 text-black py-2 px-4 rounded-md hover:bg-gray-500 focus:outline-none focus:ring focus:ring-gray-300"
-          >Cancel</Link>
-        <button
-          type="submit"
-          className=" bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
-        >
-          Add Class
-        </button>
 
+        <div className="flex w-full justify-between">
+          <button
+            onClick={() => setClassList(true)}
+            type="button" // Prevent form submission
+            className="bg-gray-300 text-black py-2 px-4 rounded-md hover:bg-gray-500 focus:outline-none focus:ring focus:ring-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
+            disabled={mutation.isPending || streamsLoading}
+          >
+            {mutation.isPending ? "Adding..." : "Add Class"}
+          </button>
         </div>
       </form>
     </div>

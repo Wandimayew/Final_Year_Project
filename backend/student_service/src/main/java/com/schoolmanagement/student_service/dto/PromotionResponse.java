@@ -9,7 +9,7 @@ public class PromotionResponse {
 
     private Long id;
     private Long studentId;
-    private Long schoolId;
+    private String schoolId;
     private Long previousClassId;
     private Long newClassId;
     private LocalDate promotionDate;

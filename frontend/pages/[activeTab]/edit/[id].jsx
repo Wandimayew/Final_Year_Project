@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 import { staffService } from "../../../services/api";
 import EditForm from "../../../components/employee/EditForm";
@@ -6,32 +6,35 @@ import { toast } from "react-toastify";
 
 export default function EditPage() {
   const router = useRouter();
-  const { activeTab, id } = router.query; // Retrieve activeTab ('staff' or 'teacher') and id from the URL
+  const { activeTab, id } = router.query;
   const [loading, setLoading] = useState(true);
   const [staffData, setStaffData] = useState(null);
+
+  const fetchStaffData = useCallback(
+    async (id) => {
+      try {
+        let response;
+        if (activeTab === "teacher") {
+          response = await staffService.getTeacherById(id);
+        } else {
+          response = await staffService.getStaffById(id);
+        }
+        setStaffData(response.data);
+      } catch (error) {
+        toast.error("Failed to fetch staff data");
+        console.error("Error fetching staff data:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [activeTab]
+  );
 
   useEffect(() => {
     if (id && activeTab) {
       fetchStaffData(id);
     }
-  }, [id, activeTab]);
-
-  const fetchStaffData = async (id) => {
-    try {
-      let response;
-      if (activeTab === "teacher") {
-        response = await staffService.getTeacherById(id);
-      } else {
-        response = await staffService.getStaffById(id);
-      }
-      setStaffData(response.data);
-    } catch (error) {
-      toast.error("Failed to fetch staff data");
-      console.error("Error fetching staff data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchStaffData, id, activeTab]); // Added activeTab
 
   return (
     <div className="mt-8">

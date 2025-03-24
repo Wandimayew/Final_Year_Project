@@ -32,4 +32,17 @@ spring:
       max-request-size: 50MB
 
 server:
-  port: 8086
+  port: 8083
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://10.194.61.74:8761/eureka/  # URL of the Eureka Server
+    registerWithEureka: true  # Register this client with Eureka
+    fetchRegistry: true  # Fetch the registry to discover other services
+  instance:
+    preferIpAddress: true  # Use IP address instead of hostname (optional but recommended)
+    # prefer-ip-address: true
+    ip-address: 10.194.61.62 # Replace with Machine 2’s actual IP (e.g., 10.194.61.x)
+    hostname: 10.194.61.62    # Optional, ensures consistency
+    non-secure-port: 8083

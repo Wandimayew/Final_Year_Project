@@ -1,3 +1,7 @@
+'use client'
+
+import Image from "next/image";
+
 const StaffModal = ({ staff, teacher, onClose, isTeacher }) => {
   if (!staff) return null;
 
@@ -98,7 +102,7 @@ const StaffModal = ({ staff, teacher, onClose, isTeacher }) => {
           <div className="col-span-1 md:col-span-2">
             <label className="font-semibold block font-serif">Photo:</label>
             {staff.photo ? (
-              <img
+              <Image
                 src={`data:image/jpeg;base64,${staff.photo}`}
                 alt="Staff Photo"
                 className="w-32 h-32 object-cover rounded-full"

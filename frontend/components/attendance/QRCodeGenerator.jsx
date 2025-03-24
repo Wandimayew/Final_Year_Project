@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import axios from 'axios';
+import Image from 'next/image';
 
 const QRCodeGenerator = () => {
   const [schoolId, setSchoolId] = useState('');
@@ -140,7 +141,7 @@ const QRCodeGenerator = () => {
           <div className="text-center">
             <p className="text-lg font-semibold">Generated QR Code:</p>
             {qrCodeData.qrCodeImage ? (
-               <img
+               <Image
                src={`http://localhost:8085${qrCodeData.qrCodeImage.replace('.', '')}`}
                alt="QR Code"
                className="mx-auto w-64 h-64 mt-4"

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: User_Service
+    name: user_service
     file:
       uploads:
         photos-output-path: ./uploads
@@ -8,20 +8,21 @@ spring:
     ansi:
       enabled: ALWAYS
   datasource:
-    url: jdbc:mysql://localhost:3306/User_Service  
-    username: root  
-    password: toor 
-    driver-class-name: com.mysql.cj.jdbc.Driver  
+    url: jdbc:mysql://localhost:3306/User_Service
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       minimum-idle: 5
       maximum-pool-size: 10
       idle-timeout: 600000
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect  
+        dialect: org.hibernate.dialect.MySQLDialect
   profiles:
     active: dev
   servlet:
@@ -49,5 +50,18 @@ app:
   jwtExpirationMs: 86400000
 
 server:
-  port: 8082
+  port: 8085
+
+# eureka:
+#   client:
+#     serviceUrl:
+#       defaultZone: http://10.194.61.74:8761/eureka/ # URL of the Eureka Server
+#     registerWithEureka: true # Register this client with Eureka
+#     fetchRegistry: true # Fetch the registry to discover other services
+#   instance:
+#     preferIpAddress: true  # Use IP address instead of hostname (optional but recommended)
+#     # prefer-ip-address: true
+#     ip-address: 10.194.61.62  # Replace with Machine 2’s actual IP (e.g., 10.194.61.x)
+#     hostname: 10.194.61.62   # Optional, ensures consistency
+#     non-secure-port: 8085
 

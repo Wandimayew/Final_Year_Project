@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class QRCodeResponse {
 
     private Long qrCodeId;
-    private Long schoolId;
+    private String schoolId;
     private Long classId;
     private Long sectionId;
     private LocalDateTime generatedTime;

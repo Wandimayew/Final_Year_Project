@@ -9,7 +9,7 @@ import java.time.LocalDate;
 public class PromotionRequest {
 
     @NotNull(message = "School ID cannot be null")
-    private Long schoolId;
+    private String schoolId;
 
     @NotNull(message = "Previous class ID cannot be null")
     private Long previousClassId;

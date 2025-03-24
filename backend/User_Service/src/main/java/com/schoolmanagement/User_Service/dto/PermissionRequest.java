@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class PermissionRequest {
 
-    private Long schoolId;
+    private String schoolId;
 
     private String name;
 

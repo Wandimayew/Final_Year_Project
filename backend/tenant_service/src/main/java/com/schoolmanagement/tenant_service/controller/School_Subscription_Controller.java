@@ -31,31 +31,31 @@ public class School_Subscription_Controller {
 
     @PostMapping("/{school_id}/addNewSchoolSubscription")
     public ResponseEntity<School_subscriptionsResponse> addNewSchoolSubscription(
-            @RequestBody School_subscriptionsRequest school_subscriptionsRequest, @PathVariable Long school_id) {
+            @RequestBody School_subscriptionsRequest school_subscriptionsRequest, @PathVariable String school_id) {
 
         return school_SubscriptionService.addNewSchoolSubscription(school_subscriptionsRequest, school_id);
     }
 
     @PutMapping("/{school_id}/editSchoolSubscriptionById/{subscription_id}")
     public ResponseEntity<School_subscriptionsResponse> editSchoolSubscriptionById(
-            @RequestBody School_subscriptionsRequest school_subscriptionsRequest, @PathVariable Long school_id,
+            @RequestBody School_subscriptionsRequest school_subscriptionsRequest, @PathVariable String school_id,
             @PathVariable Long subscription_id) {
         return school_SubscriptionService.editSchoolSubscriptionById(school_subscriptionsRequest, school_id, subscription_id);
     }
 
     @DeleteMapping("/{school_id}/deleteSchoolSubscriptionById/{subscription_id}")
-    public ResponseEntity<String> deleteSchoolSubscriptionById(@PathVariable Long school_id,
+    public ResponseEntity<String> deleteSchoolSubscriptionById(@PathVariable String school_id,
             @PathVariable Long subscription_id) {
         return school_SubscriptionService.deleteSchoolSubscriptionById(school_id, subscription_id);
     }
 
     @GetMapping("/{school_id}/getAllSchoolSubscriptions")
-    public ResponseEntity<List<School_subscriptionsResponse>> getAllSchoolSubscriptions(@PathVariable Long school_id) {
+    public ResponseEntity<List<School_subscriptionsResponse>> getAllSchoolSubscriptions(@PathVariable String school_id) {
         return school_SubscriptionService.getAllSchoolSubscription(school_id);
     }
 
     @GetMapping("/{school_id}/getSchoolSubscriptionById/{subscription_id}")
-    public ResponseEntity<School_subscriptionsResponse> getSchoolSubscriptionById(@PathVariable Long school_id,
+    public ResponseEntity<School_subscriptionsResponse> getSchoolSubscriptionById(@PathVariable String school_id,
     @PathVariable Long subscription_id) {
         return school_SubscriptionService.getSchoolSubscriptionById(school_id, subscription_id);
     }
