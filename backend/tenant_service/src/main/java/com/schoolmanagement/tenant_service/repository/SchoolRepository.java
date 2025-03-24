@@ -10,9 +10,9 @@ import org.springframework.stereotype.Repository;
 import com.schoolmanagement.tenant_service.model.School;
 
 @Repository
-public interface SchoolRepository extends JpaRepository<School, Long> {
+public interface SchoolRepository extends JpaRepository<School, String> {
     @Query("SELECT s FROM School s WHERE s.school_id = :school_id AND s.isActive = true")
-    School findBySchool_id(@Param("school_id") Long school_id);
+    School findBySchool_id(@Param("school_id") String school_id);
 
     @Query("SELECT s FROM School s WHERE s.isActive = true")
     List<School> findAllSchoolThatIsActive();

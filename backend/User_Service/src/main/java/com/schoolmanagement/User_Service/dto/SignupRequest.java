@@ -17,4 +17,7 @@ public class SignupRequest {
     private String password;
 
     private Set<String> roles;
+
+    @JsonProperty("permissions")
+    private Set<String> permissions;
 }

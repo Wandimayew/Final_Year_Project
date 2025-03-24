@@ -32,5 +32,4 @@ eureka:
       defaultZone: http://eureka-server:8761/eureka/ # URL of the Eureka Server
     registerWithEureka: true  # Register this client with Eureka
     fetchRegistry: true  # Fetch the registry to discover other services
-  instance:
-    preferIpAddress: true  # Use IP address instead of hostname (optional but recommended)
+ 

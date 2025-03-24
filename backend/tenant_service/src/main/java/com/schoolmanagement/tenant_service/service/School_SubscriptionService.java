@@ -29,7 +29,7 @@ public class School_SubscriptionService {
     private final Subscription_plansRepository subscription_plansRepository;
 
     public ResponseEntity<School_subscriptionsResponse> addNewSchoolSubscription(
-            School_subscriptionsRequest school_subscriptionsRequest, Long school_id) {
+            School_subscriptionsRequest school_subscriptionsRequest, String school_id) {
 
         School school = schoolRepository.findBySchool_id(school_id);
         if (school == null) {
@@ -64,7 +64,7 @@ public class School_SubscriptionService {
     }
 
     public ResponseEntity<School_subscriptionsResponse> editSchoolSubscriptionById(
-            School_subscriptionsRequest school_subscriptionsRequest, Long school_id, Long subscription_id) {
+            School_subscriptionsRequest school_subscriptionsRequest, String school_id, Long subscription_id) {
         School schoolExists = schoolRepository.findBySchool_id(school_id);
         if (schoolExists == null) {
             log.error("School not found with id {}", school_id);
@@ -90,7 +90,7 @@ public class School_SubscriptionService {
         return ResponseEntity.ok(convertToSchoolSubscriptionResponse(updatedSchoolSubscription));
     }
 
-    public ResponseEntity<String> deleteSchoolSubscriptionById(Long school_id, Long subscription_id) {
+    public ResponseEntity<String> deleteSchoolSubscriptionById(String school_id, Long subscription_id) {
         School schoolExists = schoolRepository.findBySchool_id(school_id);
         if (schoolExists == null) {
             log.error("School not found with id {}", school_id);
@@ -109,7 +109,7 @@ public class School_SubscriptionService {
         return ResponseEntity.ok("School subscription with id " + " deleted successfully");
     }
 
-    public ResponseEntity<School_subscriptionsResponse> getSchoolSubscriptionById(Long school_id,
+    public ResponseEntity<School_subscriptionsResponse> getSchoolSubscriptionById(String school_id,
             Long subscription_id) {
         School schoolExists = schoolRepository.findBySchool_id(school_id);
         if (schoolExists == null) {
@@ -126,7 +126,7 @@ public class School_SubscriptionService {
         return ResponseEntity.ok(convertToSchoolSubscriptionResponse(existingSchoolSubscription));
     }
 
-    public ResponseEntity<List<School_subscriptionsResponse>> getAllSchoolSubscription(Long school_id) {
+    public ResponseEntity<List<School_subscriptionsResponse>> getAllSchoolSubscription(String school_id) {
         School schoolExists = schoolRepository.findBySchool_id(school_id);
         if (schoolExists == null) {
             log.error("School not found with id {}", school_id);

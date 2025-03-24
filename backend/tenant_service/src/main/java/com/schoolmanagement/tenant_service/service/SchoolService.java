@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.schoolmanagement.tenant_service.client.UserServiceClient;
 import com.schoolmanagement.tenant_service.dto.AddressResponse;
 import com.schoolmanagement.tenant_service.dto.SchoolRequest;
 import com.schoolmanagement.tenant_service.dto.SchoolResponse;
@@ -35,11 +36,14 @@ public class SchoolService {
     private final FileStorageService fileStorageService;
     private final AddressRepository addressRepository;
     private final ObjectMapper objectMapper;
+    private final UserServiceClient userServiceClient;
 
     public ResponseEntity<SchoolResponse> addNewSchool(SchoolRequest schoolRequest) {
 
+        String schoolId = generateSchoolId(schoolRequest.getSchool_name());
         School school = new School();
 
+        school.setSchool_id(schoolId);
         school.setContact_number(schoolRequest.getContact_number());
         school.setSchool_name(schoolRequest.getSchool_name());
         school.setEmail_address(schoolRequest.getEmail_address());
@@ -85,7 +89,7 @@ public class SchoolService {
         return ResponseEntity.ok(convertToSchoolResponse(savedSchool));
     }
 
-    public ResponseEntity<SchoolResponse> editSchoolById(SchoolRequest schoolRequest, Long school_id) {
+    public ResponseEntity<SchoolResponse> editSchoolById(SchoolRequest schoolRequest, String school_id) {
         School existingSchool = schoolRepository.findBySchool_id(school_id);
         if (existingSchool == null) {
             log.error("School not found with id {}", school_id);
@@ -110,7 +114,7 @@ public class SchoolService {
         return ResponseEntity.ok(convertToSchoolResponse(updatedSchool));
     }
 
-    public ResponseEntity<SchoolResponse> getSchoolById(Long school_id) {
+    public ResponseEntity<SchoolResponse> getSchoolById(String school_id) {
         School existingSchool = schoolRepository.findBySchool_id(school_id);
         if (existingSchool == null) {
             log.error("School not found with id {}", school_id);
@@ -156,7 +160,7 @@ public class SchoolService {
         return ResponseEntity.ok(allSchoolsNotActive.stream().map(this::convertToSchoolResponse).toList());
     }
 
-    public ResponseEntity<String> deleteSchoolById(Long school_id) {
+    public ResponseEntity<String> deleteSchoolById(String school_id) {
         School existingSchool = schoolRepository.findBySchool_id(school_id);
         if (existingSchool == null) {
             log.error("School not found with id {}", school_id);
@@ -181,7 +185,7 @@ public class SchoolService {
         }
     }
 
-    public void uploadSchoolLogo(MultipartFile file, Long school_id) {
+    public void uploadSchoolLogo(MultipartFile file, String school_id) {
         School school = schoolRepository.findById(school_id)
                 .orElseThrow(() -> new EntityNotFoundException("No school found with ID:: " + school_id));
         var logo = fileStorageService.saveFile(file, school_id);
@@ -221,5 +225,35 @@ public class SchoolService {
                 .logo(FileUtils.readFileFromLocation(school.getLogo()))
                 .created_by(school.getCreated_by())
                 .build();
+    }
+
+    private String generateSchoolId(String schoolName) {
+        if (schoolName == null || schoolName.trim().isEmpty()) {
+            throw new IllegalArgumentException("School name cannot be null or empty");
+        }
+
+        // Remove extra spaces and split into words
+        String[] words = schoolName.trim().split("\\s+");
+        StringBuilder schoolId = new StringBuilder();
+
+        if (words.length == 1) {
+            // Single word: Use first 4 letters (or less if shorter)
+            String word = words[0];
+            schoolId.append(word.substring(0, Math.min(4, word.length())));
+        } else if (words.length == 2) {
+            // Two words: Use first 2 letters from each word
+            for (String word : words) {
+                schoolId.append(word.substring(0, Math.min(2, word.length())));
+            }
+        } else {
+            // More than two words: Use first letter of each word
+            for (String word : words) {
+                if (!word.isEmpty()) {
+                    schoolId.append(word.charAt(0));
+                }
+            }
+        }
+
+        return schoolId.toString().toUpperCase();
     }
 }

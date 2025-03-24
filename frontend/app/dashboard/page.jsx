@@ -5,7 +5,7 @@ import Layout from "@/components/layout/Layout";
 const Dashboard = () => {
   return (
     <Layout>
-      <Dashboard1/>
+      <Dashboard1 />
     </Layout>
   )
 }

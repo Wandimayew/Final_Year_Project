@@ -1,6 +1,4 @@
-// components/event/EditEventModal.js
 "use client";
-
 import React, { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -59,7 +57,6 @@ const EditEventModal = React.memo(({ announcement }) => {
         data,
       }),
     onMutate: async ({ data }) => {
-      // Optimistically update the announcement in the cache
       await queryClient.cancelQueries(["announcements", auth.user.schoolId]);
       const previousAnnouncements = queryClient.getQueryData([
         "announcements",
@@ -80,9 +77,7 @@ const EditEventModal = React.memo(({ announcement }) => {
     },
     onSuccess: () => {
       setIsOpen(false);
-      toast.success("Event updated successfully!", {
-        position: "top-right",
-      });
+      toast.success("Event updated successfully!", { position: "top-right" });
     },
     onError: (err, variables, context) => {
       queryClient.setQueryData(
@@ -205,5 +200,7 @@ const EditEventModal = React.memo(({ announcement }) => {
     </>
   );
 });
+
+EditEventModal.displayName = "EditEventModal"; // Added displayName
 
 export default EditEventModal;

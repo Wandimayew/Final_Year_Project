@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useState } from "react";
 import {
   FaUser,
@@ -16,6 +17,11 @@ import {
   FaUserShield,
   FaSchool,
 } from "react-icons/fa";
+=======
+'use client'
+
+import Image from "next/image";
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
 
 const StaffModal = ({ staff, teacher, onClose, isTeacher }) => {
   const [isLoading, setIsLoading] = useState(false); // Optional: for future async enhancements
@@ -140,6 +146,7 @@ const StaffModal = ({ staff, teacher, onClose, isTeacher }) => {
               </div>
             </div>
 
+<<<<<<< HEAD
             {/* Teacher-Specific Information */}
             {isTeacher && teacher && (
               <div className="bg-gray-50 rounded-xl p-5 shadow-sm">
@@ -163,6 +170,62 @@ const StaffModal = ({ staff, teacher, onClose, isTeacher }) => {
                   ))}
                 </div>
               </div>
+=======
+          <div>
+            <label className="font-semibold block font-serif">Phone:</label>
+            <p>{staff.phoneNumber || 'Not available'}</p>
+          </div>
+
+          <div>
+            <label className="font-semibold block font-serif">Date of Birth:</label>
+            <p>{formatDate(staff.dob)}</p>
+          </div>
+
+          <div>
+            <label className="font-semibold block font-serif">Gender:</label>
+            <p>{staff.gender || 'Not available'}</p>
+          </div>
+
+          <div>
+            <label className="font-semibold block font-serif">Date of Joining:</label>
+            <p>{formatDate(staff.dateOfJoining)}</p>
+          </div>
+
+          <div>
+            <label className="font-semibold block font-serif">Status:</label>
+            <p className={`inline-block px-2 py-1 rounded-full ${
+              staff.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              {staff.status || 'Not available'}
+            </p>
+          </div>
+
+          <div>
+            <label className="font-semibold block font-serif">Role:</label>
+            <p>{staff.role || 'Not available'}</p>
+          </div>
+
+          <div>
+            <label className="font-semibold block font-serif">School ID:</label>
+            <p>{staff.schoolId || 'Not available'}</p>
+          </div>
+
+          <div className="col-span-1 md:col-span-2">
+            <label className="font-semibold block font-serif">Address:</label>
+            <p dangerouslySetInnerHTML={{ __html: formatAddress(staff.addressJson) }} />
+          </div>
+
+          <div className="col-span-1 md:col-span-2">
+            <label className="font-semibold block font-serif">Photo:</label>
+            {staff.photo ? (
+              <Image
+                src={`data:image/jpeg;base64,${staff.photo}`}
+                alt="Staff Photo"
+                className="w-32 h-32 object-cover rounded-full"
+              />
+            ) : (
+              <p>No photo available</p>
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
             )}
           </div>
         </div>

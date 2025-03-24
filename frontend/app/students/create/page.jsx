@@ -1,11 +1,11 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Mail, User, Phone, School } from "lucide-react";
 import { useCreateStudent } from "@/lib/api/studentService/students";
 import {
   useParentGuardianByContact,
   useCreateParentGuardian,
-  useParentGuardians
+  useParentGuardians,
 } from "@/lib/api/studentService/parentGuardian";
 import { useCreateUser } from "@/lib/api/users";
 import InputField from "@/components/InputField";
@@ -20,22 +20,18 @@ const AdmissionForm = () => {
 
   const createUserMutation = useCreateUser();
   const createParentGuardianMutation = useCreateParentGuardian();
-  const {
-    data: parentData,
-    refetch,
-  } = useParentGuardians();
+  const { data: parentData = [], refetch } = useParentGuardians();
   const { mutateAsync: createStudent } = useCreateStudent();
 
   useEffect(() => {
     if (guardianExists) {
       refetch();
     }
-  }, [guardianExists]);
+  }, [guardianExists, refetch]); // Added refetch to dependencies
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("start handleSubmit");
-    // Step 1: Register the User
     const userData = {
       schoolId: 1,
       username:
@@ -49,9 +45,8 @@ const AdmissionForm = () => {
 
     try {
       const userResponse = await createUserMutation.mutateAsync(userData);
-
       let guardianId;
-      if(!guardianExists) {
+      if (!guardianExists) {
         const parentGuardianData = {
           schoolId: 1,
           fatherName: e.target.fatherName.value,
@@ -82,9 +77,7 @@ const AdmissionForm = () => {
         sectionId: e.target.section.value,
         category: e.target.category.value,
         firstName: e.target.firstName.value,
-        lastName: e.target.lastName.value
-          ? e.target.lastName.value
-          : e.target.firstName.value,
+        lastName: e.target.lastName.value || e.target.firstName.value,
         nationalId: e.target.registerNo.value,
         dateOfBirth: e.target.dateOfBirth.value,
         gender: e.target.gender.value,
@@ -97,7 +90,6 @@ const AdmissionForm = () => {
         isPassed: "PASSED",
         parentId: guardianExists ? parentId : guardianId,
       });
-
     } catch (error) {
       console.error("Error:", error);
     }
@@ -110,10 +102,7 @@ const AdmissionForm = () => {
           <School className="mr-2 h-6 w-6" />
           Create Admission
         </h1>
-
-        {/* Form starts here */}
         <form onSubmit={handleSubmit}>
-          {/* Academic Details */}
           <section className="mb-8">
             <SectionHeader icon="🎓" title="Academic Details" />
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -161,8 +150,6 @@ const AdmissionForm = () => {
               </InputField>
             </div>
           </section>
-
-          {/* Student Details */}
           <section className="mb-8">
             <SectionHeader icon="👤" title="Student Details" />
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -179,8 +166,8 @@ const AdmissionForm = () => {
                 required
               />
               <InputField label="Gender" name="gender" type="select">
-                <option value={"Male"}>Male</option>
-                <option value={"Female"}>Female</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
               </InputField>
               <InputField
                 label="Date of Birth"
@@ -211,8 +198,6 @@ const AdmissionForm = () => {
               }
             />
           </section>
-
-          {/* Guardian Details */}
           <section className="mb-8">
             <SectionHeader icon="👥" title="Guardian Details" />
             <div className="mb-4">
@@ -229,19 +214,23 @@ const AdmissionForm = () => {
                 </span>
               </label>
             </div>
-            {guardianExists &&  (
+            {guardianExists && (
               <div className="mt-4">
-                <InputField label="Select Guardian" name="parentId" type="select" onChange={(e) => setParentId(e.target.value)}>
+                <InputField
+                  label="Select Guardian"
+                  name="parentId"
+                  type="select"
+                  onChange={(e) => setParentId(e.target.value)}
+                >
                   <option value="">Select a guardian</option>
                   {parentData.map((parent) => (
                     <option key={parent.parentId} value={parent.parentId}>
                       {parent.fatherName} & {parent.motherName}
                     </option>
                   ))}
-              </InputField>
+                </InputField>
               </div>
             )}
-
             {!guardianExists && (
               <>
                 <div className="grid gap-4 md:grid-cols-2">
@@ -296,8 +285,6 @@ const AdmissionForm = () => {
               </>
             )}
           </section>
-
-          {/* Previous School Details */}
           <section className="mb-8">
             <SectionHeader
               icon={<School className="mr-2 h-6 w-6" />}
@@ -319,8 +306,6 @@ const AdmissionForm = () => {
               />
             </div>
           </section>
-
-          {/* Form actions */}
           <div className="flex justify-end space-x-4">
             <button
               type="button"

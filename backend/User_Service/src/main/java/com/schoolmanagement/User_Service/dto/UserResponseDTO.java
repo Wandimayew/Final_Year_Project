@@ -19,7 +19,10 @@ public class UserResponseDTO {
     private String schoolId;
     private String username;
     private String email;
-    private Set<Role> roles;
+    private String password;
+    @JsonProperty("roles")
+    private Set<String> roles;
+    private Set<String> permissions;
     private boolean isActive;
     private LocalDateTime lastLogin;
     private LocalDateTime createdAt;

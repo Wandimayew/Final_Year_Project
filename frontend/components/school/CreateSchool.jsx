@@ -85,6 +85,11 @@ const CreateSchool = () => {
   };
 
   const handleSubmit = async (e) => {
+    // const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3YW5kaSIsImp0aSI6ImYzNzU2NmRkLTRhZTEtNDgxMy1iNGM2LTFjYzdjNWU1OTA1MSIsImlhdCI6MTc0MjY0NzEyMCwiZXhwIjoxNzQyNzMzNTIwLCJlbWFpbCI6IndvbmRpbWF5ZXdhc2NoYWxld0BnbWFpbC5jb20iLCJzY2hvb2xfaWQiOiJhZG1pbiIsInVzZXJfaWQiOiJ3YW5kaS0xIiwicm9sZXMiOlsiUk9MRV9TVVBFUkFETUlOIl19.ewMiPQwERjeeX7rgHX4mieJF8XAtMFPxPJbtVgnJ-hw"
+    // const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3YW5kaWkiLCJqdGkiOiIzMDI5OGI3My0zYjYwLTQ4YWEtODc3Mi1mY2IxNWY2M2FiNmUiLCJpYXQiOjE3NDI2NTE4MzUsImV4cCI6MTc0MjczODIzNSwiZW1haWwiOiJ3YW5kaWlAZ21haWwuY29tIiwic2Nob29sX2lkIjoiR0xPQkFMUyIsInVzZXJfaWQiOiJHTE9CQUxTMDAxIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdfQ.KRzlN7quZAnfwDSglGVvUQqZuk82_Bci7VF9cjtA1Hc"
+    // const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3YW5kaWkiLCJqdGkiOiI1NTIwYTc3Yi1iYjRlLTRhMjUtOGRkZi1lMTBhY2ZjMWEzOTMiLCJpYXQiOjE3NDI2NTI4OTksImV4cCI6MTc0MjczOTI5OSwiZW1haWwiOiJ3YW5kaWlAZ21haWwuY29tIiwic2Nob29sX2lkIjoiR0xPQkFMUyIsInVzZXJfaWQiOiJHTE9CQUxTMDAxIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdfQ.oMGO51Wo-RZzmYVPdGbnkJk0SlS61vZeBh3mRxE03UI"
+    // const token= "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3YW5kaSIsImp0aSI6IjdiMjJhYWRhLWZjZTgtNDZiMi1iNDA0LTY3NmJhODUyY2JmZSIsImlhdCI6MTc0MjY1MzQxMSwiZXhwIjoxNzQyNzM5ODExLCJlbWFpbCI6IndvbmRpbWF5ZXdhc2NoYWxld0BnbWFpbC5jb20iLCJzY2hvb2xfaWQiOiJhZG1pbiIsInVzZXJfaWQiOiJ3YW5kaS0xIiwicm9sZXMiOlsiUk9MRV9TVVBFUkFETUlOIl19.boa3lbLbRT2vxI-M8z88309xoTuWhr6Bk6gK8ecjBDw"
+    const token= "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3YW5kaWkiLCJqdGkiOiI3MGFiMGE4Mi02Yjc3LTQ5ZTEtYTgxZi1kNmFkZWRmMzE5YWQiLCJpYXQiOjE3NDI2NTM1NDUsImV4cCI6MTc0MjczOTk0NSwiZW1haWwiOiJ3YW5kaWlAZ21haWwuY29tIiwic2Nob29sX2lkIjoiR0xPQkFMUyIsInVzZXJfaWQiOiJHTE9CQUxTMDAxIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdfQ.yiAoctTmaVHXmtvq9KWfVGBon-YmfLcNtecvWrjC3yM"
     e.preventDefault();
     console.log("Saveing data");
 
@@ -115,11 +120,12 @@ const CreateSchool = () => {
       }
       // Sending the form data with Axios
       const response = await axios.post(
-        "http://localhost:8083/tenant/api/addNewSchool",
+        "http://localhost:8084/tenant/api/addNewSchool",
         formDataToSend,
         {
           headers: {
             "Content-Type": "multipart/form-data", // Important for file uploads
+            "Authorization": `Bearer ${token}`,    // Add the Authorization header with Bearer token
           },
         }
       );

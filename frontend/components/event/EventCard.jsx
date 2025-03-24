@@ -165,6 +165,8 @@ const EventCard = React.memo(
   }
 );
 
+EventCard.displayName = "EventCard"; // Added displayName
+
 export default EventCard;
 
 <style jsx global>{`

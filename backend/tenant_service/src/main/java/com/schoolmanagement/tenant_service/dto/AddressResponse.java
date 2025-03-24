@@ -32,5 +32,5 @@ public class AddressResponse {
 
     private boolean isActive;
 
-    private Long school_id;
+    private String school_id;
 }

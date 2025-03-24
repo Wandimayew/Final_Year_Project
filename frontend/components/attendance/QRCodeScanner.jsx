@@ -1,9 +1,19 @@
+<<<<<<< HEAD
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { isMobile } from "react-device-detect";
 import { Smartphone, Scan, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
+=======
+'use client';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import ReactQRScanner from 'react-qr-scanner';
+import { isMobile } from 'react-device-detect';
+import { Smartphone, Laptop } from 'lucide-react';
+import Image from 'next/image';
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
 
 const QRCodeScanner = () => {
   const [schoolId, setSchoolId] = useState(null);
@@ -142,10 +152,110 @@ const QRCodeScanner = () => {
 
   if (isLoading && !teacherDetails) {
     return (
+<<<<<<< HEAD
       <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-6">
         <div className="text-center text-gray-600 flex flex-col items-center">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
           <p className="mt-2">Loading teacher information...</p>
+=======
+        <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md mt-12 text-black">
+            <h1 className="text-2xl font-bold text-center mb-6">
+                {isMobile ? "Scan Printed QR Code" : "Attendance QR Code"}
+            </h1>
+
+            <div className="mb-4 space-x-4 flex justify-center">
+                <label className="inline-flex items-center">
+                    <input
+                        type="radio"
+                        checked={isInTime}
+                        onChange={() => setIsInTime(true)}
+                        className="form-radio text-blue-500"
+                    />
+                    <span className="ml-2">In Time</span>
+                </label>
+                <label className="inline-flex items-center">
+                    <input
+                        type="radio"
+                        checked={!isInTime}
+                        onChange={() => setIsInTime(false)}
+                        className="form-radio text-blue-500"
+                    />
+                    <span className="ml-2">Out Time</span>
+                </label>
+            </div>
+
+            {!isMobile && (
+                <div className="text-center">
+                    <Laptop className="mx-auto mb-4" size={48} />
+                    <p className="text-gray-600 mb-4">Scan the QR code below to record attendance.</p>
+
+                    {isLoading ? (
+                        <div>Loading QR code...</div>
+                    ) : (
+                        qrCodeUrl && (
+                            <div className="mb-6">
+                                <Image src={qrCodeUrl} alt="QR Code" className="mx-auto w-48 h-48" />
+                                <p className="text-sm text-gray-600 mt-2">
+                                    Scan this QR code using your mobile device.
+                                </p>
+                            </div>
+                        )
+                    )}
+                </div>
+            )}
+
+            {isMobile && (
+                <div className="text-center">
+                    <Smartphone className="mx-auto" size={48} />
+                    <p className="mt-2 text-gray-600">
+                        Enter your Staff ID to scan the printed QR code.
+                    </p>
+
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Staff ID
+                        </label>
+                        <input
+                            type="number"
+                            value={staffId}
+                            onChange={(e) => setStaffId(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            placeholder="Enter your Staff ID"
+                        />
+                    </div>
+
+                    <button
+                        onClick={handleManualEntry}
+                        className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                        {isScanning ? 'Scanning...' : 'Open Scanner'}
+                    </button>
+
+                    {isScanning && (
+                        <div className="mt-4">
+                            <ReactQRScanner 
+                                delay={300}
+                                onError={handleError}
+                                onScan={handleScan}
+                                style={{ width: "100%" }}
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {error && (
+                <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg">
+                    {error}
+                </div>
+            )}
+
+            {success && (
+                <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-lg">
+                    {success}
+                </div>
+            )}
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
         </div>
       </div>
     );

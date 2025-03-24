@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import schoolLogo from "@/public/schoolLogo.svg";
 import Image from "next/image";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import Link from "next/link";
 
 const Login = ({ setLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -89,9 +90,9 @@ const Login = ({ setLogin }) => {
             />
             <span className="ml-2">Remember me</span>
           </label>
-          <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+          <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
             Forgot password?
-          </a>
+          </Link>
         </div>
 
         <button
