@@ -237,10 +237,10 @@
 //             availableTeachers.add(teacher.getTeacherId());
 //         }
 
-        // if (availableTeachers.isEmpty()) {
-        //     log.error("No teachers available for subject: {}", subject.getSubjectName());
-        //     throw new RuntimeException("Unable to assign teacher for subject: " + subject.getSubjectName());
-        // }
+//         if (availableTeachers.isEmpty()) {
+//             log.error("No teachers available for subject: {}", subject.getSubjectName());
+//             throw new RuntimeException("Unable to assign teacher for subject: " + subject.getSubjectName());
+//         }
 
 //         // Return the first available teacher (or use your preferred selection strategy)
 //         String assignedTeacherId = availableTeachers.get(0);
