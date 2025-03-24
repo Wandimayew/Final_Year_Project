@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -223,7 +223,7 @@ const CreatorAnnouncements = () => {
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -237,12 +237,12 @@ const CreatorAnnouncements = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [auth]); // Dependencies: auth
 
   useEffect(() => {
     if (!auth || authLoading) return;
     fetchAnnouncements();
-  }, [auth, authLoading]);
+  }, [auth, authLoading, fetchAnnouncements]);
 
   const requestApprovalMutation = useMutation({
     mutationFn: (announcementId) =>

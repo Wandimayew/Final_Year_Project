@@ -1,13 +1,33 @@
 "use client";
+<<<<<<< HEAD
 import { useState } from "react";
+=======
+
+import { useState, useEffect, memo } from "react";
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MENU_ITEMS } from "@/config/menuItems";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
+import { filterMenuByRole } from "../utility/RoleFilter";
+import { useAuthStore } from "@/lib/auth";
 
-const Sidebar = ({ isMenuOpen }) => {
+// Memoize the Sidebar to prevent unnecessary re-renders
+const Sidebar = memo(({ isMenuOpen }) => {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
+
+  // Use a stable selector to avoid re-creating the object on every render
+  const user = useAuthStore((state) => state.user);
+  const userRole = user?.roles || "ROLE_GUEST";
+  console.log("user information is ",user);
+  
+
+  useEffect(() => {
+    const filteredItems = filterMenuByRole(MENU_ITEMS, userRole);
+    setMenuItems(filteredItems);
+  }, [userRole]);
 
   const toggleExpand = (itemId) => {
     setExpandedItems((prev) =>
@@ -31,8 +51,17 @@ const Sidebar = ({ isMenuOpen }) => {
         <div
           className={`
             flex items-center justify-between py-1 cursor-pointer font-bold
+<<<<<<< HEAD
             ${isItemActive ? "bg-indigo-100 text-indigo-600" : "text-[#555] hover:text-indigo-600"}
             rounded-lg transition-colors duration-150 px-2
+=======
+            ${
+              isItemActive
+                ? "bg-navy-700 text-[#1672EE]"
+                : "text-[#555] hover:text-[#1672EE]"
+            }
+            rounded-lg transition-colors duration-150
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
           `}
           onClick={() => (hasSubItems ? toggleExpand(item.id) : null)}
         >
@@ -46,17 +75,18 @@ const Sidebar = ({ isMenuOpen }) => {
             </span>
             {isMenuOpen && <span className="text-sm">{item.label}</span>}
           </Link>
-          {isMenuOpen && hasSubItems && (
-            isExpanded ? (
+          {isMenuOpen &&
+            hasSubItems &&
+            (isExpanded ? (
               <FaChevronDown className="w-3 h-3" />
             ) : (
               <FaChevronRight className="w-3 h-3" />
-            )
-          )}
+            ))}
         </div>
 
         {isMenuOpen && hasSubItems && isExpanded && (
           <div className="ml-8 mt-1 space-y-1">
+<<<<<<< HEAD
             {item.subItems.map((subItem) => (
               <Link
                 key={subItem.id}
@@ -76,6 +106,31 @@ const Sidebar = ({ isMenuOpen }) => {
                 <span>{subItem.label}</span>
               </Link>
             ))}
+=======
+            <div className="max-h-60 overflow-y-auto">
+              {item.subItems.map((subItem) => (
+                <Link
+                  key={subItem.id}
+                  href={subItem.href}
+                  className={`
+                    flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-bold
+                    ${
+                      isActive(subItem.href)
+                        ? "bg-navy-700 text-[#1672EE]"
+                        : "text-[#555] hover:text-[#1672EE]"
+                    }
+                  `}
+                >
+                  {subItem.icon && (
+                    <span className="text-[#1672EE]">
+                      <subItem.icon size={18} />
+                    </span>
+                  )}
+                  <span>{subItem.label}</span>
+                </Link>
+              ))}
+            </div>
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
           </div>
         )}
       </div>
@@ -88,11 +143,19 @@ const Sidebar = ({ isMenuOpen }) => {
         isMenuOpen ? "w-64" : "w-16"
       }`}
     >
+<<<<<<< HEAD
       <nav className="h-full p-2 overflow-y-auto scroll-smooth">
         {MENU_ITEMS.map((menu) => renderMenuItem(menu))}
+=======
+      <nav className="flex-1 p-2 space-y-2 overflow-y-auto">
+        {menuItems.map((menu) => renderMenuItem(menu))}
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
       </nav>
     </aside>
   );
-};
+});
+
+// Add display name for better debugging
+Sidebar.displayName = "Sidebar";
 
 export default Sidebar;

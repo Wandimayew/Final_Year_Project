@@ -1,4 +1,5 @@
 "use client";
+<<<<<<< HEAD
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "react-toastify";
@@ -14,6 +15,24 @@ import {
   File,
   FileText,
 } from "lucide-react";
+=======
+
+import React, { useEffect, useState, useCallback } from "react"; // Added useCallback
+import Link from "next/link";
+import { toast } from "react-toastify";
+import {
+  FiArrowUp,
+  FiArrowDown,
+  FiEdit,
+  FiTrash2,
+  FiEye,
+  FiDownload,
+  FiCopy,
+  FiPrinter,
+  FiFile,
+  FiFileText,
+} from "react-icons/fi";
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -37,7 +56,12 @@ export default function EmployeeList() {
   const [activeTab, setActiveTab] = useState("staff");
   const [selectedTeacherDetails, setSelectedTeacherDetails] = useState(null);
 
+<<<<<<< HEAD
   const fetchStaffData = async () => {
+=======
+  // Fetch staff data with useCallback
+  const fetchStaffData = useCallback(async () => {
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
     try {
       setLoading(true);
       let response = [];
@@ -72,12 +96,16 @@ export default function EmployeeList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]); // Dependency: activeTab
 
   useEffect(() => {
     fetchStaffData();
-  }, [activeTab]);
+  }, [fetchStaffData,activeTab]); // Dependency: fetchStaffData
 
+<<<<<<< HEAD
+=======
+  // Rest of the code remains unchanged...
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
   const handleDelete = async (id) => {
     try {
       // Optimistically update the UI by marking as inactive
@@ -206,6 +234,7 @@ export default function EmployeeList() {
     if (filteredStaff.length === 0) return toast.error("No data to copy");
   
     const textToCopy = filteredStaff
+<<<<<<< HEAD
       .map(({ firstName, middleName, lastName, email, status }) =>
         `${firstName} ${middleName || ""} ${lastName} - ${email} - ${status}`.trim()
       )
@@ -214,13 +243,28 @@ export default function EmployeeList() {
     navigator.clipboard.writeText(textToCopy)
       .then(() => toast.success("Data copied to clipboard!"))
       .catch(() => toast.error("Failed to copy data!"));
+=======
+      .map(
+        (staff) =>
+          `${staff.firstName} ${staff.middleName} ${staff.lastName} - ${staff.email} - ${staff.status}`
+      )
+      .join("\n");
+    navigator.clipboard
+      .writeText(textToCopy)
+      .then(() => toast.success("Data copied to clipboard!"))
+      .catch(() => toast.error("Failed to copy data."));
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
   };
 
   const handleSort = (key) => {
     let direction = "ascending";
+<<<<<<< HEAD
     if (sortConfig.key === key && sortConfig.direction === "ascending") direction = "descending";
+=======
+    if (sortConfig.key === key && sortConfig.direction === "ascending")
+      direction = "descending";
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
     setSortConfig({ key, direction });
-
     const sorted = [...filteredStaff].sort((a, b) => {
       let aValue, bValue;
       if (key === "fullName") {
@@ -245,8 +289,14 @@ export default function EmployeeList() {
         member.middleName?.toLowerCase().includes(searchString) ||
         member.lastName?.toLowerCase().includes(searchString) ||
         member.email?.toLowerCase().includes(searchString);
+<<<<<<< HEAD
       const matchesStatus = filterStatus === "all" ? true : member.status === filterStatus;
       return matchesSearch && matchesStatus && member.isActive; // Only active staff
+=======
+      const matchesStatus =
+        filterStatus === "all" ? true : member.status === filterStatus;
+      return matchesSearch && matchesStatus;
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
     });
     setFilteredStaff(filtered);
     setCurrentPage(1);
@@ -258,10 +308,16 @@ export default function EmployeeList() {
   const totalPages = Math.ceil(filteredStaff.length / itemsPerPage);
 
   return (
+<<<<<<< HEAD
     <div className="container mx-auto px-4 py-8">
       {/* Header and Controls */}
       <div className="mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex gap-2">
+=======
+    <div className="container mx-auto px-4 py-8 mt-12">
+      <div className="mb-8">
+        <div className="flex mb-4 space-x-4">
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
           <button
             onClick={() => setActiveTab("all")}
             className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === "all" ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
@@ -275,9 +331,19 @@ export default function EmployeeList() {
             Teachers
           </button>
         </div>
+<<<<<<< HEAD
         <div className="flex gap-2 flex-wrap justify-center">
           <button onClick={exportToExcel} className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600" title="Export to Excel">
             <FileText size={20} />
+=======
+        <div className="flex justify-end space-x-2">
+          <button
+            onClick={exportToExcel}
+            className="px-4 py-2 bg-green-500 text-white rounded"
+            title="Export to Excel"
+          >
+            <FiFileText className="mr-1" />
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
           </button>
           <button onClick={exportToPDF} className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600" title="Export to PDF">
             <Download size={20} />
@@ -293,9 +359,13 @@ export default function EmployeeList() {
           </button>
         </div>
       </div>
+<<<<<<< HEAD
 
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row justify-end gap-4 mb-6">
+=======
+      <div className="flex flex-wrap justify-end gap-4 mb-4">
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
         <input
           type="text"
           placeholder="Search staff..."
@@ -313,11 +383,17 @@ export default function EmployeeList() {
           <option value="INACTIVE">Inactive</option>
         </select>
       </div>
+<<<<<<< HEAD
 
       {/* Staff Table */}
       <div className="overflow-x-auto bg-white rounded-lg shadow-lg">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-indigo-50">
+=======
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white text-black">
+          <thead>
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
             <tr>
               <th
                 className="px-6 py-3 text-center text-sm font-semibold text-indigo-700 cursor-pointer"
@@ -356,6 +432,7 @@ export default function EmployeeList() {
               </tr>
             ) : (
               currentItems.map((item) => (
+<<<<<<< HEAD
                 <tr key={item.id} className="hover:bg-gray-50 transition-colors duration-200">
                   <td className="px-6 py-4 text-center text-gray-700">{item.id}</td>
                   <td className="px-6 py-4 text-center">
@@ -375,6 +452,17 @@ export default function EmployeeList() {
                   <td className="px-6 py-4 text-center text-gray-700">{`${item.firstName} ${item.middleName || ""} ${item.lastName}`}</td>
                   <td className="px-6 py-4 text-center text-gray-700">{item.email}</td>
                   <td className="px-6 py-4 text-center">
+=======
+                <tr key={item.id}>
+                  <td className="px-6 py-4 border-b text-center">{item.id}</td>
+                  <td className="px-6 py-4 border-b text-center">{`${
+                    item.firstName
+                  } ${item.middleName || ""} ${item.lastName}`}</td>
+                  <td className="px-6 py-4 border-b text-center">
+                    {item.email}
+                  </td>
+                  <td className="px-6 py-4 border-b text-center">
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
                     >
@@ -386,8 +474,17 @@ export default function EmployeeList() {
                       <button onClick={() => fetchCompleteDetails(item.id)} className="text-indigo-500 hover:text-indigo-700" title="View Details">
                         <Eye size={18} />
                       </button>
+<<<<<<< HEAD
                       <Link href={`/employee/edit/${item.id}`} className="text-yellow-500 hover:text-yellow-700" title="Edit Staff">
                         <Pencil size={18} />
+=======
+                      <Link
+                        href={`/staff/edit/${item.id}`}
+                        className="text-yellow-500"
+                        title="Edit Staff"
+                      >
+                        <FiEdit />
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
                       </Link>
                       <button
                         onClick={() => {
@@ -407,9 +504,13 @@ export default function EmployeeList() {
           </tbody>
         </table>
       </div>
+<<<<<<< HEAD
 
       {/* Pagination */}
       <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-700">
+=======
+      <div className="mt-4 flex justify-between items-center text-black">
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
         <span>
           Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredStaff.length)} of {filteredStaff.length} entries
         </span>
@@ -430,8 +531,6 @@ export default function EmployeeList() {
           </button>
         </div>
       </div>
-
-      {/* Modals */}
       {showModal && (
         <StaffModal
           staff={selectedStaff}

@@ -6,25 +6,25 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
+import com.schoolmanagement.User_Service.config.BooleanConverter;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = { "username", "school_id" }))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class User {
-
     @Id
-    @Column(name = "user_id", updatable = false, nullable = false)
-    private String userId;  // Manually generated
+    @Column(unique = true, name = "user_id", updatable = false, nullable = false)
+    private String userId;
 
     @NotNull(message = "School ID cannot be null")
     @Column(name = "school_id", nullable = false)
@@ -45,6 +45,7 @@ public class User {
 
     @NotNull(message = "Active status cannot be null")
     @Column(name = "is_active", nullable = false)
+    @Convert(converter = BooleanConverter.class)
     private Boolean isActive;
 
     private LocalDateTime lastLogin;
@@ -57,14 +58,19 @@ public class User {
     private LocalDateTime updatedAt;
 
     @NotBlank(message = "Created by cannot be blank")
+    @Column(nullable = false, name = "created_by")
     private String createdBy;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
+    @Column(nullable = true, name = "updated_by")
+    private String updatedBy;
+
+    @ManyToMany(fetch = FetchType.EAGER) // Use EAGER for now to ensure loading
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
+    @Override
+    public String toString() {
+        return "User{userId='" + userId + "', username='" + username + "', schoolId='" + schoolId + "', isActive="
+                + isActive + "}";
+    }
 }

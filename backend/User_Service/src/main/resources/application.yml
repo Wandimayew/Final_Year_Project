@@ -17,11 +17,12 @@ spring:
       maximum-pool-size: 10
       idle-timeout: 600000
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect  
+        dialect: org.hibernate.dialect.MySQLDialect
   profiles:
     active: dev
   servlet:

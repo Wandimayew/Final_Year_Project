@@ -2,6 +2,7 @@
 import { FaUser, FaSchool, FaCalendar, FaPhone, FaMapMarker, FaIdCard } from "react-icons/fa";
 import { useStudent } from "@/lib/api/studentService/students";
 import { use } from "react";
+import Image from "next/image";
 
 const StudentDetailPage = ({ params }) => {
 const { studentId } = use(params);
@@ -134,7 +135,7 @@ const { studentId } = use(params);
             Student Photo
           </h2>
           <div className="flex justify-center">
-            <img
+            <Image
               src={studentData.photo || "/default-avatar.png"}
               alt="Student Photo"
               className="w-48 h-48 rounded-full border-4 border-blue-100 shadow-md"

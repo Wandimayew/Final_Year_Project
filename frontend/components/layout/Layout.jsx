@@ -1,9 +1,14 @@
 "use client";
+<<<<<<< HEAD
+=======
+
+import { useState, memo } from "react";
+>>>>>>> 5f7cb358532ddc87b0dec9622e460731c27a18d7
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-import { useState } from "react";
 
-const Layout = ({ children }) => {
+// Memoize Layout to prevent unnecessary re-renders
+const Layout = memo(({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
 
   return (
@@ -23,6 +28,8 @@ const Layout = ({ children }) => {
       </div>
     </div>
   );
-};
+});
+
+Layout.displayName = "Layout";
 
 export default Layout;

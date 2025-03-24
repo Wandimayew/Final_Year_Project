@@ -16,7 +16,7 @@
     <artifactId>User_Service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>User_Service</name>
-    <description>Demo project for Spring Boot</description>
+    <description>User Service for SaaS School management system</description>
 
     <properties>
         <java.version>17</java.version>
@@ -37,6 +37,18 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -55,11 +67,6 @@
             <optional>true</optional>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
-
         <!-- Devtools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -68,6 +75,7 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- MySQL -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
@@ -86,7 +94,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- JWT for Token Management -->
+        <!-- JWT -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -103,13 +111,22 @@
             <version>0.11.5</version>
         </dependency>
 
-        <!-- Hibernate Validator as Jakarta Validation implementation -->
+        <!-- Servlet API -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Hibernate Validator -->
         <dependency>
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
             <version>8.0.1.Final</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui -->
+
+        <!-- Springdoc OpenAPI (use latest version) -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -121,17 +138,30 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.17.0</version>
         </dependency>
+
+        <!-- Jackson JSR310 -->
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>2.18.1</version>
         </dependency>
 
+        <!-- SLF4J and Logback -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-mail</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
         </dependency>
 
+        <!-- Caffeine Cache -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.1.8</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>

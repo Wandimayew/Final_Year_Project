@@ -30,28 +30,28 @@ public class Address_Controller {
 
     @PostMapping("{school_id}/addNewAddress")
     public ResponseEntity<AddressResponse> addNewAddress(@RequestBody AddressRequest addressRequest,
-            @PathVariable Long school_id) {
+            @PathVariable String school_id) {
         return addressService.addNewAddress(addressRequest, school_id);
     }
 
     @PutMapping("/{school_id}/editAddressById/{address_id}")
-    public ResponseEntity<AddressResponse> editAddressById(@PathVariable Long school_id, @PathVariable Long address_id,
+    public ResponseEntity<AddressResponse> editAddressById(@PathVariable String school_id, @PathVariable Long address_id,
             @RequestBody AddressRequest addressRequest) {
         return addressService.editAddressById(addressRequest, school_id, address_id);
     }
 
     @GetMapping("/{school_id}/getAllAddressBySchool")
-    public ResponseEntity<List<AddressResponse>> getAllAddressBySchool(@PathVariable Long school_id) {
+    public ResponseEntity<List<AddressResponse>> getAllAddressBySchool(@PathVariable String school_id) {
         return addressService.getAllAddressesBySchoolId(school_id);
     }
 
     @GetMapping("/{school_id}/getAddressById/{address_id}")
-    public ResponseEntity<AddressResponse> getAddressById(@PathVariable Long school_id, @PathVariable Long address_id) {
+    public ResponseEntity<AddressResponse> getAddressById(@PathVariable String school_id, @PathVariable Long address_id) {
         return addressService.getAddressById(school_id, address_id);
     }
 
     @DeleteMapping("/{school_id}/deleteAddressById/{address_id}")
-    public ResponseEntity<String> deleteSchoolById(@PathVariable Long school_id, @PathVariable Long address_id) {
+    public ResponseEntity<String> deleteSchoolById(@PathVariable String school_id, @PathVariable Long address_id) {
         return addressService.deleteAddressById(school_id, address_id);
     }
 }

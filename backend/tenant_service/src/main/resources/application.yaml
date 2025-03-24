@@ -37,11 +37,23 @@ springdoc:
 server:
   port: 8086
 
+app:
+  jwtSecret: zWR3i+mURw4kppEwVNhxZdqblotfvWseQGKI1SdLI9Y=
+  jwtExpirationMs: 86400000 # 24 hours in milliseconds
+
+user:
+  service:
+    url: http://10.194.61.74:8087
+
+tenant:
+  service:
+    token: this-is-me-do-you-remember-me
+
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://eureka-server:8761/eureka/ 
-    registerWithEureka: true  
-    fetchRegistry: true  
+      defaultZone: http://eureka-server:8761/eureka/  # URL of the Eureka Server
+    registerWithEureka: true  # Register this client with Eureka
+    fetchRegistry: true 
   instance:
-    preferIpAddress: true  
+    preferIpAddress: true

@@ -17,8 +17,8 @@ import lombok.Data;
 public class School {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long school_id;
+    @Column(nullable = false, unique = true)
+    private String school_id;
 
     @Column(nullable = false)
     @NotBlank(message = "School Name must not be null or empty")

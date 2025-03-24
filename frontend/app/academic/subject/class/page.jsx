@@ -8,7 +8,7 @@ import axios from "axios";
 const ClassSubjectPage = () => {
   const [subjectData, setSubjectData] = useState([]);
   const [contiue, setContinue] = useState(false);
-  const [classId, setClassId] = useState(null);
+  const [classId, setClassId] = useState(0);
   useEffect(() => {
     const fetchClass = async () => {
       const response = await axios.get(
@@ -32,7 +32,7 @@ const ClassSubjectPage = () => {
           };
           fetchSubject();
     }
-  }, [contiue]);
+  }, [contiue,classId]);
 
 
   return (
