@@ -30,5 +30,18 @@ spring:
       max-file-size: 50MB
       max-request-size: 50MB
 
+# Chapa Payment Gateway Configuration
+chapa:
+  api:
+    url: https://api.chapa.co/v1
+  secret:
+    key: CHASECK_TEST-e9Fx9PFOSErlyR9uTaJx7sEgtxeWlSji
+  callback:
+    url: http://localhost:8087/api/finance/payments/process
+
 server:
   port: 8087
+
+PublicKey: CHAPUBK_TEST-2hYHCrRRvI95dm0C7D94xybSsK59AvOH
+SecretKey: CHASECK_TEST-e9Fx9PFOSErlyR9uTaJx7sEgtxeWlSji
+EncryptionKey: CG7RxF1PANgPnwUrNTh2UTju

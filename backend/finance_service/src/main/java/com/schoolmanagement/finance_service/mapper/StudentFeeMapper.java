@@ -18,7 +18,7 @@ public class StudentFeeMapper {
         studentFee.setRemainingAmount(dto.getRemainingAmount());
         studentFee.setStatus(dto.getStatus());
         studentFee.setLastPaymentDate(dto.getLastPaymentDate());
-        studentFee.setActive(dto.isActive());
+        studentFee.setActive(true);
         
         Fee fee = new Fee();
         fee.setFeeId(dto.getFeeId());

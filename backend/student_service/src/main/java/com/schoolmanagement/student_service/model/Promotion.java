@@ -30,7 +30,7 @@ public class Promotion {
     @Size(max = 500, message = "Remark cannot exceed 500 characters")
     private String remark;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "studentId")
     @NotNull(message = "Student cannot be null")
     private Student student;

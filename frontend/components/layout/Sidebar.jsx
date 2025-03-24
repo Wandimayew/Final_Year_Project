@@ -92,7 +92,7 @@ const Sidebar = ({ isMenuOpen }) => {
         isMenuOpen ? "w-64" : "w-16"
       }`}
     >
-      <nav className="flex-1 p-2 space-y-2 overflow-y-auto">
+      <nav className="flex-1 p-2 pb-40 space-y-2 overflow-y-auto">
         {MENU_ITEMS.map((menu) => renderMenuItem(menu))}
       </nav>
     </aside>
