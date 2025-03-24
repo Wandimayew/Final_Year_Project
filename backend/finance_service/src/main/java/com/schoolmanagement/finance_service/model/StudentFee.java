@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "student_fees")
@@ -54,6 +56,10 @@ public class StudentFee {
     @JoinColumn(name = "invoiceId")  
     private Invoice invoice;  
     
+    // New ManyToMany relationship with Payment
+    @ManyToMany(mappedBy = "studentFees")
+    private List<Payment> payments = new ArrayList<>();
+
     // Methods
     public void addStudentFee() {
         this.isActive = true;
@@ -63,10 +69,10 @@ public class StudentFee {
     }
     
     public void calculateRemainingAmount() {
-        this.remainingAmount = this.appliedAmount.subtract(this.paidAmount);
+        this.remainingAmount = this.appliedAmount.subtract(this.paidAmount != null ? this.paidAmount : BigDecimal.ZERO);
         if (this.remainingAmount.compareTo(BigDecimal.ZERO) == 0) {
             this.status = "PAID";
-        } else if (this.paidAmount.compareTo(BigDecimal.ZERO) > 0) {
+        } else if (this.paidAmount != null && this.paidAmount.compareTo(BigDecimal.ZERO) > 0) {
             this.status = "PARTIALLY_PAID";
         } else {
             this.status = "PENDING";

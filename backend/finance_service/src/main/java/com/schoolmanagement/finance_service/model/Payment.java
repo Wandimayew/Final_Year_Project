@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "payments")
@@ -33,10 +36,12 @@ public class Payment {
     
     private LocalDate paymentDate;
     
+    @Column(name = "payment_reference")
     private String paymentReference;
     
     private String remarks;
     
+    @Column(name = "payment_gateway_response", columnDefinition = "TEXT")
     private String paymentGatewayResponse;
     
     private boolean isActive;
@@ -57,6 +62,15 @@ public class Payment {
     @JoinColumn(name = "financial_transaction_id")
     private FinancialTransaction financialTransaction;
     
+    // New ManyToMany relationship with StudentFee
+    @ManyToMany
+    @JoinTable(
+        name = "payment_student_fees",
+        joinColumns = @JoinColumn(name = "payment_id"),
+        inverseJoinColumns = @JoinColumn(name = "student_fee_id")
+    )
+    private List<StudentFee> studentFees = new ArrayList<>();
+
     // Methods
     public void getPayment() {
         // Logic to retrieve payment details
@@ -71,6 +85,11 @@ public class Payment {
         this.isActive = false;
         this.updatedAt = LocalDateTime.now();
     }
+
+    // Helper method to get studentFeeIds (for compatibility with previous logic)
+    public List<Long> getStudentFeeIds() {
+        return studentFees.stream()
+                .map(StudentFee::getStudentFeeId)
+                .collect(Collectors.toList());
+    }
 }
-
-

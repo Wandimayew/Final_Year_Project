@@ -49,7 +49,7 @@ public class Fee {
     private LocalDateTime updatedAt;
 
     public enum FeeType {
-        TUITION, TRANSPORTATION, BOOKS, UNIFORM, EXAM, LABORATORY, SPORTS, MISCELLANEOUS
+        TUITION, TRANSPORTATION, BOOKS, UNIFORM, EXAM, LABORATORY, SPORTS, MISCELLANEOUS, REGISTRATION
     }
     
     public enum Frequency {

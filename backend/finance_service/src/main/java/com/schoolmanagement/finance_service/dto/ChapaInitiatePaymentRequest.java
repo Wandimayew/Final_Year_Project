@@ -1,5 +1,6 @@
 package com.schoolmanagement.finance_service.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,37 +10,41 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
-import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PaymentRequestDTO {
-    @NotBlank(message = "School ID is required")
-    private String schoolId;
-    
-    @NotBlank(message = "Student ID is required")
-    private String studentId;
+public class ChapaInitiatePaymentRequest {
     
     @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be positive")
     private BigDecimal amount;
     
-    @NotNull(message = "Student fee IDs are required")
-    private List<Long> studentFeeIds;
+    @NotBlank(message = "Currency is required")
+    private String currency;
     
-    private String paymentMethod;
-    
-    private String remarks;
-    
-    @NotBlank(message = "Created by is required")
-    private String createdBy;
-
-    @NotBlank(message = "Email is required for online payment")
+    @NotBlank(message = "Email is required")
     private String email;
-
+    
+    @JsonProperty("first_name")
     private String firstName;
-
+    
+    @JsonProperty("last_name")
     private String lastName;
+    
+    @JsonProperty("tx_ref")
+    private String txRef;
+    
+    @JsonProperty("callback_url")
+    private String callbackUrl;
+    
+    private String customization;
+    
+    @JsonProperty("return_url")
+    private String returnUrl;
+    
+    private String title;
+    
+    private String description;
 }
