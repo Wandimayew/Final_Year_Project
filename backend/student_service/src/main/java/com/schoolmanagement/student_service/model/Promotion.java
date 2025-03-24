@@ -15,7 +15,7 @@ public class Promotion {
     private Long id;
 
     @NotNull(message = "School ID cannot be null")
-    private Long schoolId;
+    private String schoolId;
 
     @NotNull(message = "Previous class ID cannot be null")
     private Long previousClassId;

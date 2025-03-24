@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 public class AttendanceResponse {
 
     private Long attendanceId;
-    private Long schoolId;
+    private String schoolId;
     private Long classId;
     private Long studentId;
     private Long qrCodeId;

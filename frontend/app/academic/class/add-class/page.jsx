@@ -1,11 +1,15 @@
+"use client"
+
+import { Suspense, useState } from "react";
 import AddClass from "@/components/academic/AddClass";
-import Layout from "@/components/layout/Layout";
 
 const AddClassPage = () => {
+  const [classList, setClassList] = useState(false); // State for parent control
+
   return (
-    <Layout>
-      <AddClass />
-    </Layout>
+    <Suspense fallback={<div>Loading class form...</div>}>
+      <AddClass setClassList={setClassList} classListClicked={false} />
+    </Suspense>
   );
 };
 

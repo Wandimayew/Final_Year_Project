@@ -1,6 +1,11 @@
+"use client";
+
 import localFont from "next/font/local";
 import ReactQueryProvider from '@/lib/ReactQueryProvider';
 import "./globals.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -13,11 +18,6 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const metadata = {
-  title: "SSMS",
-  description: "SaaS School management system",
-};
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
@@ -26,6 +26,8 @@ export default function RootLayout({ children }) {
       >
         <ReactQueryProvider>
           {children}
+          <ToastContainer position="top-right" autoClose={3000} />
+          <Toaster position="top-right" toastOptions={{ duration: 5000 }} />
         </ReactQueryProvider>
       </body>
     </html>

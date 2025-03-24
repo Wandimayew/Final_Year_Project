@@ -24,4 +24,6 @@ public class ClassResponse {
     private Set<Stream> stream;
 
     private List<SectionResponse> sections;
+
+    private Boolean status;
 }

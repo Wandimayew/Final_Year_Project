@@ -14,10 +14,10 @@ public class StudentRequest {
     private String registId;
 
     @NotNull(message = "User ID cannot be null")
-    private Long userId;
+    private String userId;
 
     @NotNull(message = "School ID cannot be null")
-    private Long schoolId;
+    private String schoolId;
 
     @NotNull(message = "Class ID cannot be null")
     private Long classId;

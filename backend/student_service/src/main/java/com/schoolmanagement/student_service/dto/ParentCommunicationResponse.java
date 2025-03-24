@@ -9,7 +9,7 @@ public class ParentCommunicationResponse {
 
     private Long Id;
     private Long studentId;
-    private Long schoolId;
+    private String schoolId;
     private LocalDateTime sentAt;
     private String message;
     private Long parentId;

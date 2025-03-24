@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class QRCodeScanRequest {
-    private Long schoolId;
+    private String schoolId;
     private Long classId;
     private Long studentId;
     private Long qrCodeId;

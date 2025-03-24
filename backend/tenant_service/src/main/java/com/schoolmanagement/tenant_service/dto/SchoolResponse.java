@@ -10,7 +10,7 @@ import lombok.Data;
 @Builder
 @Data
 public class SchoolResponse {
-    private Long school_id;
+    private String school_id;
 
     private String school_name;
 
@@ -21,14 +21,17 @@ public class SchoolResponse {
     private String email_address;
 
     private String school_type;
- 
+
+    private String message;
+
     private LocalDate establishment_date;
+    
     private String school_information;
 
     private boolean isActive;
 
     private String status;
-    
+
     private LocalDateTime created_at;
 
     private LocalDateTime updated_at;

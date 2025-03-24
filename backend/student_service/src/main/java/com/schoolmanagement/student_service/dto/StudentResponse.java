@@ -10,8 +10,8 @@ public class StudentResponse {
 
     private Long studentId;
     private String registId;
-    private Long userId;
-    private Long schoolId;
+    private String userId;
+    private String schoolId;
     private Long classId;
     private Long sectionId;
     private String firstName;
