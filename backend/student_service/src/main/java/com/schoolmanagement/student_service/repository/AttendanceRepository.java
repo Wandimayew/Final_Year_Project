@@ -7,5 +7,5 @@ import com.schoolmanagement.student_service.model.Attendance;
 
 @Repository
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
-    boolean existsByStudentIdAndQrCodeId(String studentId, Long qrCodeId);
+    boolean existsByStudentIdAndQrCodeId(Long studentId, Long qrCodeId);
 }

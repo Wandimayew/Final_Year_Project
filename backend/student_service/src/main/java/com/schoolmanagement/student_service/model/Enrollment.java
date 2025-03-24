@@ -15,7 +15,7 @@ public class Enrollment {
     private Long id;
 
     @NotNull(message = "School ID cannot be null")
-    private Long schoolId;
+    private String schoolId;
 
     @NotNull(message = "Class ID cannot be null")
     private Long classId;

@@ -14,8 +14,8 @@ import java.util.List;
 public class JwtResponse {
     private String token;
     private String type = "Bearer";
-    private Long userId;
-    private Long schoolId;
+    private String userId;
+    private String schoolId;
     private String username;
     private String email;
     private List<String> roles;

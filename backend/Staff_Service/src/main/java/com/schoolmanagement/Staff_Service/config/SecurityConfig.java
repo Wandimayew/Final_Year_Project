@@ -23,9 +23,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // ✅ Disable CSRF for API calls
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/staff/**", "/api/teachers/**", "/api/qrcodes/**",
-                                "/api/attendance/**", "/api/assignments/**")
-                        .permitAll()
+                        .requestMatchers("/staff/**").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().permitAll())
                 .httpBasic(httpBasic -> httpBasic.disable());
 
@@ -35,7 +34,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() { // ✅ Define CORS method
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000")); // ✅ Allow frontend React app
+        config.setAllowedOrigins(List.of("http://10.194.61.74:8080", "http://10.194.61.74:3000")); // ✅ Allow frontend React app
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         config.setAllowedHeaders(List.of("*"));
 

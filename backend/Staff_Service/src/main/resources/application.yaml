@@ -1,6 +1,6 @@
 spring:
   application:
-    name: Staff_Service
+    name: STAFF_SERVICE
     file:
       uploads:
         photos-output-path: ./uploads
@@ -11,7 +11,7 @@ spring:
     ansi:
       enabled: ALWAYS
   datasource:
-    url: jdbc:mysql://localhost:3306/Staff_Service
+    url: jdbc:mysql://mysql:3306/Staff_Service
     username: admin
     password: admin
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -43,8 +43,13 @@ logging:
               BasicBinder: trace
     org.springframework.cloud.loadbalancer: DEBUG
     com.netflix.discovery: DEBUG
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 server:
-  port: 0
+  port: 8084
 eureka:
   client:
     service-url:

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.schoolmanagement.student_service.model.Promotion;
 import com.schoolmanagement.student_service.model.Student;
+import com.schoolmanagement.student_service.model.Student.PassedOrFail;
 import com.schoolmanagement.student_service.repository.PromotionRepository;
 import com.schoolmanagement.student_service.repository.StudentRepository;
 
@@ -58,9 +59,10 @@ public class PromotionService {
         promotionRepository.delete(promotion);
     }
 
-    public void promoteStudents(Long currentClassId, Long newClassId, boolean isPassed) {
+    public void promoteStudents(Long currentClassId, Long newClassId, Long sectionId, PassedOrFail isPassed) {
         // Fetch all students in the current class who meet the passing criteria
-        List<Student> studentsToPromote = studentRepository.findByClassIdAndIsPassed(currentClassId, isPassed);
+        
+        List<Student> studentsToPromote = studentRepository.findByClassIdAndSectionIdAndIsPassed(currentClassId, sectionId, isPassed);
 
         if (studentsToPromote.isEmpty()) {
             throw new RuntimeException("No students meet the criteria for promotion.");

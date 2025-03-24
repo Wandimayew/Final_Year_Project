@@ -23,13 +23,12 @@ import java.util.Set;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "user_id", updatable = false, nullable = false)
-    private Long userId;
+    private String userId;  // Manually generated
 
     @NotNull(message = "School ID cannot be null")
     @Column(name = "school_id", nullable = false)
-    private Long schoolId;
+    private String schoolId;
 
     @NotBlank(message = "Username cannot be blank")
     @Size(min = 5, max = 30, message = "Username must be between 5 and 30 characters")

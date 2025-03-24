@@ -21,7 +21,12 @@ import {
   FaUsers,
   FaCalendarCheck,
   FaQrcode,
+  FaGraduationCap,
+  FaPlusCircle,
+  FaFileImport,
+  FaList,
 } from "react-icons/fa";
+import { FiClock, FiDollarSign, FiEye, FiGrid, FiList, FiPackage, FiSettings, FiUserPlus, FiCamera } from "react-icons/fi";
 
 export const MENU_ITEMS = [
   {
@@ -77,6 +82,12 @@ export const MENU_ITEMS = [
         id: "subject",
         label: "Subject",
         href: "/academic/subject",
+        roles: "",
+      },
+      {
+        id: "subject-class",
+        label: "Subject Class",
+        href: "/academic/subject/class",
         roles: "",
       },
       {
@@ -205,6 +216,93 @@ export const MENU_ITEMS = [
     ],
   },
   {
+    id: "announcementandevent",
+    icon: FiSettings,
+    label: "Announcements",
+    href: "/communication/event",
+    roles: "", // Roles can be updated later for access control (e.g., "admin,teacher")
+    subItems: [
+      {
+        id: "event",
+        label: "Events",
+        href: "/communication/event",
+        roles: "",
+      },
+      {
+        id: "allEvents",
+        label: "All Events",
+        href: "/communication/event",
+        roles: "",
+      },
+      {
+        id: "createEvent",
+        label: "Create Event",
+        href: "/communication/event/create",
+        roles: "",
+      },
+      {
+        id: "pendingApprovals",
+        label: "Pending Approvals",
+        href: "/communication/event/pending-approval",
+        roles: "", // Restrict to admins; adjust based on your role system
+      },
+      {
+        id: "myAnnouncement",
+        label: "My Announcement",
+        href: "/communication/event/my-pending",
+        roles: "", // Available to all creators
+      },
+      {
+        id: "draft",
+        label: "My Draft",
+        href: "/communication/event/draft",
+        roles: "", // Available to all creators
+      },
+      {
+        id: "email",
+        label: "Email",
+        href: "/communication/email",
+        roles: "",
+      },
+      {
+        id: "notification",
+        label: "Notification",
+        href: "/communication/notification",
+        roles: "",
+      },
+    ],
+  },
+  {
+    id: "student",
+    icon: FaGraduationCap,
+    label: "Student",
+    href: "/students",
+    roles: "",
+    subItems: [
+      {
+        id: "studentlist",
+        icon: FaList,
+        label: "Student List",
+        href: "/students",
+        roles: "",
+      },
+      {
+        id: "createstudent",
+        icon: FaPlusCircle,
+        label: "Add Student",
+        href: "/students/create",
+        roles: "",
+      },
+      {
+        id: "importstudents",
+        icon: FaFileImport,
+        label: "Import Students",
+        href: "/students/import",
+        roles: "",
+      },
+    ],
+  },
+  {
     id: "setting",
     icon: FiSettings,
     label: "Settings",
@@ -213,8 +311,8 @@ export const MENU_ITEMS = [
     subItems: [
       {
         id: "system",
-        label: "System Setting",
-        href: "/setting/system",
+        label: "Communication Setting",
+        href: "/setting/communication/preference",
         roles: "",
       },
       {

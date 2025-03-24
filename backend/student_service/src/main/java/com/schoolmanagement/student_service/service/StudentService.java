@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-
 import com.schoolmanagement.student_service.model.Student;
+import com.schoolmanagement.student_service.model.Student.PassedOrFail;
 import com.schoolmanagement.student_service.repository.StudentRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -16,13 +16,43 @@ public class StudentService {
     private final StudentRepository studentRepository;
 
     // Get all students
-    public List<Student> getAllStudents() {
-        return studentRepository.findAll();
+    public List<Student> getAllStudents(Long classId, Long sectionId) {
+        if (classId != null && sectionId != null) {
+            // Filter by both classId and sectionId
+            return studentRepository.findByClassIdAndSectionId(classId, sectionId);
+        } else if (classId != null) {
+            // Filter by classId only
+            return studentRepository.findByClassId(classId);
+        } else if (sectionId != null) {
+            // Filter by sectionId only
+            return studentRepository.findBySectionId(sectionId);
+        } else {
+            // No filters applied, return all QR codes
+            return studentRepository.findAll();
+        }
+    }
+
+    // Get all students
+    public List<Student> getAllPassedStudents(Long classId, Long sectionId, PassedOrFail isPassed) {
+
+        if (classId != null && sectionId != null) {
+            // Filter by both classId and sectionId
+            return studentRepository.findByClassIdAndSectionIdAndIsPassed(classId, sectionId, isPassed);
+        } else if (classId != null) {
+            // Filter by classId only
+            return studentRepository.findByClassIdAndIsPassed(classId, isPassed);
+        } else if (sectionId != null) {
+            // Filter by sectionId only
+            return studentRepository.findBySectionIdAndIsPassed(sectionId, isPassed);
+        } else {
+            // No filters applied, return all QR codes
+            return studentRepository.findAllIsPassed(isPassed);
+        }
     }
 
     // Get a student by ID
-    public Student getStudentById(Long id) {
-        return studentRepository.findById(id)
+    public Student getStudentById(String id) {
+        return studentRepository.findByStudentId(id)
                 .orElseThrow(() -> new RuntimeException("Student not found with id: " + id));
     }
 
@@ -52,8 +82,8 @@ public class StudentService {
         existingStudent.setContactInfo(studentDetails.getContactInfo());
         existingStudent.setPhoto(studentDetails.getPhoto());
         existingStudent.setAddress(studentDetails.getAddress());
-        existingStudent.setActive(studentDetails.isActive());
-        existingStudent.setPassed(studentDetails.isPassed());
+        // existingStudent.setActive(studentDetails.isActive());
+        // existingStudent.setPassed(studentDetails.isPassed());
         existingStudent.setAdmissionDate(studentDetails.getAdmissionDate());
 
         // Save the updated student

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/permissions")
+@RequestMapping("/auth/api/permissions")
 @RequiredArgsConstructor
 @Slf4j
 public class PermissionController {

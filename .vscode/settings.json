@@ -1,12 +1,5 @@
 {
-  "java.configuration.updateBuildConfiguration": "automatic",
-  "java.server.launchMode": "Standard",
-  "java.compile.nullAnalysis.mode": "automatic",
-  "cSpell.words": [
-    "kebele",
-    "LONGTEXT",
-    "qrcodes"
-  ],
-  "java.debug.settings.onBuildFailureProceed": true,
-  "java.jdt.ls.vmargs": "-Xmx1G -XX:+UseParallelGC"
+  "java.configuration.updateBuildConfiguration": "automatic", 
+  "java.server.launchMode": "Lightweight",                  
+  "java.compile.nullAnalysis.mode": "automatic"              
 }

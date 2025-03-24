@@ -2,10 +2,9 @@ package com.schoolmanagement.academic_service.dto.request;
 
 import java.util.List;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
@@ -13,6 +12,9 @@ public class TimeTableRequest {
 
     @NotBlank(message = "School Name must not be null or empty")
     private String schoolName;
+
+    @NotBlank(message = "School ID must not be null or empty")
+    private String schoolId;
 
     @NotBlank(message = "Academic Year must not be null or empty")
     private String academicYear;
@@ -32,9 +34,11 @@ public class TimeTableRequest {
     @NotNull(message = "Timetable constraints must not be null")
     private TimetableConstraints timetableConstraints;
 
-    // Class-specific configurations
     @Data
     public static class ClassConfig {
+        @NotNull(message = "Class ID must not be null")
+        private Long classId;
+
         @NotBlank(message = "Class name must not be null or empty")
         private String className;
 
@@ -42,20 +46,21 @@ public class TimeTableRequest {
         private List<SectionConfig> sections;
 
         @NotNull(message = "Subjects for the class must not be null")
-        private List<Integer> subjectIds;
+        private List<Long> subjectIds;
     }
 
-    // Section-specific configurations
     @Data
     public static class SectionConfig {
+        @NotNull(message = "Section ID must not be null")
+        private Long sectionId;
+
         @NotBlank(message = "Section name must not be null or empty")
         private String sectionName;
 
         @NotNull(message = "Stream Id must not be null")
-        private Integer streamId;
+        private Long streamId;
     }
 
-    // Teacher-specific configurations
     @Data
     public static class TeacherConfig {
         @NotBlank(message = "Teacher name must not be null or empty")
@@ -65,7 +70,7 @@ public class TimeTableRequest {
         private String teacherId;
 
         @NotNull(message = "Subjects taught by the teacher must not be null")
-        private List<Integer> subjectIds;
+        private List<Long> subjectIds;
 
         @NotNull(message = "Classes assigned to the teacher must not be null")
         private List<String> classNames;
@@ -78,16 +83,14 @@ public class TimeTableRequest {
         @Min(value = 1, message = "Maximum classes per day must be at least 1")
         private Integer maxClassesPerDay;
     }
-    // int currentLoad = teacherLoadTracker.getOrDefault(teacher.getTeacherId(), 0);
 
-    // Subject-specific configurations
     @Data
     public static class SubjectConfig {
         @NotBlank(message = "Subject name must not be null or empty")
         private String subjectName;
 
         @NotNull(message = "Subject Id must not be null")
-        private Integer subjectId;
+        private Long subjectId;
 
         @NotNull(message = "Subject duration in minutes must not be null")
         @Min(value = 1, message = "Subject duration in minutes must be at least 1 minute")
@@ -98,7 +101,6 @@ public class TimeTableRequest {
         private Integer subjectFrequencyPerWeek;
     }
 
-    // Stream-specific configurations
     @Data
     public static class StreamConfig {
         @NotBlank(message = "Stream name must not be null or empty")
@@ -108,7 +110,6 @@ public class TimeTableRequest {
         private List<String> classNames;
     }
 
-    // Timetable constraints
     @Data
     public static class TimetableConstraints {
         @NotNull(message = "Maximum subjects per day must not be null")
@@ -118,10 +119,6 @@ public class TimeTableRequest {
         @NotNull(message = "Break duration in minutes must not be null")
         @Min(value = 1, message = "Break duration in minutes must be at least 1 minute")
         private Integer breakDurationInMinutes;
-
-        @NotNull(message = "Break after how many subjects must not be null")
-        @Min(value = 1, message = "Break after how many subjects must be at least 1")
-        private Integer breakAfterSubjects;
 
         @NotNull(message = "School start time must not be null")
         private String schoolStartTime;

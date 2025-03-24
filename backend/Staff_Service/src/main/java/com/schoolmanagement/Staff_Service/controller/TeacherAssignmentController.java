@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @Slf4j
-@RequestMapping("/api/assignments")
+@RequestMapping("/staff/api/assignments")
 @RequiredArgsConstructor
 public class TeacherAssignmentController {
 

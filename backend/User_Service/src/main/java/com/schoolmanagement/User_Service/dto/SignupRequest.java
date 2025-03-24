@@ -8,7 +8,7 @@ import java.util.Set;
 @Data
 public class SignupRequest {
 
-    private Long schoolId;
+    private String schoolId;
 
     private String username;
 
@@ -17,5 +17,4 @@ public class SignupRequest {
     private String password;
 
     private Set<String> roles;
-
 }

@@ -12,7 +12,7 @@ import com.schoolmanagement.User_Service.dto.PasswordResetRequestDto;
 import com.schoolmanagement.User_Service.service.PasswordResetService;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth/api")
 public class PasswordResetController {
     
     @Autowired

@@ -25,20 +25,26 @@ import com.schoolmanagement.student_service.service.QRCodeService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/api/qrcodes")
+@RequestMapping("/student/api/qrcodes")
 @RequiredArgsConstructor
+@Slf4j
 public class QRCodeController {
     private final QRCodeService qrCodeService;
 
-    // Get all QR codes
+    // Get all QR codes filtered by classId and sectionId
     @GetMapping
-    public ResponseEntity<List<QRCodeResponse>> getAllQRCodes() {
-        List<QRCode> qrCodes = qrCodeService.getAllQRCodes();
+    public ResponseEntity<List<QRCodeResponse>> getAllQRCodes(
+            @RequestParam(required = false) Long classId,
+            @RequestParam(required = false) Long sectionId) {
+
+        List<QRCode> qrCodes = qrCodeService.getAllQRCodes(classId, sectionId);
         List<QRCodeResponse> response = qrCodes.stream()
                 .map(QRCodeMapper::toResponse)
                 .collect(Collectors.toList());
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -77,10 +83,26 @@ public class QRCodeController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    // @PostMapping("/generate")
+    // public QRCode generateQRCode(@RequestParam(required = false) Long schoolId, @RequestParam Long classId, @RequestParam Long sectionId,
+    //         @RequestParam String generatedBy) throws WriterException, IOException {
+
+    //     return qrCodeService.generateQRCode(schoolId, classId, sectionId, generatedBy);
+    // }
+
     @PostMapping("/generate")
-    public QRCode generateQRCode(@RequestParam Long schoolId, @RequestParam Long classId, @RequestParam Long sectionId,
-            @RequestParam String generatedBy) throws WriterException, IOException {
-        return qrCodeService.generateQRCode(schoolId, classId, sectionId, generatedBy);
-    }
+public ResponseEntity<QRCodeResponse> generateQRCode(@Valid @RequestBody QRCodeRequest qrCodeRequest) 
+        throws WriterException, IOException {
+    // Convert DTO to Entity
+    QRCode qrCode = QRCodeMapper.toEntity(qrCodeRequest);
+    
+    // Call Service to Generate QR Code
+    QRCode generatedQRCode = qrCodeService.generateQRCode(qrCode);
+    
+    // Convert Entity to Response DTO
+    QRCodeResponse response = QRCodeMapper.toResponse(generatedQRCode);
+    
+    return ResponseEntity.ok(response);
+}
 
 }

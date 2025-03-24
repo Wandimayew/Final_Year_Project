@@ -7,5 +7,7 @@ import com.schoolmanagement.academic_service.model.TimeTable;
 
 @Repository
 public interface TimeTableRepository  extends JpaRepository<TimeTable,Long>{
+
+    Iterable<? extends TimeTable> findBySchoolId(String schoolId);
     
 }

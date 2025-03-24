@@ -80,7 +80,8 @@ public class AuthService {
             .message("Login successful") 
             .build();
     }
-    
+
+    @Transactional
     public User registerUser(SignupRequest signupRequest) {
         if (userRepository.existsByUsername(signupRequest.getUsername())) {
              new BadRequestException("Username is already taken");
@@ -91,6 +92,10 @@ public class AuthService {
         }
 
         User user = new User();
+        // Generate userId based on schoolId
+        String newUserId = generateUserId(signupRequest.getSchoolId());
+
+        user.setUserId(newUserId);
         user.setSchoolId(signupRequest.getSchoolId());
         user.setUsername(signupRequest.getUsername());
         user.setEmail(signupRequest.getEmail());
@@ -120,13 +125,18 @@ public class AuthService {
       
     }
 
-    //  public void uploadUserPhoto(MultipartFile file, Long userId) {
-    //     User user = userRepository.findById(userId)
-    //             .orElseThrow(() -> new EntityNotFoundException("No user found with ID:: " + userId));
-    //     var photo = fileStorageService.saveFile(file, userId);
-    //     user.setUserPhoto(photo);
-    //     userRepository.save(user);
-    // }
+    private String generateUserId(String schoolId) {
+        // Find the latest user for the given schoolId
+        String lastUserId = userRepository.findLastUserIdBySchoolId(schoolId);
 
-    
+        int nextNumber = 1; // Default if no users exist
+        if (lastUserId != null && lastUserId.startsWith(schoolId)) {
+            // Extract number from last userId (e.g., "SCH12" -> 12)
+            String numberPart = lastUserId.replace(schoolId, "");
+            nextNumber = Integer.parseInt(numberPart) + 1;
+        }
+
+        return schoolId + nextNumber;
+    }
+
 }

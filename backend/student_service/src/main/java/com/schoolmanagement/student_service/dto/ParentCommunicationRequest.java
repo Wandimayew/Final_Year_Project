@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class ParentCommunicationRequest {
 
     @NotNull(message = "School ID cannot be null")
-    private Long schoolId;
+    private String schoolId;
 
     @NotNull(message = "Sent date and time cannot be null")
     @PastOrPresent(message = "Sent date and time must be in the past or present")
