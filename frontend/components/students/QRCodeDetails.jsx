@@ -6,6 +6,7 @@ import { useReactToPrint } from "react-to-print";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { useRef, useState } from "react";
+import Image from "next/image";
 
 const QRCodeDetails = ({ id, onClose, setOnClose }) => {
   const { data: qrcode, isLoading, isError } = useQRCode(id);
@@ -130,7 +131,7 @@ const QRCodeDetails = ({ id, onClose, setOnClose }) => {
 
           {/* QR Code Image */}
           <div className="mt-6 flex justify-center">
-            <img
+            <Image
               src={`data:image/png;base64,${qrcode.qrCodePath}`}
               alt="QR Code"
               className="w-48 h-48 border-4 border-blue-100 rounded-lg shadow-md"

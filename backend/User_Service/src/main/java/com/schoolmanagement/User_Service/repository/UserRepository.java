@@ -3,6 +3,7 @@ package com.schoolmanagement.User_Service.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,28 +13,33 @@ import com.schoolmanagement.User_Service.model.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles r WHERE u.username = :username AND u.isActive = true")
+    Optional<User> findByUsername(@Param("username") String username);
 
-    Optional<User> findByUsername(String username);
+    @Query("SELECT u FROM User u WHERE u.schoolId = :schoolId AND u.isActive = true")
+    List<User> findBySchoolId(@Param("schoolId") String schoolId);
 
-    List<User> findBySchoolId(String schoolId);
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.username = :username AND u.isActive = true")
+    boolean existsByUsername(@Param("username") String username);
 
-    boolean existsByUsername(String username);
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.email = :email AND u.isActive = true")
+    boolean existsByEmail(@Param("email") String email);
 
-    boolean existsByEmail(String email);
+    @Query("SELECT u FROM User u JOIN u.roles r WHERE r.roleId IN :roleIds AND u.schoolId = :schoolId AND u.isActive = true")
+    List<User> findByRolesAndSchoolId(@Param("roleIds") List<Long> roleIds, @Param("schoolId") String schoolId);
 
-    @Query("SELECT u FROM User u JOIN u.roles r WHERE r.roleId IN :roleIds AND u.isActive = true")
-    List<User> findByRoles(@Param("roleIds") List<Long> roleIds);
+    @Query("SELECT u FROM User u WHERE u.email = :email AND u.schoolId = :schoolId AND u.isActive = true")
+    Optional<User> findByEmailAndSchoolId(@Param("email") String email, @Param("schoolId") String schoolId);
 
-    User findByEmail(String email);
+    @Query("SELECT u.userId FROM User u WHERE u.schoolId = :schoolId AND u.isActive = true ORDER BY u.userId DESC")
+    List<String> findTopUserIdBySchoolId(@Param("schoolId") String schoolId, Pageable pageable);
 
-    @Query("SELECT u.userId FROM User u WHERE u.schoolId = :schoolId ORDER BY u.userId DESC LIMIT 1")
-    String findLastUserIdBySchoolId(@Param("schoolId") String schoolId);
+    @Query("SELECT u FROM User u WHERE u.userId = :userId AND u.schoolId = :schoolId AND u.isActive = true")
+    Optional<User> findBySchoolIdAndUserId(@Param("schoolId") String schoolId, @Param("userId") String userId);
 
-    @Query("SELECT u FROM User u WHERE u.schoolId= :schoolId AND u.userId= :userId and u.isActive= true")
-    User findBySchoolAndUserId(@Param("schoolId") String schoolId,@Param("userId") String userId);
+    @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName AND u.schoolId = :schoolId AND u.isActive = true")
+    List<User> findByRoleNameAndSchoolId(@Param("roleName") String roleName, @Param("schoolId") String schoolId);
 
-    @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name IN :role AND u.schoolId = :schoolId AND u.isActive = true")
-    List<User> findByRoleAndSchoolId(@Param("role") String role, @Param("schoolId") String schoolId);
-
-    
+    @Query("SELECT u FROM User u WHERE u.userId = :userId")
+    Optional<User> findByUserId(@Param("userId") String userId);
 }

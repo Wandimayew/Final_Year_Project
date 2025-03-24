@@ -23,7 +23,8 @@ public class UserResponseDTO {
     private String email;
     private String password;
     @JsonProperty("roles")
-    private Set<Role> roles;
+    private Set<String> roles;
+    private Set<String> permissions;
     private boolean isActive;
     private LocalDateTime lastLogin;
     private LocalDateTime createdAt;

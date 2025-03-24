@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import Breadcrumb from "@/components/constant/Breadcrumb";
 
 const TimeTableList = ({
@@ -8,22 +8,20 @@ const TimeTableList = ({
   onConfirm,
   onCancel,
 }) => {
-  // Expected structure: { timetable: { [yearLevel]: { [section]: AggregatedSchedule[] } } }
-  const timetableData = timetable.timetable || {};
-
-  // Use ref to store the initial timetable data and prevent unnecessary updates
+  const timetableData = useMemo(
+    () => timetable.timetable || {},
+    [timetable.timetable]
+  ); // Memoize timetableData
   const initialTimetableRef = useRef(timetableData);
-
   const [isEditing, setIsEditing] = useState(false);
   const [editedTimetable, setEditedTimetable] = useState(timetableData);
 
   useEffect(() => {
-    // Check if the timetableData has changed before setting editedTimetable
     if (initialTimetableRef.current !== timetableData) {
       initialTimetableRef.current = timetableData;
-      setEditedTimetable(timetableData); // Only update state if data changes
+      setEditedTimetable(timetableData);
     }
-  }, [timetableData]); // Depend on timetableData
+  }, [timetableData]);
 
   if (!timetableData || Object.keys(timetableData).length === 0) {
     return (
@@ -33,7 +31,6 @@ const TimeTableList = ({
     );
   }
 
-  // Update a top-level field (subjectTitle or teacher) in an aggregated schedule.
   const handleFieldChange = (yearLevel, section, index, field, value) => {
     setEditedTimetable((prev) => {
       const updated = { ...prev };
@@ -45,30 +42,25 @@ const TimeTableList = ({
     });
   };
 
-  // Update a schedule day (Monday, Tuesday, etc.) for an aggregated schedule.
   const handleScheduleChange = (yearLevel, section, index, day, value) => {
     setEditedTimetable((prev) => {
       const updated = { ...prev };
       updated[yearLevel] = { ...updated[yearLevel] };
       updated[yearLevel][section] = updated[yearLevel][section].map(
-        (item, idx) => {
-          if (idx === index) {
-            return { ...item, schedule: { ...item.schedule, [day]: value } };
-          }
-          return item;
-        }
+        (item, idx) =>
+          idx === index
+            ? { ...item, schedule: { ...item.schedule, [day]: value } }
+            : item
       );
       return updated;
     });
   };
 
-  // Confirm changes and exit edit mode.
   const handleConfirm = () => {
     setIsEditing(false);
     if (onConfirm) onConfirm(editedTimetable);
   };
 
-  // Cancel editing, revert changes, and exit edit mode.
   const handleCancel = () => {
     setEditedTimetable(timetableData);
     setIsEditing(false);
@@ -78,7 +70,6 @@ const TimeTableList = ({
   return (
     <div className="relative top-20 px-4 py-8">
       <Breadcrumb />
-      {/* Show edit button only if editing is allowed and we're not in editing mode */}
       {editable && !isEditing && (
         <div className="mb-4">
           <button

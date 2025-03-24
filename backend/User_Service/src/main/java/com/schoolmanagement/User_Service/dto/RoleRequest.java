@@ -1,15 +1,18 @@
 package com.schoolmanagement.User_Service.dto;
 
-import lombok.Data;
+import java.util.Set;
 
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 @Data
+@RequiredArgsConstructor
 public class RoleRequest {
     private String schoolId;
 
     private String name;
 
     private String description;
- 
-    private Long permissions;
+
+    Set<Long> permissions;
 }

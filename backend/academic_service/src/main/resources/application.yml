@@ -4,7 +4,7 @@ spring:
     datasource:
         url: jdbc:mysql://localhost:3306/Academic_Service
         username: root  
-        password: toor 
+        password: root 
         driver-class-name: com.mysql.cj.jdbc.Driver
         hikari:
             minimum-idle: 5
@@ -19,7 +19,7 @@ spring:
     profiles:
         active: dev
 server:
-  port: 0
+  port: 8082
 
 eureka:
   client:
@@ -29,3 +29,7 @@ eureka:
     fetchRegistry: true  # Fetch the registry to discover other services
   instance:
     preferIpAddress: true  # Use IP address instead of hostname (optional but recommended)
+    # prefer-ip-address: true
+    ip-address: 10.194.61.62  # Replace with Machine 2’s actual IP (e.g., 10.194.61.x)
+    hostname: 10.194.61.62    # Optional, ensures consistency
+    non-secure-port: 8082

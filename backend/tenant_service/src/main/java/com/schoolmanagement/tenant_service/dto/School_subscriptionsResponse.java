@@ -15,7 +15,7 @@ public class School_subscriptionsResponse {
 
     private Long subscription_id;
 
-    private Long school_id;
+    private String school_id;
 
     private Long subscriptionPlan;
 

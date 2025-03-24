@@ -1,44 +1,45 @@
+"use client";
+
 export default function StudentImportPage() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-2xl font-bold mb-6">Multiple Import</h1>
-
         <div className="space-y-6">
           <div>
             <h2 className="text-xl font-semibold mb-2">Instructions:</h2>
             <ol className="list-decimal list-inside space-y-2">
               <li>Download the first sample file.</li>
               <li>
-                Open the downloaded 'csv' file and carefully fill the details of
-                the student.
+                Open the downloaded &quot;csv&quot; file and carefully fill the
+                details of the student.
               </li>
               <li>
-                The date you are trying to enter the "Birthday" and
-                "AdmissionDate" column make sure the date format is Y-m-d
-                (2025-01-12).
+                The date you are trying to enter the &quot;Birthday&quot; and
+                &quot;AdmissionDate&quot; column make sure the date format is
+                Y-m-d (2025-01-12).
               </li>
               <li>
-                Do not import the duplicate "Roll Number" and "Register No".
+                Do not import the duplicate &quot;Roll Number&quot; and
+                &quot;Register No&quot;.
               </li>
-              <li>For student "Gender" use Male, Female value.</li>
+              <li>For student &quot;Gender&quot; use Male, Female value.</li>
               <li>
                 If enable Automatically Generate login details, leave the
-                "username" and "password" columns blank.
+                &quot;username&quot; and &quot;password&quot; columns blank.
               </li>
               <li>
                 The Category name comes from another table, so for the
-                "Category", enter Category ID (can be found on the Category
-                page).
+                &quot;Category&quot;, enter Category ID (can be found on the
+                Category page).
               </li>
               <li>
                 If a parent is existing / if you want to use the same parent
                 information for multiple students only enter the
-                "GuardianUsername" and leave other columns blank.
+                &quot;GuardianUsername&quot; and leave other columns blank.
               </li>
             </ol>
           </div>
-
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -46,20 +47,16 @@ export default function StudentImportPage() {
               </label>
               <select className="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                 <option>Select</option>
-                {/* Add more options as needed */}
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Section*
               </label>
               <select className="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                 <option>Select Class First</option>
-                {/* Add more options as needed */}
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Select csv File*
@@ -99,7 +96,6 @@ export default function StudentImportPage() {
                 </div>
               </div>
             </div>
-
             <button className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">
               Import
             </button>
