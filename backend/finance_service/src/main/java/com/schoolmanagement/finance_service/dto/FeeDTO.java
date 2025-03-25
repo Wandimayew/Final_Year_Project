@@ -39,5 +39,5 @@ public class FeeDTO {
     
     private LocalDate dueDate;
     
-    private boolean isActive;
+    private String isActive;
 }
