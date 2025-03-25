@@ -148,7 +148,7 @@ public class SchoolPermissionService {
                                         permission.setHttpMethod(template.getHttpMethod());
                                         permission.setCreatedAt(LocalDateTime.now());
                                         permission.setUpdatedAt(LocalDateTime.now());
-                                        permission.setIsActive(true);
+                                        permission.setIs_active(true);
                                         return permissionRepository.save(permission);
                                 });
         }
@@ -241,7 +241,7 @@ public class SchoolPermissionService {
                                                 newPermission.setEndpoint("/auth/api/" + permissionName.toLowerCase()); // Example
                                                                                                                         // endpoint
                                                 newPermission.setHttpMethod("POST"); // Example method
-                                                newPermission.setIsActive(true);
+                                                newPermission.setIs_active(true);
                                                 newPermission.setCreatedBy(createdBy.getUsername());
                                                 newPermission.setCreatedAt(LocalDateTime.now());
                                                 newPermission.setUpdatedAt(LocalDateTime.now());

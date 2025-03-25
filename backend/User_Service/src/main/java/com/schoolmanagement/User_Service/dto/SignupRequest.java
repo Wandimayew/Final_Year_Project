@@ -1,6 +1,7 @@
 package com.schoolmanagement.User_Service.dto;
 
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Set;
 

@@ -159,7 +159,7 @@ public class RoleService {
         Set<UserRolePermission> newAssignments = permissionIds.stream()
                 .map(permissionId -> {
                     Permission permission = permissionRepository.findById(permissionId)
-                            .filter(p -> p.getSchoolId().equals(schoolId) && p.getIsActive())
+                            .filter(p -> p.getSchoolId().equals(schoolId) && p.getIs_active())
                             .orElseThrow(() -> new EntityNotFoundException(
                                     "Permission not found with ID: " + permissionId + " in school: " + schoolId));
                     UserRolePermission urp = new UserRolePermission();

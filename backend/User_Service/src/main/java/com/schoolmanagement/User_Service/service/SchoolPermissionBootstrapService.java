@@ -40,7 +40,7 @@ public class SchoolPermissionBootstrapService {
                     permission.setDescription(template.getDescription());
                     permission.setEndpoint(template.getEndpoint());
                     permission.setHttpMethod(template.getHttpMethod());
-                    permission.setIsActive(true);
+                    permission.setIs_active(true);
                     permission.setCreatedBy("system");
                     permission.setCreatedAt(LocalDateTime.now());
                     permission.setUpdatedAt(LocalDateTime.now());

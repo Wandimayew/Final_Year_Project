@@ -80,7 +80,7 @@ public class PermissionService {
         permission.setDescription(permissionRequest.getDescription());
         permission.setSchoolId(permissionRequest.getSchoolId());
         permission.setName(permissionRequest.getName());
-        permission.setIsActive(true); // Default to active
+        permission.setIs_active(true); // Default to active
 
         Permission savedPermission = permissionRepository.save(permission);
         log.info("Permission created with ID: {} for schoolId: {}", savedPermission.getPermissionId(), schoolId);
@@ -91,7 +91,7 @@ public class PermissionService {
             String schoolId, String userId) {
         log.info("Updating permission with ID: {} for schoolId: {}", permissionId, schoolId);
         Permission existingPermission = permissionRepository.findById(permissionId)
-                .filter(p -> p.getSchoolId().equals(schoolId) && p.getIsActive())
+                .filter(p -> p.getSchoolId().equals(schoolId) && p.getIs_active())
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Permission not found with ID: " + permissionId + " in school: " + schoolId));
 
@@ -114,11 +114,11 @@ public class PermissionService {
     public ResponseEntity<String> deletePermission(Long permissionId, String schoolId, String userId) {
         log.info("Deleting permission with ID: {} for schoolId: {}", permissionId, schoolId);
         Permission existingPermission = permissionRepository.findById(permissionId)
-                .filter(p -> p.getSchoolId().equals(schoolId) && p.getIsActive())
+                .filter(p -> p.getSchoolId().equals(schoolId) && p.getIs_active())
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Permission not found with ID: " + permissionId + " in school: " + schoolId));
 
-        existingPermission.setIsActive(false);
+        existingPermission.setIs_active(false);
         existingPermission.setUpdatedAt(LocalDateTime.now());
         existingPermission.setUpdatedBy(userId);
 

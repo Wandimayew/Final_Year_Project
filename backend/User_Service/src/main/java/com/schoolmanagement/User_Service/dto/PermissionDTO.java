@@ -14,7 +14,7 @@ public class PermissionDTO {
     private String endpoint;
     private String httpMethod;
     private String description;
-    private boolean isActive;
+    private boolean is_active;
 
     public PermissionDTO(Permission permission) {
         this.permissionId = permission.getPermissionId();
@@ -23,6 +23,6 @@ public class PermissionDTO {
         this.endpoint = permission.getEndpoint();
         this.httpMethod = permission.getHttpMethod();
         this.description = permission.getDescription();
-        this.isActive = permission.getIsActive();
+        this.is_active = permission.getIs_active();
     }
 }
