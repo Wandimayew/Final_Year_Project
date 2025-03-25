@@ -1,6 +1,8 @@
 package com.schoolmanagement.finance_service.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,12 +18,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/finance/fees")
 @RequiredArgsConstructor
+@Slf4j
 public class FeeController {
     
     private final FeeManagementService feeManagementService;
     
     @PostMapping
     public ResponseEntity<FeeDTO> createFee(@Valid @RequestBody FeeDTO feeDTO) {
+        log.info("request body inside controller {}", feeDTO);
         return new ResponseEntity<>(feeManagementService.createFee(feeDTO), HttpStatus.CREATED);
     }
     
@@ -46,6 +50,7 @@ public class FeeController {
     @PostMapping("/student")
     public ResponseEntity<StudentFeeDTO> assignFeeToStudent(
             @Valid @RequestBody StudentFeeDTO studentFeeDTO) {
+                log.info("request body inside controller {}", studentFeeDTO);
         return new ResponseEntity<>(feeManagementService.assignFeeToStudent(studentFeeDTO), HttpStatus.CREATED);
     }
     

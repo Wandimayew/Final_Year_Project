@@ -79,6 +79,12 @@
 			<artifactId>javase</artifactId>
 			<version>3.4.1</version> <!-- Make sure to use the correct version -->
    		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+			<version>2.18.2</version> <!-- Use the latest version compatible with your project -->
+		</dependency>
 		
 		<!-- <dependency>
   <groupId>org.springdoc</groupId>
