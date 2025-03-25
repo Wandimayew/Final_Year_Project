@@ -51,11 +51,12 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/error")
                         .permitAll()
-                        .requestMatchers("/auth/api/**").permitAll() // Allow /auth/api/login
+                        .requestMatchers("/auth/api/login").permitAll() // Allow /auth/api/login
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(corsFilter(), UsernamePasswordAuthenticationFilter.class) // Add CORS filter explicitly
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, permissionService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, permissionService),
+                        UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(permissionCheckFilter, JwtAuthenticationFilter.class);
 
         return http.build();
@@ -69,14 +70,18 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://10.194.61.72:3000", "http://10.194.61.74:8080"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
-        configuration.setAllowCredentials(true); // Support credentialed requests
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        CorsConfiguration config = new CorsConfiguration();
+
+        // Explicitly set allowed origins (no wildcards with credentials)
+        config.setAllowedOrigins(List.of("http://10.194.61.74:8080"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setMaxAge(3600L); // 1 hour
+        config.setAllowCredentials(true);
+
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 

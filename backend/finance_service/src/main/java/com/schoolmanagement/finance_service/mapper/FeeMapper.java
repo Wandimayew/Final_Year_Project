@@ -15,7 +15,11 @@ public class FeeMapper {
         fee.setFeeName(feeDTO.getFeeName());
         fee.setAmount(feeDTO.getAmount());
         fee.setDueDate(feeDTO.getDueDate());
-        fee.setActive(feeDTO.isActive());
+        if (feeDTO.getIsActive().equals("active")){
+            fee.setActive(true);
+        }else{
+            fee.setActive(false);
+        }
         
         // Convert string to enum
         fee.setFeeType(FeeType.valueOf(feeDTO.getFeeType().toUpperCase()));
@@ -32,8 +36,11 @@ public class FeeMapper {
         feeDTO.setFeeName(fee.getFeeName());
         feeDTO.setAmount(fee.getAmount());
         feeDTO.setDueDate(fee.getDueDate());
-        feeDTO.setActive(fee.isActive());
-        
+        if (fee.isActive()){
+            feeDTO.setIsActive("active");
+        }else {
+            feeDTO.setIsActive("inActive");
+        }        
         // Convert enum to string
         feeDTO.setFeeType(fee.getFeeType().name());
         feeDTO.setFrequency(fee.getFrequency().name());
@@ -47,7 +54,12 @@ public class FeeMapper {
         if (feeDTO.getFeeName() != null) existingFee.setFeeName(feeDTO.getFeeName());
         if (feeDTO.getAmount() != null) existingFee.setAmount(feeDTO.getAmount());
         if (feeDTO.getDueDate() != null) existingFee.setDueDate(feeDTO.getDueDate());
-        existingFee.setActive(feeDTO.isActive());
+        if (feeDTO.getIsActive().equals("active")){
+            existingFee.setActive(true);
+        }else{
+            existingFee.setActive(false);
+        }
+        // existingFee.setActive(feeDTO.isActive());
         
         if (feeDTO.getFeeType() != null) {
             existingFee.setFeeType(FeeType.valueOf(feeDTO.getFeeType().toUpperCase()));
