@@ -11,7 +11,7 @@ export default function SchoolList() {
   const getSchoolList = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8083/tenant/api/getAllSchools"
+        "http://10.194.61.74:8080/tenant/api/getAllSchools"
       );
       console.log("school Resposes : ",response.data);
       setSchools(response.data);

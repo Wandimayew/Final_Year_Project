@@ -6,7 +6,7 @@ import axios from "axios";
 
 // Role-specific axios instance
 const roleService = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8085/auth/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://10.194.61.74:8080/auth/api",
   timeout: 15000,
   withCredentials: true,
 });

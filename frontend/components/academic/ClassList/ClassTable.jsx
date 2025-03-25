@@ -35,7 +35,7 @@ const ClassTable = ({ classes, router, setClasses }) => {
     setLoading(classId);
     try {
       await axios.put(
-        `http://localhost:8084/academic/api/new/editStatus/${classId}`
+        `http://10.194.61.74:8080/academic/api/new/editStatus/${classId}`
       );
       toast.success(`Class ${status ? "disabled" : "enabled"} successfully!`);
       setClasses((prev) =>
@@ -55,7 +55,7 @@ const ClassTable = ({ classes, router, setClasses }) => {
     setLoading(classId);
     try {
       await axios.delete(
-        `http://localhost:8084/academic/api/new/deleteClassById/${classId}`
+        `http://10.194.61.74:8080/academic/api/new/deleteClassById/${classId}`
       );
       toast.success("Class deleted successfully!");
       setClasses((prev) => prev.filter((c) => c.classId !== classId));

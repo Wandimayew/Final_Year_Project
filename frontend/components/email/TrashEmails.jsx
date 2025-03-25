@@ -52,7 +52,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   backgroundColor: "#fff",
 }));
 
-const API_BASE_URL = "http://localhost:8086/communication/api";
+const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
 
 const fetchTrashEmails = async ({ schoolId, token }) => {
   const response = await axios.get(`${API_BASE_URL}/${schoolId}/emails/TRASH`, {

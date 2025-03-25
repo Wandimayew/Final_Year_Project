@@ -15,7 +15,7 @@ const SubjectList = ({ setSubjectListClicked, setAssign }) => {
   const getClassList = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:8084/academic/api/new/getAllSubjectBySchool`
+        `http://10.194.61.74:8080/academic/api/new/getAllSubjectBySchool`
       );
       setSubjects(response.data);
     } catch (error) {

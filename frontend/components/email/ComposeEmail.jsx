@@ -54,7 +54,7 @@ const sendOrSaveEmail = async ({ schoolId, token, emailData, send }) => {
   emailData.attachments.forEach((file) => formData.append("attachments", file));
 
   const response = await axios.post(
-    `http://localhost:8086/communication/api/${schoolId}/compose?send=${send}`,
+    `http://10.194.61.74:8080/communication/api/${schoolId}/compose?send=${send}`,
     formData,
     {
       headers: {

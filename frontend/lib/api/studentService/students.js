@@ -6,7 +6,7 @@ import axios from "axios";
 // Adjust the path as necessary
 
 const studentApi = axios.create({
-  baseURL: 'http://localhost:8086/api', // Adjust the base URL as needed
+  baseURL: 'http://10.194.61.74:8080/student', // Adjust the base URL as needed
   // headers: {
   //   'Content-Type': 'application/json',
   // },
@@ -17,7 +17,7 @@ export const useCreateStudent = () => {
 
   return useMutation({
     mutationFn: async (data) => {
-      const response = await studentApi.post("/students", data);
+      const response = await studentApi.post("/api", data);
       return response.data;
     },
     onSuccess: (newStudent) => {
@@ -32,7 +32,7 @@ export const useStudents = (params) => {
   return useQuery({
     queryKey: ["students", params],
     queryFn: async () => {
-      const response = await studentApi.get("/students", { params });
+      const response = await studentApi.get("/api", { params });
       return response.data;
     },
   });
@@ -43,7 +43,7 @@ export const useStudent = (id) => {
   return useQuery({
     queryKey: ["students", id],
     queryFn: async () => {
-      const response = await studentApi.get(`/students/${id}`);
+      const response = await studentApi.get(`/api/${id}`);
       return response.data;
     },
     enabled: !!id, // Only run if id is truthy
@@ -56,7 +56,7 @@ export const useUpdateStudent = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...data }) => {
-      const response = await studentApi.patch(`/students/${id}`, data);
+      const response = await studentApi.patch(`/api/${id}`, data);
       return response.data;
     },
     onSuccess: (updatedStudent) => {
@@ -75,7 +75,7 @@ export const useDeleteStudent = () => {
 
   return useMutation({
     mutationFn: async (id) => {
-      await studentApi.delete(`/students/${id}`);
+      await studentApi.delete(`/api/${id}`);
       return id;
     },
     onSuccess: (deletedId) => {

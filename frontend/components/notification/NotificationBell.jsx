@@ -7,7 +7,7 @@ import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 
-const API_BASE_URL = "http://localhost:8086/communication/api";
+const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
 
 // Fetch unread notifications
 const fetchUnreadNotifications = async ({ schoolId, userId, token }) => {

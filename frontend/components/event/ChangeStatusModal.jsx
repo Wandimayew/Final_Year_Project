@@ -8,7 +8,7 @@ import Modal from "./Modal";
 import ActionButton from "../common/ActionButton";
 import toast from "react-hot-toast";
 
-const API_BASE_URL = "http://localhost:8086/communication/api";
+const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
 
 const changeStatus = async ({ schoolId, token, announcementId, status }) =>
   axios.put(

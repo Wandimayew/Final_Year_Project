@@ -52,7 +52,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 const fetchDraftEmails = async ({ schoolId, token }) => {
   const response = await axios.get(
-    `http://localhost:8086/communication/api/${schoolId}/emails/DRAFT`,
+    `http://10.194.61.74:8080/communication/api/${schoolId}/emails/DRAFT`,
     {
       headers: { Authorization: `Bearer ${token}` },
     }

@@ -37,7 +37,7 @@ const AddSection = ({onClose, classOptions }) => {
       // Example API call to submit data
       console.log("datas for section ", sectionName,capacity,classOptions);
       
-      await axios.post(`http://localhost:8084/academic/api/new/addNewSection`, {
+      await axios.post(`http://10.194.61.74:8080/academic/api/new/addNewSection`, {
         sectionName,
         capacity: parseInt(capacity, 10),
         classId: classOptions,

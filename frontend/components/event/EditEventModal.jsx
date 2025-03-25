@@ -7,7 +7,7 @@ import Modal from "./Modal";
 import { CircularProgress } from "@mui/material";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = "http://localhost:8086/communication/api";
+const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
 
 const editAnnouncement = async ({ schoolId, token, announcementId, data }) => {
   const response = await fetch(

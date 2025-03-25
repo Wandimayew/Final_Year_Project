@@ -12,7 +12,7 @@ const ClassSubjectPage = () => {
   useEffect(() => {
     const fetchClass = async () => {
       const response = await axios.get(
-        `http://localhost:8083/api/students?id=nsr/2506/13`
+        `http://10.94.61.74:8080/student/api/students?id=nsr/2506/13`
       );
       console.log("Responnse in class Subject page ", response.data[0].classId);
       setClassId(response.data[0].classId);
@@ -26,7 +26,7 @@ const ClassSubjectPage = () => {
     if (contiue) {
         const fetchSubject = async () => {
             const response = await axios.get(
-              `http://localhost:8084/academic/api/new/getAllSubjectByClass/${classId}`
+              `http://10.194.61.74:8080/academic/api/new/getAllSubjectByClass/${classId}`
             );
             setSubjectData(response.data);
           };

@@ -5,9 +5,11 @@ import { useAuthStore } from "@/lib/auth";
 import axios from "axios";
 
 const userService = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8085/auth/api",
+  baseURL: "http://10.194.61.74:8080/auth/api",
   timeout: 15000,
   withCredentials: true,
+  credentials: 'include',
+  headers: {'Content-Type': 'application/json'}
 });
 
 userService.interceptors.request.use(

@@ -57,7 +57,7 @@ const AddSubject = ({ setSubjectListClicked, setAssign }) => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        `http://localhost:8084/academic/api/new/addNewSubject`,
+        `http://10.194.61.74:8080/academic/api/new/addNewSubject`,
         formData
       );
       console.log("Response data: {", response, "}.");

@@ -18,7 +18,7 @@ const ViewClass = ({ id }) => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8084/academic/api/new/getClassDetails/${id}`
+          `http://10.194.61.74:8080/academic/api/new/getClassDetails/${id}`
         );
         setClassDetails(response.data);
       } catch (error) {

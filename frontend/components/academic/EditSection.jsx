@@ -14,7 +14,7 @@ const EditSection = ({ section, classId, onClose, type, setClassDetails }) => {
     setLoading(true);
     try {
       await axios.put(
-        `http://localhost:8084/academic/api/new/editSectionById/${section.sectionId}`,
+        `http://10.194.61.74:8080/academic/api/new/editSectionById/${section.sectionId}`,
         {
           sectionName,
           capacity: parseInt(capacity, 10),
@@ -44,7 +44,7 @@ const EditSection = ({ section, classId, onClose, type, setClassDetails }) => {
     setLoading(true);
     try {
       await axios.delete(
-        `http://localhost:8084/academic/api/new/deleteSectionById/${section.sectionId}`
+        `http://10.194.61.74:8080/academic/api/new/deleteSectionById/${section.sectionId}`
       );
       toast.success("Section deleted successfully!");
 

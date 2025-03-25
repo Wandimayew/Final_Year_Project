@@ -45,7 +45,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   },
 }));
 
-const API_BASE_URL = "http://localhost:8086/communication/api";
+const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
 
 const fetchEmail = async ({ schoolId, token, emailId }) => {
   const response = await axios.get(

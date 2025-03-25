@@ -76,7 +76,7 @@ const CreateEmployee = () => {
     }
     try {
       const response = await axios.post(
-        "http://localhost:8085/api/staff/create",
+        "http://10.194.61.74:8080/staff/api/staff/create",
         formDataToSend,
         {
           headers: {
@@ -95,7 +95,7 @@ const CreateEmployee = () => {
         });
 
         await axios.post(
-          "http://localhost:8085/api/teachers/create",
+          "http://10.194.61.74:8080/staff/api/teachers/create",
           teacherData,
           {
             headers: {

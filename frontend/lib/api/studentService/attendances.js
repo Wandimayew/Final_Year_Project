@@ -5,7 +5,7 @@ import axios from "axios";
 // Adjust the path as necessary
 
 const attendanceApi = axios.create({
-  baseURL: 'http://localhost:8086/api', // Adjust the base URL as needed
+  baseURL: 'http://10.194.61.74:8080/student/api', // Adjust the base URL as needed
 });
 
 // ================== ATTENDANCE API FUNCTIONS ==================

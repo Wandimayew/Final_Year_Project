@@ -120,7 +120,7 @@ const CreateSchool = () => {
       }
       // Sending the form data with Axios
       const response = await axios.post(
-        "http://localhost:8084/tenant/api/addNewSchool",
+        "http://10.194.61.74:8080/tenant/api/addNewSchool",
         formDataToSend,
         {
           headers: {
@@ -147,7 +147,7 @@ const CreateSchool = () => {
         };
         try{
           const userResponse = await axios.post(
-            "http://localhost:8082/api/auth/register",
+            "http://10.194.61.74:8080/auth/api/register",
             formUserData,
             {
               headers: {

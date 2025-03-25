@@ -40,7 +40,7 @@ const AttendanceList = () => {
 
   const fetchAttendanceData = async () => {
     try {
-      const response = await fetch('http://localhost:8085/api/attendance');
+      const response = await fetch('http://10.194.61.74:8080/staff/api/attendance');
       const data = await response.json();
       setAttendanceData(data);
     } catch (error) {
@@ -56,7 +56,7 @@ const AttendanceList = () => {
     }
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:8085/api/attendance/by-date/${staffId}?attendanceDate=${searchDate}`);
+      const response = await fetch(`http://10.194.61.74:8080/staff/api/attendance/by-date/${staffId}?attendanceDate=${searchDate}`);
       const data = await response.json();
       setAttendanceData(data);
     } catch (error) {
@@ -74,7 +74,7 @@ const AttendanceList = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/attendance/history/${staffId}?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
+        `/staff/api/attendance/history/${staffId}?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
       );
       const data = await response.json();
       setAttendanceData(data);

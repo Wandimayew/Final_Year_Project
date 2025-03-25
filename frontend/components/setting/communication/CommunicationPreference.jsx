@@ -44,7 +44,7 @@ const CommunicationPreference = () => {
           userId
         );
         const response = await axios.get(
-          `http://localhost:8086/communication/api/${schoolId}/getCommunicationPreferenceByUserId`, // Dynamic endpoint
+          `http://10.194.61.74:8080/communication/api/${schoolId}/getCommunicationPreferenceByUserId`, // Dynamic endpoint
           {
             headers: { Authorization: `Bearer ${token}` },
             withCredentials: true,
@@ -81,7 +81,7 @@ const CommunicationPreference = () => {
     try {
       console.log(`Updating ${field} for userId: ${userId}`);
       await axios.put(
-        `http://localhost:8086/communication/api/${schoolId}/updateCommunicationPreference/${userId}`,
+        `http://10.194.61.74:8080/communication/api/${schoolId}/updateCommunicationPreference/${userId}`,
         updatedPreference,
         {
           headers: {

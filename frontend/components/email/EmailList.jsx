@@ -63,7 +63,7 @@ const AttachmentPreview = styled(Box)(({ theme }) => ({
   alignItems: "center",
 }));
 
-const API_BASE_URL = "http://localhost:8086/communication/api";
+const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
 
 const fetchEmails = async ({
   schoolId,

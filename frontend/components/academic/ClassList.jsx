@@ -26,7 +26,7 @@ const ClassList = ({ classListClicked, setClassListClicked }) => {
   const getClassList = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:8084/academic/api/new/getAllClassBySchool`
+        `http://10.194.61.74:8080/academic/api/new/getAllClassBySchool`
       );
       setClasses(response.data);
     } catch (error) {

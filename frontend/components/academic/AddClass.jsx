@@ -8,14 +8,14 @@ import { useRouter } from "next/navigation";
 const fetchStreams = async (schoolId) => {
   if (!schoolId) return []; // Avoid fetch if no schoolId
   const response = await axios.get(
-    `http://localhost:8084/academic/api/new/getAllStreamBySchool`
+    `http://10.194.61.74:8080/academic/api/new/getAllStreamBySchool`
   );
   return response.data;
 };
 
 const addClass = async (classData) => {
   const response = await axios.post(
-    `http://localhost:8084/academic/api/new/add-class`, // Adjust endpoint as needed
+    `http://10.194.61.74:8080/academic/api/new/add-class`, // Adjust endpoint as needed
     classData
   );
   return response.data;

@@ -29,7 +29,7 @@ function ResetPasswordContent() {
 
     try {
       const response = await axios.post(
-        "http://localhost:8082/api/auth/reset-password",
+        "http://10.194.61.74:8080/auth/api/reset-password",
         { token, newPassword }
       );
       setMessage(response.data);

@@ -12,7 +12,7 @@ import FormSelect from "@/components/ui/FormSelect";
 import FormTextarea from "@/components/ui/FormTextarea";
 import SubmitButton from "@/components/ui/SubmitButton";
 
-const API_BASE_URL = "http://localhost:8086/communication/api";
+const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
 
 const createAnnouncement = async ({ schoolId, token, data }) => {
   const { schoolId: _, authorId: __, ...payload } = data; // Exclude schoolId and authorId

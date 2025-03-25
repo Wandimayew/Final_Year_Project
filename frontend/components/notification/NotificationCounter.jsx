@@ -8,7 +8,7 @@ import SockJS from "sockjs-client";
 import axios from "axios";
 import { useAuth } from "@/hooks/useAuth";
 
-const API_BASE_URL = "http://localhost:8086/communication/api";
+const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
 
 const fetchUnreadNotifications = async ({ schoolId, userId, token }) => {
   const res = await axios.get(
@@ -38,7 +38,7 @@ const NotificationCounter = ({ schoolId, userId }) => {
     if (!auth?.token || !userId) return;
 
     const socket = new SockJS(
-      `http://localhost:8086/notifications?token=${auth.token}`
+      `http://10.194.61.74:8083/notifications?token=${auth.token}`
     );
     const client = new Client({
       webSocketFactory: () => socket,

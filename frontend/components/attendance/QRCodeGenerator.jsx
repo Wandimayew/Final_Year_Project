@@ -43,7 +43,7 @@ const QRCodeGenerator = () => {
     try {
       setLoading(true);
 
-      const response = await axios.post('http://localhost:8085/api/qrcodes/generate', {
+      const response = await axios.post('http://10.194.61.74:8080/staff/api/qrcodes/generate', {
         schoolId: parseInt(schoolId),
         startTimeHour: startHours,
         startTimeMinute: startMinutes,
@@ -142,7 +142,7 @@ const QRCodeGenerator = () => {
             <p className="text-lg font-semibold">Generated QR Code:</p>
             {qrCodeData.qrCodeImage ? (
                <Image
-               src={`http://localhost:8085${qrCodeData.qrCodeImage.replace('.', '')}`}
+               src={`http://10.194.61.74:8080${qrCodeData.qrCodeImage.replace('.', '')}`}
                alt="QR Code"
                className="mx-auto w-64 h-64 mt-4"
              />

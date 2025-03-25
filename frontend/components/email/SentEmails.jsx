@@ -63,7 +63,7 @@ const SentEmails = () => {
   const [error, setError] = useState(null);
   const router = useRouter();
 
-  const API_BASE_URL = "http://localhost:8086/communication/api";
+  const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
 
   useEffect(() => {
     if (authLoading || !auth) return;

@@ -6,7 +6,7 @@ import { useAuthStore } from "@/lib/auth";
 import axios from "axios";
 
 const userService = axios.create({
-  baseURL: 'http://localhost:8082/api', // Adjust the base URL as needed
+  baseURL: 'http://10.194.61.74:8080/auth/api', // Adjust the base URL as needed
   // headers: {
   //   'Content-Type': 'application/json',
   // },
@@ -14,25 +14,25 @@ const userService = axios.create({
 // ================== AUTH API FUNCTIONS ==================
 const authApi = {
   login: async (credentials) => {
-    const { data } = await userService.post("/auth/login", credentials);
+    const { data } = await userService.post("/login", credentials);
     return data;
   },
 
   register: async (userData) => {
-    const { data } = await userService.post("/auth/register", userData);
+    const { data } = await userService.post("/register", userData);
     return data;
   },
 
   logout: async () => {
     localStorage.removeItem("token");
-    await userService.post("/auth/logout");
+    await userService.post("/logout");
   },
 };
 
 // ================== USER API FUNCTIONS ==================
 const userApi = {
   register: async (userData) => {
-    const { data } = await userService.post("/auth/register", userData);
+    const { data } = await userService.post("/register", userData);
     return data;
   },
 

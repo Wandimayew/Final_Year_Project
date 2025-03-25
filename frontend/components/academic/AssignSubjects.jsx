@@ -18,7 +18,7 @@ const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
     const fetchStreams = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8084/academic/api/new/getAllStreamBySchool`
+          `http://10.194.61.74:8080/academic/api/new/getAllStreamBySchool`
         );
         console.log("assigning the the selected stream {: ", response);
 
@@ -44,7 +44,7 @@ const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
 
         try {
           const response = await axios.get(
-            `http://localhost:8084/academic/api/new/getAllClassByStream/${selectedStream}`
+            `http://10.194.61.74:8080/academic/api/new/getAllClassByStream/${selectedStream}`
           );
           console.log("stream response {", response, "}.");
 
@@ -66,7 +66,7 @@ const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
     const fetchSubjects = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8084/academic/api/new/getAllSubjectBySchool`
+          `http://10.194.61.74:8080/academic/api/new/getAllSubjectBySchool`
         );
         console.log("subject data: {", response.data, "}.");
         setSubjects(response.data);
@@ -101,7 +101,7 @@ const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
       console.log("selected subjects : ", selectedSubjects);
 
       const response = await axios.post(
-        `http://localhost:8084/academic/api/new/assign-subjects/${selectedClass}`,
+        `http://10.194.61.74:8080/academic/api/new/assign-subjects/${selectedClass}`,
         selectedSubjects
       );
 

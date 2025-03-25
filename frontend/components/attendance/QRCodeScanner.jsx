@@ -28,7 +28,7 @@ const QRCodeScanner = () => {
         // Fetch the saved QR code only if schoolId is set and is not a mobile device
         if (!isMobile && schoolId) {
             setIsLoading(true); // Start loading
-            axios.get(`http://localhost:8085/api/qrcodes/active?schoolId=${schoolId}`, { responseType: 'blob' })
+            axios.get(`http://10.194.61.74:8080/staff/api/qrcodes/active?schoolId=${schoolId}`, { responseType: 'blob' })
                 .then(response => {
                     // Create a URL for the QR code image blob
                     const imageUrl = URL.createObjectURL(response.data);
@@ -48,7 +48,7 @@ const QRCodeScanner = () => {
 
             // Validate the QR code
             const validateResponse = await axios.get(
-                `http://localhost:8085/api/qrcodes/validate/${schoolId}?sessionToken=${sessionToken}`
+                `http://10.194.61.74:8080/staff/api/qrcodes/validate/${schoolId}?sessionToken=${sessionToken}`
             );
 
             if (!validateResponse.data.isValid) {
@@ -68,7 +68,7 @@ const QRCodeScanner = () => {
                 outTime: !isInTime ? new Date().toISOString() : null,
             };
 
-            const response = await axios.post('http://localhost:8085/api/attendance/record', attendanceData);
+            const response = await axios.post('http://10.194.61.74:8080/staff/api/attendance/record', attendanceData);
 
             if (response.status === 200) {
                 setSuccess(isInTime ? 'In time marked successfully!' : 'Out time marked successfully!');
