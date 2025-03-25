@@ -13,7 +13,7 @@ export default function ForgotPassword() {
 
     try {
       const response = await axios.post(
-        "http://10.194.61.74:8080/auth/api/forgot-password",
+        "http://10.194.61.72:8080/auth/api/forgot-password",
         { email }
       );
       setMessage(

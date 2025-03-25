@@ -5,7 +5,7 @@ import axios from "axios";
 // Adjust the path as necessary
 
 const parentGuardianApi = axios.create({
-  baseURL: 'http://10.194.61.74:8080/student/api', // Adjust the base URL as needed
+  baseURL: 'http://10.194.61.72:8081/student/api', // Adjust the base URL as needed
 });
 
 // ================== PARENT/GUARDIAN API FUNCTIONS ==================

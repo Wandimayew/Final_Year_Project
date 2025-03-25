@@ -6,7 +6,7 @@ import axios from "axios";
 
 // Permission-specific axios instance
 const permissionService = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://10.194.61.74:8080/auth/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://10.194.61.72:8080/auth/api",
   timeout: 15000,
   withCredentials: true,
 });

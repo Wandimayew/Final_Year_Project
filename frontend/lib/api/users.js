@@ -6,7 +6,7 @@ import { useAuthStore } from "@/lib/auth";
 import axios from "axios";
 
 const userService = axios.create({
-  baseURL: 'http://10.194.61.74:8080/auth/api', // Adjust the base URL as needed
+  baseURL: 'http://10.194.61.72:8080/auth/api', // Adjust the base URL as needed
   // headers: {
   //   'Content-Type': 'application/json',
   // },

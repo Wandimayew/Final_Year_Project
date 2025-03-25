@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 const promotionApi = axios.create({
-  baseURL: 'http://10.194.61.74:8080/student/api',
+  baseURL: 'http://10.194.61.72:8081/student/api',
 });
 
 // ================== PROMOTION API FUNCTIONS ==================
