@@ -10,7 +10,7 @@ public class AppConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // Allow all endpoints
-                .allowedOrigins("http://10.194.*.*:3000","http://10.194.*.*:8080") // Allow frontend React app
+                .allowedOrigins("http://10.194.61.74:3000","http://10.194.61.74:8080") // Allow frontend React app
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH") // Allowed HTTP methods
                 .allowedHeaders("*") // Allow all headers
                 .allowCredentials(true); // Allow credentials (cookies, authentication)

@@ -7,9 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
@@ -25,7 +23,6 @@ import java.util.Set;
 public class PermissionCheckFilter extends OncePerRequestFilter {
 
     private final PermissionTemplateService permissionTemplateService;
-    // private static final java.util.logging.Logger log = LoggerFactory.getLogger(PermissionCheckFilter.class);
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
@@ -41,8 +38,14 @@ public class PermissionCheckFilter extends OncePerRequestFilter {
             return;
         }
 
-        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserPrincipal)) {
+            log.warn("No valid CustomUserPrincipal found for {} {}", httpMethod, requestPath);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+            return;
+        }
+
+        CustomUserPrincipal principal = (CustomUserPrincipal) authentication.getPrincipal();
         Set<String> userPermissions = principal.getPermissions();
 
         log.info("User Permissions for accessing : {}", userPermissions);
@@ -59,11 +62,11 @@ public class PermissionCheckFilter extends OncePerRequestFilter {
             }
         }
 
-        log.info("permission matching : {}",matchingTemplate );
+        log.info("permission matching : {}", matchingTemplate);
         if (matchingTemplate != null) {
             String requiredPermission = matchingTemplate.getName();
 
-            log.info("required permission : {}",requiredPermission);
+            log.info("required permission : {}", requiredPermission);
             if (!userPermissions.contains(requiredPermission)) {
                 log.warn("User {} lacks permission {} for {} {}", principal.getUserId(), requiredPermission, httpMethod,
                         requestPath);

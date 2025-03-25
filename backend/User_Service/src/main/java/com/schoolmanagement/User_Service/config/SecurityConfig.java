@@ -12,11 +12,15 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.config.Customizer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter; // Added import
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -29,13 +33,13 @@ public class SecurityConfig {
     private final PermissionCheckFilter permissionCheckFilter;
     private final PermissionTemplateService permissionTemplateService;
     private final UserService userService;
-    private final PasswordEncoder passwordEncoder; // Injected from PasswordEncoderConfig
+    private final PasswordEncoder passwordEncoder;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Use custom CORS config
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(
                                 "/swagger-ui/**",
@@ -47,10 +51,12 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/error")
                         .permitAll()
-                        .requestMatchers("/auth/api/**").permitAll()
+                        .requestMatchers("/auth/api/**").permitAll() // Allow /auth/api/login
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(corsFilter(), UsernamePasswordAuthenticationFilter.class) // Add CORS filter explicitly
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, permissionService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(permissionCheckFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }
@@ -64,13 +70,18 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://10.194.*.*:3000","http://10.194.*.*:8080"));
+        configuration.setAllowedOrigins(List.of("http://10.194.61.72:3000", "http://10.194.61.74:8080"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
+        configuration.setAllowCredentials(true); // Support credentialed requests
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public CorsFilter corsFilter() {
+        return new CorsFilter(corsConfigurationSource()); // Explicitly define CorsFilter
     }
 }

@@ -59,7 +59,7 @@ public class DefaultUserBootstrapper implements ApplicationRunner {
             createSchoolPermission.setHttpMethod("POST");
             createSchoolPermission.setCreatedAt(LocalDateTime.now());
             createSchoolPermission.setUpdatedAt(LocalDateTime.now());
-            createSchoolPermission.setIsActive(true);
+            createSchoolPermission.setIs_active(true);
             permissionRepository.save(createSchoolPermission);
             
 
@@ -72,7 +72,7 @@ public class DefaultUserBootstrapper implements ApplicationRunner {
             getUserActivityPermission.setHttpMethod("POST");
             getUserActivityPermission.setCreatedAt(LocalDateTime.now());
             getUserActivityPermission.setUpdatedAt(LocalDateTime.now());
-            getUserActivityPermission.setIsActive(true);
+            getUserActivityPermission.setIs_active(true);
             permissionRepository.save(getUserActivityPermission);
 
             Permission getAdminActivityPermission = new Permission();
@@ -84,7 +84,7 @@ public class DefaultUserBootstrapper implements ApplicationRunner {
             getAdminActivityPermission.setHttpMethod("POST");
             getAdminActivityPermission.setCreatedAt(LocalDateTime.now());
             getAdminActivityPermission.setUpdatedAt(LocalDateTime.now());
-            getAdminActivityPermission.setIsActive(true);
+            getAdminActivityPermission.setIs_active(true);
             permissionRepository.save(getAdminActivityPermission);
 
             Permission registerAdminPermission = new Permission();
@@ -96,7 +96,7 @@ public class DefaultUserBootstrapper implements ApplicationRunner {
             registerAdminPermission.setHttpMethod("POST");
             registerAdminPermission.setCreatedAt(LocalDateTime.now());
             registerAdminPermission.setUpdatedAt(LocalDateTime.now());
-            registerAdminPermission.setIsActive(true);
+            registerAdminPermission.setIs_active(true);
             permissionRepository.save(registerAdminPermission);
 
             // Create default User Role
