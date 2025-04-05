@@ -1,22 +1,54 @@
+// package com.schoolmanagement.communication_service.config;
+
+// import org.springframework.beans.factory.annotation.Autowired;
+// import org.springframework.context.annotation.Configuration;
+// import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+// import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+// import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+// import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+// @Configuration
+// @EnableWebSocketMessageBroker
+// public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+//     @Autowired
+//     // private JwtHandshakeInterceptor jwtHandshakeInterceptor;
+
+//     @Override
+//     public void configureMessageBroker(MessageBrokerRegistry config) {
+//         config.enableSimpleBroker("/topic");
+//         config.setApplicationDestinationPrefixes("/app");
+//     }
+
+//     @Override
+//     public void registerStompEndpoints(StompEndpointRegistry registry) {
+//         registry.addEndpoint("/notifications")
+//                 // .addInterceptors(jwtHandshakeInterceptor)
+//                 .setAllowedOriginPatterns("*") // Temporarily allow all for testing
+//                 .withSockJS(); // Enable SockJS fallback
+//     }
+// }
+
 package com.schoolmanagement.communication_service.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    @Autowired
-    private JwtHandshakeInterceptor jwtHandshakeInterceptor;
+    private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic");
+        config.enableStompBrokerRelay("/topic", "/queue");
         config.setApplicationDestinationPrefixes("/app");
     }
 
@@ -24,7 +56,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/notifications")
                 .addInterceptors(jwtHandshakeInterceptor)
-                .setAllowedOriginPatterns("*") // Temporarily allow all for testing
-                .withSockJS(); // Enable SockJS fallback
+                .setAllowedOriginPatterns("*") // Adjust for production
+                .withSockJS();
     }
 }

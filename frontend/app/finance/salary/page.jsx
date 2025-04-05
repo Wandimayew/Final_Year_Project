@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useProcessSalaryPayment, useStaffSalaryHistory, useMonthlySalaryReport } from "@/lib/api/financeService/salary";
+export const dynamic = "force-dynamic";
 
 export default function SalaryManagement({ schoolId=1 }) {
   const [salaryData, setSalaryData] = useState({

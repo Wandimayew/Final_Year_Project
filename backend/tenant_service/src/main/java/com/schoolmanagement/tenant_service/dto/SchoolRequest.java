@@ -1,12 +1,8 @@
 package com.schoolmanagement.tenant_service.dto;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
-
-import com.schoolmanagement.tenant_service.model.Address;
 
 import jakarta.validation.Valid;
 import lombok.Data;

@@ -7,15 +7,18 @@ import axios from "axios";
 import SubjectTable from "../constant/SubjectTable";
 import Breadcrumb from "../constant/Breadcrumb";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 const SubjectList = ({ setSubjectListClicked, setAssign }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [subjects, setSubjects] = useState([]);
-  const [school, setSchool] = useState("");
+  const [school, setSchool] = useState([]);
 
   const getClassList = async () => {
     try {
       const response = await axios.get(
-        `http://10.194.61.74:8080/academic/api/new/getAllSubjectBySchool`
+        `http://localhost:8086/academic/api/new/getAllSubjectBySchool`
       );
       setSubjects(response.data);
     } catch (error) {

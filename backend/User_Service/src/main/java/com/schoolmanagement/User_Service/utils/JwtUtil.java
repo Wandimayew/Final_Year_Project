@@ -32,30 +32,37 @@ public class JwtUtil {
         return new SecretKeySpec(decodedKey, SignatureAlgorithm.HS512.getJcaName());
     }
 
+    // Generate short-lived access token (15 minutes)
     public String generateJwtToken(User user) {
-        // Fetch active roles for the user directly
-        // Fetch active roles for the user directly
         List<String> roleNames = roleRepository.findRolesByUserId(user.getUserId())
                 .stream()
-                .distinct() // Avoid duplicates
+                .distinct()
                 .collect(Collectors.toList());
 
-        log.info("Generating token for user {} with roles: {}", user.getUsername(), roleNames);
+        log.info("Generating access token for user {} with roles: {}", user.getUsername(), roleNames);
 
         if (roleNames.isEmpty()) {
             log.warn("No roles found for user {} in school {}", user.getUserId(), user.getSchoolId());
         }
+
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .setId(UUID.randomUUID().toString())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86_400_000)) // 24 hours
+                .setExpiration(new Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15 minutes
                 .claim("email", user.getEmail())
                 .claim("school_id", user.getSchoolId())
                 .claim("user_id", user.getUserId())
                 .claim("roles", roleNames)
-                .signWith(getSecretKey()) // Explicit algorithm
+                .signWith(getSecretKey())
                 .compact();
+    }
+
+    // Generate refresh token (1 day)
+    public String generateRefreshToken(User user) {
+        String token = Base64.getEncoder().encodeToString(UUID.randomUUID().toString().getBytes());
+        log.info("Generated refresh token for user: {}", user.getUsername());
+        return token;
     }
 
     // Validate JWT Token
@@ -89,7 +96,7 @@ public class JwtUtil {
                     .getBody();
         } catch (JwtException e) {
             log.error("Failed to extract claims from token: {}", e.getMessage());
-            throw e; // Re-throw for caller to handle
+            throw e;
         }
     }
 
@@ -115,6 +122,10 @@ public class JwtUtil {
 
     public List<String> extractRoles(String token) {
         return extractClaim(token, claims -> claims.get("roles", List.class));
+    }
+
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
     }
 
     @FunctionalInterface

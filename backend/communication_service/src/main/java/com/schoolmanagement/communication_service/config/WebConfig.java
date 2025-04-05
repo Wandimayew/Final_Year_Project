@@ -10,11 +10,11 @@ import java.util.List;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Autowired
-    private JwtTokenResolver jwtTokenResolver;
+    // @Autowired
+    // private JwtTokenResolver jwtTokenResolver;
 
-    @Override
-    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(jwtTokenResolver);
-    }
+    // @Override
+    // public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+    //     resolvers.add(jwtTokenResolver);
+    // }
 }

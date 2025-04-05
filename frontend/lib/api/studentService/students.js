@@ -6,7 +6,7 @@ import axios from "axios";
 // Adjust the path as necessary
 
 const studentApi = axios.create({
-  baseURL: 'http://10.194.61.72:8081/student', // Adjust the base URL as needed
+  baseURL: 'http://localhost:8080/student', // Adjust the base URL as needed
   // headers: {
   //   'Content-Type': 'application/json',
   // },

@@ -21,20 +21,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class AddressService {
-    
+
     private final AddressRepository addressRepository;
     private final SchoolRepository schoolRepository;
 
-
-    public ResponseEntity<AddressResponse> addNewAddress(AddressRequest addressRequest, String school_id){
-        School school=schoolRepository.findBySchool_id(school_id);
-        if(school == null){
-            log.error("School not found with id {}", school_id);
+    public ResponseEntity<AddressResponse> addNewAddress(AddressRequest addressRequest, String schoolId) {
+        School school = schoolRepository.findBySchool_id(schoolId);
+        if (school == null) {
+            log.error("School not found with id {}", schoolId);
             return ResponseEntity.notFound().build();
         }
 
         Address newAddress = new Address();
-
         newAddress.setAddress_line(addressRequest.getAddress_line());
         newAddress.setCity(addressRequest.getCity());
         newAddress.setRegion(addressRequest.getRegion());
@@ -47,78 +45,98 @@ public class AddressService {
         newAddress.setUpdated_at(LocalDateTime.now());
 
         Address savedAddress = addressRepository.save(newAddress);
-        return ResponseEntity.ok(convertToAddressResponse(savedAddress));
-// LocalDateTime.now()
-        
-    }
-
-    public ResponseEntity<AddressResponse> editAddressById(AddressRequest addressRequest,String school_id,Long address_id){
-        School schoolExists=schoolRepository.findBySchool_id(school_id);
-        if(schoolExists == null){
-            log.error("School not found with id {}", school_id);
-            return ResponseEntity.notFound().build();
-        }
-        Address addressExists=addressRepository.findBySchoolAndAddressId(schoolExists, address_id);
-        if(addressExists == null){
-            log.error("Address not found with id {}", address_id);
-            return ResponseEntity.notFound().build();
-        }
-        addressExists.setAddress_line(addressRequest.getAddress_line());
-        addressExists.setCity(addressRequest.getCity());
-        addressExists.setCountry(addressRequest.getCountry());
-        addressExists.setRegion(addressRequest.getRegion());
-        addressExists.setUpdated_at(LocalDateTime.now());
-        addressExists.setZone(addressRequest.getZone());
-        addressExists.setCreated_by("admin");
-
-        Address savedAddress=addressRepository.save(addressExists);
-
+        log.info("New address added for school {} with ID: {}", schoolId, savedAddress.getAddress_id());
         return ResponseEntity.ok(convertToAddressResponse(savedAddress));
     }
 
-    public ResponseEntity<String> deleteAddressById(String school_id, Long address_id){
-        School schoolExists=schoolRepository.findBySchool_id(school_id);
-        if(schoolExists == null){
-            log.error("School not found with id {}", school_id);
-            return ResponseEntity.notFound().build();
-        }
-        Address addressExists=addressRepository.findBySchoolAndAddressId(schoolExists, address_id);
-        if(addressExists == null){
-            log.error("Address not found with id {}", address_id);
+    public ResponseEntity<AddressResponse> editAddressById(AddressRequest addressRequest, String schoolId,
+            Long addressId) {
+        School school = schoolRepository.findBySchool_id(schoolId);
+        if (school == null) {
+            log.error("School not found with id {}", schoolId);
             return ResponseEntity.notFound().build();
         }
 
-        addressExists.setActive(false);
+        Address existingAddress = addressRepository.findBySchoolAndAddressId(school, addressId);
+        if (existingAddress == null) {
+            log.error("Address not found with id {} for school {}", addressId, schoolId);
+            return ResponseEntity.notFound().build();
+        }
 
-        addressRepository.save(addressExists);
-        return ResponseEntity.ok("Address with id "+ address_id + " deleted successfully.");
+        // Update only provided fields, preserving existing values if not specified
+        if (addressRequest.getAddress_line() != null) {
+            existingAddress.setAddress_line(addressRequest.getAddress_line());
+        }
+        if (addressRequest.getCity() != null) {
+            existingAddress.setCity(addressRequest.getCity());
+        }
+        if (addressRequest.getCountry() != null) {
+            existingAddress.setCountry(addressRequest.getCountry());
+        }
+        if (addressRequest.getRegion() != null) {
+            existingAddress.setRegion(addressRequest.getRegion());
+        }
+        if (addressRequest.getZone() != null) {
+            existingAddress.setZone(addressRequest.getZone());
+        }
+        existingAddress.setUpdated_at(LocalDateTime.now());
+        existingAddress.setCreated_by("admin"); // Consider if this should change on update
+
+        Address savedAddress = addressRepository.save(existingAddress);
+        log.info("Address updated for school {} with ID: {}", schoolId, addressId);
+        return ResponseEntity.ok(convertToAddressResponse(savedAddress));
     }
-    
-    public ResponseEntity<AddressResponse> getAddressById(String school_id, Long address_id){
-        School schoolExists=schoolRepository.findBySchool_id(school_id);
-        if(schoolExists == null){
-            log.error("School not found with id {}", school_id);
-            return ResponseEntity.notFound().build();
-        }
-        Address addressExists=addressRepository.findBySchoolAndAddressId(schoolExists, address_id);
-        if(addressExists == null){
-            log.error("Address not found with id {}", address_id);
+
+    public ResponseEntity<String> deleteAddressById(String schoolId, Long addressId) {
+        School school = schoolRepository.findBySchool_id(schoolId);
+        if (school == null) {
+            log.error("School not found with id {}", schoolId);
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(convertToAddressResponse(addressExists));
-    }
-  
-    public ResponseEntity<List<AddressResponse>> getAllAddressesBySchoolId(String school_id){
-        School schoolExists=schoolRepository.findBySchool_id(school_id);
-        if(schoolExists == null){
-            log.error("School not found with id {}", school_id);
+        Address existingAddress = addressRepository.findBySchoolAndAddressId(school, addressId);
+        if (existingAddress == null) {
+            log.error("Address not found with id {} for school {}", addressId, schoolId);
             return ResponseEntity.notFound().build();
         }
-        List<Address> addresses=addressRepository.findAllSchoolAddressThatIsActive(schoolExists);
 
-        return ResponseEntity.ok(addresses.stream().map(this::convertToAddressResponse).collect(Collectors.toList()));
+        existingAddress.setActive(false);
+        addressRepository.save(existingAddress);
+        log.info("Address with ID {} for school {} marked as inactive", addressId, schoolId);
+        return ResponseEntity.ok("Address with id " + addressId + " deleted successfully.");
     }
+
+    public ResponseEntity<AddressResponse> getAddressById(String schoolId, Long addressId) {
+        School school = schoolRepository.findBySchool_id(schoolId);
+        if (school == null) {
+            log.error("School not found with id {}", schoolId);
+            return ResponseEntity.notFound().build();
+        }
+
+        Address existingAddress = addressRepository.findBySchoolAndAddressId(school, addressId);
+        if (existingAddress == null) {
+            log.error("Address not found with id {} for school {}", addressId, schoolId);
+            return ResponseEntity.notFound().build();
+        }
+
+        log.info("Fetched address with ID {} for school {}", addressId, schoolId);
+        return ResponseEntity.ok(convertToAddressResponse(existingAddress));
+    }
+
+    public ResponseEntity<List<AddressResponse>> getAllAddressesBySchoolId(String schoolId) {
+        School school = schoolRepository.findBySchool_id(schoolId);
+        if (school == null) {
+            log.error("School not found with id {}", schoolId);
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Address> addresses = addressRepository.findAllSchoolAddressThatIsActive(school);
+        log.info("Fetched {} active addresses for school {}", addresses.size(), schoolId);
+        return ResponseEntity.ok(addresses.stream()
+                .map(this::convertToAddressResponse)
+                .collect(Collectors.toList()));
+    }
+
     private AddressResponse convertToAddressResponse(Address address) {
         return AddressResponse.builder()
                 .address_id(address.getAddress_id())

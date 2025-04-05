@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 
 
 @RestController
-@RequestMapping("/api/communications")
+@RequestMapping("/student/api/communications")
 @RequiredArgsConstructor
 public class ParentCommunicationController {
     private final ParentCommunicationService parentCommunicationService;

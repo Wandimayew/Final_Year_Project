@@ -1,7 +1,6 @@
 
 import LandingPage from "@/components/Home/LandingPage";
-import { store } from "@/Redux/stores/store";
-import { Provider } from "react-redux";
+export const dynamic = "force-dynamic";
 
 export default function Home() {
   return (

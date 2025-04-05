@@ -65,10 +65,10 @@ const AttendanceHistory = () => {
 
             let url;
             if (filters.startDate && filters.endDate) {
-                url = `http://10.194.61.74:8080/staff/api/attendance/history/${filters.staffId}?Date=${filters.Date}`;
+                url = `http://localhost:8083/staff/api/attendance/history/${filters.staffId}?Date=${filters.Date}`;
             } else {
                 const today = new Date().toISOString().split('T')[0];
-                url = `http://10.194.61.74:8080/staff/api/attendance/by-date/${filters.staffId}?attendanceDate=${today}`;
+                url = `http://localhost:8083/staff/api/attendance/by-date/${filters.staffId}?attendanceDate=${today}`;
             }
 
             const response = await fetch(url, {

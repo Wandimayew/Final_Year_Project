@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useGenerateInvoice, useStudentInvoices, useUpdateInvoiceStatus, useDeleteInvoice } from "@/lib/api/financeService/invoice";
+export const dynamic = "force-dynamic";
 
 export default function InvoiceManagement({ schoolId=1 }) {
   const [invoiceData, setInvoiceData] = useState({

@@ -4,6 +4,7 @@
 import ClassList from "@/components/academic/ClassList/ClassList";
 import AddClass from "@/components/academic/AddClass";
 import { useState } from "react";
+export const dynamic = "force-dynamic";
 
 const ClassPage = () => {
   const [classList, setClassList] = useState(true);

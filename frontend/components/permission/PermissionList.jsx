@@ -3,45 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { usePermissions } from "@/lib/api/userManagementService/permission";
 import { useAuthStore } from "@/lib/auth";
-import {
-  Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Typography,
-  CircularProgress,
-  TableSortLabel,
-  Button,
-  AppBar,
-  Toolbar,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-} from "@mui/material";
-import { styled } from "@mui/system";
 import { useRouter } from "next/navigation";
-import { Add as AddIcon } from "@mui/icons-material";
+import {
+  ArrowUpIcon,
+  ArrowDownIcon,
+  PlusIcon,
+  ArrowLeftIcon,
+} from "@heroicons/react/24/outline";
 import SearchBar from "../constant/SearchBar";
-
-// Styled components for enhanced UI
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  fontWeight: 600,
-  color: "#333",
-  borderBottom: "2px solid #e0e0e0",
-}));
-
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  "&:hover": {
-    backgroundColor: "#f5f5f5",
-    cursor: "pointer",
-    transition: "background-color 0.2s ease-in-out",
-  },
-}));
 
 const PermissionList = () => {
   const { getSchoolId } = useAuthStore();
@@ -53,7 +22,7 @@ const PermissionList = () => {
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterOperation, setFilterOperation] = useState(""); // "" means all, options: "read", "write", "delete"
+  const [filterOperation, setFilterOperation] = useState("");
 
   // Fetch permissions using usePermissions hook
   const {
@@ -68,7 +37,7 @@ const PermissionList = () => {
     setSchoolId(id);
     setIsHydrated(true);
     if (!id) {
-      router.push("/login"); // Redirect if no schoolId
+      router.push("/login");
     }
   }, [getSchoolId, router]);
 
@@ -125,9 +94,31 @@ const PermissionList = () => {
     console.log("Permission clicked:", permissionId);
   };
 
-  // Show nothing during SSR until hydrated
   if (!isHydrated) {
-    return null; // Or a loading skeleton
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <svg
+          className="animate-spin h-8 w-8 text-blue-500"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+          ></path>
+        </svg>
+      </div>
+    );
   }
 
   if (!schoolId) {
@@ -135,159 +126,165 @@ const PermissionList = () => {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f7fa" }}>
+    <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <AppBar
-        position="static"
-        sx={{ bgcolor: "#1976d2", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-      >
-        <Toolbar>
-          <Box sx={{ flexGrow: 1 }} />
-          <Button
-            variant="contained"
-            color="secondary"
-            startIcon={<AddIcon />}
-            onClick={() => router.push("/user/permission/create")}
-            sx={{
-              mr: 2,
-              bgcolor: "#fff",
-              color: "#1976d2",
-              "&:hover": { bgcolor: "#e0e0e0" },
-            }}
-          >
-            Add Permission
-          </Button>
-          <Button
-            color="inherit"
-            onClick={() => router.push("/dashboard")}
-            sx={{
-              bgcolor: "rgba(255, 255, 255, 0.15)",
-              "&:hover": { bgcolor: "rgba(255, 255, 255, 0.25)" },
-            }}
-          >
-            Back to Dashboard
-          </Button>
-        </Toolbar>
-      </AppBar>
+      <header className="bg-blue-600 shadow-lg">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="flex-1" />
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push("/user/permission/create")}
+              className="flex items-center px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
+            >
+              <PlusIcon className="w-5 h-5 mr-2" />
+              Add Permission
+            </button>
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="flex items-center px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
+            >
+              <ArrowLeftIcon className="w-5 h-5 mr-2" />
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      </header>
 
       {/* Main Content */}
-      <Box sx={{ p: 4, maxWidth: "1200px", mx: "auto" }}>
-        <Paper
-          sx={{
-            p: 3,
-            borderRadius: 2,
-            boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
-            bgcolor: "white",
-          }}
-        >
+      <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="bg-white shadow-lg rounded-xl p-6">
           {/* Header with Search and Filter */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 3,
-            }}
-          >
-            <Typography variant="h5" sx={{ fontWeight: 700, color: "#333" }}>
-              Permissions for School: {schoolId}
-            </Typography>
-            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <h1 className="text-2xl font-bold text-gray-800">
+              Permissions for School:{" "}
+              <span className="text-blue-600">{schoolId}</span>
+            </h1>
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <SearchBar
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 placeholder="Search permissions..."
-                width="w-[300px]"
+                width="w-full sm:w-72"
                 additionalStyles="shadow-md"
               />
-              <FormControl sx={{ minWidth: 150 }} size="small">
-                <InputLabel>Filter by Operation</InputLabel>
-                <Select
-                  value={filterOperation}
-                  onChange={(e) => setFilterOperation(e.target.value)}
-                  label="Filter by Operation"
-                >
-                  <MenuItem value="">All</MenuItem>
-                  <MenuItem value="read">Read (GET)</MenuItem>
-                  <MenuItem value="write">Write (POST/PUT)</MenuItem>
-                  <MenuItem value="delete">Delete (DELETE)</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </Box>
+              <select
+                value={filterOperation}
+                onChange={(e) => setFilterOperation(e.target.value)}
+                className="w-full sm:w-48 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">All Operations</option>
+                <option value="read">Read (GET)</option>
+                <option value="write">Write (POST/PUT)</option>
+                <option value="delete">Delete (DELETE)</option>
+              </select>
+            </div>
+          </div>
 
+          {/* Permissions Table */}
           {isLoading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-              <CircularProgress />
-            </Box>
+            <div className="flex justify-center py-12">
+              <svg
+                className="animate-spin h-10 w-10 text-blue-500"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+                ></path>
+              </svg>
+            </div>
           ) : error ? (
-            <Typography color="error" align="center" sx={{ py: 4 }}>
+            <p className="text-center text-red-600 py-6">
               Failed to load permissions: {error.message}
-            </Typography>
+            </p>
           ) : sortedPermissions.length === 0 ? (
-            <Typography align="center" sx={{ py: 4, color: "#666" }}>
+            <p className="text-center text-gray-500 py-8">
               No permissions found matching your criteria.
-            </Typography>
+            </p>
           ) : (
-            <TableContainer>
-              <Table sx={{ minWidth: 650 }} aria-label="permission table">
-                <TableHead>
-                  <TableRow>
-                    <StyledTableCell>
-                      <TableSortLabel
-                        active={sortBy === "name"}
-                        direction={sortBy === "name" ? sortOrder : "asc"}
-                        onClick={() => handleSort("name")}
-                      >
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                      onClick={() => handleSort("name")}
+                    >
+                      <div className="flex items-center cursor-pointer">
                         Name
-                      </TableSortLabel>
-                    </StyledTableCell>
-                    <StyledTableCell>
-                      <TableSortLabel
-                        active={sortBy === "description"}
-                        direction={sortBy === "description" ? sortOrder : "asc"}
-                        onClick={() => handleSort("description")}
-                      >
+                        {sortBy === "name" &&
+                          (sortOrder === "asc" ? (
+                            <ArrowUpIcon className="w-4 h-4 ml-1 text-blue-500" />
+                          ) : (
+                            <ArrowDownIcon className="w-4 h-4 ml-1 text-blue-500" />
+                          ))}
+                      </div>
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                      onClick={() => handleSort("description")}
+                    >
+                      <div className="flex items-center cursor-pointer">
                         Description
-                      </TableSortLabel>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">Actions</StyledTableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
+                        {sortBy === "description" &&
+                          (sortOrder === "asc" ? (
+                            <ArrowUpIcon className="w-4 h-4 ml-1 text-blue-500" />
+                          ) : (
+                            <ArrowDownIcon className="w-4 h-4 ml-1 text-blue-500" />
+                          ))}
+                      </div>
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
                   {sortedPermissions.map((permission) => (
-                    <StyledTableRow
+                    <tr
                       key={permission.permissionId}
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
                       onClick={() => handleRowClick(permission.permissionId)}
                     >
-                      <TableCell>{permission.name}</TableCell>
-                      <TableCell>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {permission.name}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
                         {permission.description || "No description"}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          color="primary"
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             router.push(
                               `/user/permission/update/${permission.permissionId}`
                             );
                           }}
+                          className="px-3 py-1 border border-blue-500 text-blue-500 rounded-md hover:bg-blue-500 hover:text-white transition-colors"
                         >
                           Edit
-                        </Button>
-                      </TableCell>
-                    </StyledTableRow>
+                        </button>
+                      </td>
+                    </tr>
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                </tbody>
+              </table>
+            </div>
           )}
-        </Paper>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 

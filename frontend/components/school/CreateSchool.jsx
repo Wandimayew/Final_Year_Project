@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "react-toastify";
 import AddressPopup from "./AddressPopup";
-import axios from "axios";
+import { useCreateSchool } from "@/lib/api/tenantService/school";
+import { useCreateAdmin } from "@/lib/api/userManagementService/user";
+import { useAuthStore } from "@/lib/auth";
 
 const CreateSchool = () => {
   const [formData, setFormData] = useState({
@@ -20,13 +22,24 @@ const CreateSchool = () => {
     schoolInfo: "",
     adminAddress: "",
     adminPhone: "",
-    adminUsername: ""
+    adminUsername: "",
   });
 
   const [addressClicked, setAddressClicked] = useState(false);
   const [addresses, setAddresses] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Added loading state
 
-  const handleChange = (e) => {
+  const rawToken = useAuthStore((state) => state.token);
+  const token = isMounted ? rawToken : null;
+  const createSchoolMutation = useCreateSchool();
+  const createUserMutation = useCreateAdmin();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const handleChange = useCallback((e) => {
     const { name, value, type, files } = e.target;
     if (type === "file") {
       setFormData((prevState) => ({
@@ -39,161 +52,101 @@ const CreateSchool = () => {
         [name]: value,
       }));
     }
-  };
+  }, []);
 
-  const validateForm = () => {
-    const newErrors = {};
-    const requiredFields = [
-      "schoolName",
-      "schoolAddress",
-      "schoolEmail",
-      "schoolPhone",
-      "establishmentDate",
-      "schooType",
-      "adminName",
-      "adminEmail",
-      "adminPassword",
-      "schoolLogo",
-      "schoolInfo",
-      "adminAddress",
-      "adminPhone",
-    ];
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      console.log("Saving data");
 
-    requiredFields.forEach((field) => {
-      newErrors[field] = !formData[field];
-    });
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (formData.schoolEmail && !emailRegex.test(formData.schoolEmail)) {
-      newErrors.schoolEmail = "Invalid email format";
-    }
-    if (formData.adminEmail && !emailRegex.test(formData.adminEmail)) {
-      newErrors.adminEmail = "Invalid email format";
-    }
-
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    if (formData.schoolPhone && !phoneRegex.test(formData.schoolPhone)) {
-      newErrors.schoolPhone = "Invalid phone number";
-    }
-
-    if (formData.adminPassword && formData.adminPassword.length < 8) {
-      newErrors.adminPassword = "Password must be at least 8 characters";
-    }
-
-    // setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    // const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3YW5kaSIsImp0aSI6ImYzNzU2NmRkLTRhZTEtNDgxMy1iNGM2LTFjYzdjNWU1OTA1MSIsImlhdCI6MTc0MjY0NzEyMCwiZXhwIjoxNzQyNzMzNTIwLCJlbWFpbCI6IndvbmRpbWF5ZXdhc2NoYWxld0BnbWFpbC5jb20iLCJzY2hvb2xfaWQiOiJhZG1pbiIsInVzZXJfaWQiOiJ3YW5kaS0xIiwicm9sZXMiOlsiUk9MRV9TVVBFUkFETUlOIl19.ewMiPQwERjeeX7rgHX4mieJF8XAtMFPxPJbtVgnJ-hw"
-    // const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3YW5kaWkiLCJqdGkiOiIzMDI5OGI3My0zYjYwLTQ4YWEtODc3Mi1mY2IxNWY2M2FiNmUiLCJpYXQiOjE3NDI2NTE4MzUsImV4cCI6MTc0MjczODIzNSwiZW1haWwiOiJ3YW5kaWlAZ21haWwuY29tIiwic2Nob29sX2lkIjoiR0xPQkFMUyIsInVzZXJfaWQiOiJHTE9CQUxTMDAxIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdfQ.KRzlN7quZAnfwDSglGVvUQqZuk82_Bci7VF9cjtA1Hc"
-    // const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3YW5kaWkiLCJqdGkiOiI1NTIwYTc3Yi1iYjRlLTRhMjUtOGRkZi1lMTBhY2ZjMWEzOTMiLCJpYXQiOjE3NDI2NTI4OTksImV4cCI6MTc0MjczOTI5OSwiZW1haWwiOiJ3YW5kaWlAZ21haWwuY29tIiwic2Nob29sX2lkIjoiR0xPQkFMUyIsInVzZXJfaWQiOiJHTE9CQUxTMDAxIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdfQ.oMGO51Wo-RZzmYVPdGbnkJk0SlS61vZeBh3mRxE03UI"
-    // const token= "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3YW5kaSIsImp0aSI6IjdiMjJhYWRhLWZjZTgtNDZiMi1iNDA0LTY3NmJhODUyY2JmZSIsImlhdCI6MTc0MjY1MzQxMSwiZXhwIjoxNzQyNzM5ODExLCJlbWFpbCI6IndvbmRpbWF5ZXdhc2NoYWxld0BnbWFpbC5jb20iLCJzY2hvb2xfaWQiOiJhZG1pbiIsInVzZXJfaWQiOiJ3YW5kaS0xIiwicm9sZXMiOlsiUk9MRV9TVVBFUkFETUlOIl19.boa3lbLbRT2vxI-M8z88309xoTuWhr6Bk6gK8ecjBDw"
-    const token= "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3YW5kaWkiLCJqdGkiOiI3MGFiMGE4Mi02Yjc3LTQ5ZTEtYTgxZi1kNmFkZWRmMzE5YWQiLCJpYXQiOjE3NDI2NTM1NDUsImV4cCI6MTc0MjczOTk0NSwiZW1haWwiOiJ3YW5kaWlAZ21haWwuY29tIiwic2Nob29sX2lkIjoiR0xPQkFMUyIsInVzZXJfaWQiOiJHTE9CQUxTMDAxIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdfQ.yiAoctTmaVHXmtvq9KWfVGBon-YmfLcNtecvWrjC3yM"
-    e.preventDefault();
-    console.log("Saveing data");
-
-    // if (!validateForm()) {
-    //   toast.error("Please fix the errors before submitting.", {
-    //     icon: false, // This removes the icon
-    //   });
-    //   return;
-    // }
-
-    console.log("we are here");
-    // Prepare FormData to match the DTO structure
-    const formDataToSend = new FormData();
-    formDataToSend.append("school_name", formData.schoolName);
-    // Convert the address array to a JSON string if necessary
-    formDataToSend.append("addresses", JSON.stringify(formData.schoolAddress)); // Sending as JSON string
-    formDataToSend.append("contact_number", formData.schoolPhone);
-    formDataToSend.append("email_address", formData.schoolEmail);
-    formDataToSend.append("school_type", formData.schoolType);
-    formDataToSend.append("establishment_date", formData.establishmentDate); // LocalDate, should be in yyyy-MM-dd format
-    formDataToSend.append("logo", formData.schoolLogo); // File field for logo
-    formDataToSend.append("school_information", formData.schoolInfo);
-    console.log("we are there");
-    try {
-      console.log("Form Data being sent:");
-      for (let pair of formDataToSend.entries()) {
-        console.log(pair[0] + ": " + pair[1]);
+      if (!token) {
+        toast.error("You must be logged in to create a school.");
+        return;
       }
-      // Sending the form data with Axios
-      const response = await axios.post(
-        "http://10.194.61.74:8080/tenant/api/addNewSchool",
-        formDataToSend,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data", // Important for file uploads
-            "Authorization": `Bearer ${token}`,    // Add the Authorization header with Bearer token
-          },
-        }
-      );
-      console.log("successfully registered :", response);
 
-      if (response.status === 200) {
-        console.log("school response :",response);
-        
-        const schoolId=response.data.school_id;
-        const formUserData = {
-          schoolId: schoolId,
-          fullName: formData.adminName,
-          username: formData.adminUsername,
-          email: formData.adminEmail,
-          password: formData.adminPassword,
-          userAddress: formData.adminAddress,
-          phoneNumber: formData.adminPhone,
-          roles: ["ADMIN"],
-        };
-        try{
-          const userResponse = await axios.post(
-            "http://10.194.61.74:8080/auth/api/register",
-            formUserData,
-            {
-              headers: {
-                "Content-Type": "application/json", // Correct for JSON payloads
-              },
-            }
-          );
-          console.log("user one with school registered : ",userResponse);
+      setIsSubmitting(true); // Set loading state to true
 
-          if (userResponse.status === 200) {
+      const schoolRequest = {
+        school_name: formData.schoolName,
+        addresses: formData.schoolAddress,
+        contact_number: formData.schoolPhone,
+        email_address: formData.schoolEmail,
+        school_type: formData.schoolType,
+        establishment_date: formData.establishmentDate,
+        logo: formData.schoolLogo,
+        school_information: formData.schoolInfo,
+      };
 
-          console.log("user with school registered : ",userResponse);
+      try {
+        await createSchoolMutation.mutateAsync(
+          { schoolRequest },
+          {
+            onSuccess: async (schoolResponse) => {
+              console.log("School created successfully:", schoolResponse);
+              toast.success("School created successfully!");
+
+              const schoolId = schoolResponse.school_id;
+
+              const formUserData = {
+                fullName: formData.adminName,
+                username: formData.adminUsername,
+                email: formData.adminEmail,
+                password: formData.adminPassword,
+                userAddress: formData.adminAddress,
+                phoneNumber: formData.adminPhone,
+                roles: ["ROLE_ADMIN"],
+                schoolId: schoolId,
+              };
+
+              await createUserMutation.mutateAsync(formUserData, {
+                onSuccess: (userResponse) => {
+                  console.log("User registered successfully:", userResponse);
+                  toast.success("Admin user registered successfully!");
+                },
+                onError: (error) => {
+                  console.error("User registration failed:", error);
+                  toast.error(
+                    `User registration failed: ${
+                      error.message || "Something went wrong"
+                    }`
+                  );
+                },
+              });
+            },
+            onError: (error) => {
+              console.error("School creation failed:", error);
+              toast.error(
+                `School creation failed: ${
+                  error.message || "Something went wrong"
+                }`
+              );
+            },
           }
-
-        }catch(error){
-          console.error("Error during submission:", error); // Log the full error
-          toast.error(`Network error: ${error.message}`);
-        }
-
-        toast.success("School created successfully!");
-        
-      } else {
-        console.log("error is occured");
-
-        const errorData = await response.json();
-        toast.error(`Error: ${errorData.message || "Something went wrong"}`);
+        );
+      } catch (error) {
+        console.error("Submission error:", error);
+        toast.error(`Submission error: ${error.message}`);
+      } finally {
+        setIsSubmitting(false); // Reset loading state
       }
-    } catch (error) {
-      console.error("Error during submission:", error); // Log the full error
-      toast.error(`Network error: ${error.message}`);
-    }
-  };
+    },
+    [formData, token, createSchoolMutation, createUserMutation]
+  );
 
-  const handleSaveAddress = (address) => {
-    // Add the address to the schoolAddress array
+  const handleSaveAddress = useCallback((address) => {
     setFormData((prevState) => ({
       ...prevState,
-      schoolAddress: [{ ...address }], // Address saved as an array
+      schoolAddress: [{ ...address }],
     }));
-    // Assuming address is an object with properties like street, city, state, zip, etc.
     const formattedAddress = `${address.address_line}, ${address.city}, ${address.zone}, ${address.region}, ${address.country}`;
-
-    console.log("address is taken this data", address);
-    setAddressClicked(false); // Close the popup
+    console.log("Address saved:", address);
+    setAddressClicked(false);
     setAddresses(formattedAddress);
-  };
+  }, []);
+
+  if (!isMounted) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 top-20 relative">
@@ -201,7 +154,6 @@ const CreateSchool = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-lg font-semibold mb-6">SCHOOL INFO</h2>
-
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -212,20 +164,18 @@ const CreateSchool = () => {
                   name="schoolName"
                   value={formData.schoolName}
                   onChange={handleChange}
-                  required // This triggers native validation
+                  required
+                  disabled={isSubmitting} // Disable during submission
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
-
               <div>
                 {addressClicked ? (
-                  <div>
-                    <AddressPopup
-                      show={addressClicked}
-                      onClose={() => setAddressClicked(false)}
-                      onSave={handleSaveAddress}
-                    />
-                  </div>
+                  <AddressPopup
+                    show={addressClicked}
+                    onClose={() => setAddressClicked(false)}
+                    onSave={handleSaveAddress}
+                  />
                 ) : (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -237,8 +187,9 @@ const CreateSchool = () => {
                       value={addresses}
                       onChange={handleChange}
                       required
+                      disabled={isSubmitting} // Disable during submission
                       className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      onClick={() => setAddressClicked(true)} // Show the popup when clicked
+                      onClick={() => setAddressClicked(true)}
                     />
                   </div>
                 )}
@@ -253,11 +204,11 @@ const CreateSchool = () => {
                   value={formData.schoolEmail}
                   onChange={handleChange}
                   required
+                  disabled={isSubmitting}
                   title="Please enter a valid email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md" // Fixed line
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   School Phone
@@ -268,6 +219,7 @@ const CreateSchool = () => {
                   value={formData.schoolPhone}
                   onChange={handleChange}
                   required
+                  disabled={isSubmitting} // Disable during submission
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
@@ -279,12 +231,13 @@ const CreateSchool = () => {
                   name="schoolType"
                   value={formData.schoolType}
                   onChange={handleChange}
+                  disabled={isSubmitting} // Disable during submission
                   title="Please select the School Type"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 >
                   <option value="">Select School Type</option>
                   <option value="public">Public</option>
-                  <option value="private">private</option>
+                  <option value="private">Private</option>
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -297,7 +250,8 @@ const CreateSchool = () => {
                   name="establishmentDate"
                   value={formData.establishmentDate}
                   onChange={handleChange}
-                  required // This triggers native validation
+                  required
+                  disabled={isSubmitting} // Disable during submission
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
@@ -311,17 +265,19 @@ const CreateSchool = () => {
                   title="Please fill out this field"
                   onChange={handleChange}
                   rows="4"
+                  disabled={isSubmitting} // Disable during submission
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 ></textarea>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  School logo
+                  School Logo
                 </label>
                 <input
                   type="file"
                   name="schoolLogo"
                   onChange={handleChange}
+                  disabled={isSubmitting} // Disable during submission
                   className="w-full px-3 py-2 border"
                   title="Please select a file"
                   required
@@ -332,7 +288,6 @@ const CreateSchool = () => {
 
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-lg font-semibold mb-6">ADMIN INFO</h2>
-
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -344,10 +299,10 @@ const CreateSchool = () => {
                   value={formData.adminName}
                   onChange={handleChange}
                   required
+                  disabled={isSubmitting} // Disable during submission
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Admin Email
@@ -359,40 +314,24 @@ const CreateSchool = () => {
                   title="Please enter valid email"
                   onChange={handleChange}
                   required
+                  disabled={isSubmitting} // Disable during submission
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Admin Password
                 </label>
                 <input
-                  type="password"
+                  type="text" // Changed from "password" to "text"
                   name="adminPassword"
                   value={formData.adminPassword}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300rounded-md"
+                  disabled={isSubmitting} // Disable during submission
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
-
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Gender
-                </label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  title="Please select the gender"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Select a gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div> */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Username
@@ -403,6 +342,7 @@ const CreateSchool = () => {
                   value={formData.adminUsername}
                   onChange={handleChange}
                   required
+                  disabled={isSubmitting} // Disable during submission
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
@@ -415,6 +355,7 @@ const CreateSchool = () => {
                   name="adminAddress"
                   value={formData.adminAddress}
                   onChange={handleChange}
+                  disabled={isSubmitting} // Disable during submission
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
@@ -428,23 +369,10 @@ const CreateSchool = () => {
                   value={formData.adminPhone}
                   onChange={handleChange}
                   required
+                  disabled={isSubmitting} // Disable during submission
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               </div>
-
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Admin Photo
-                </label>
-                <input
-                  type="file"
-                  name="adminPhoto"
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border"
-                  title="Please select a file"
-                  required
-                />
-              </div> */}
             </div>
           </div>
         </div>
@@ -452,9 +380,12 @@ const CreateSchool = () => {
         <div className="flex justify-end mt-6">
           <button
             type="submit"
-            className="bg-blue-600 text-white py-2 px-6 rounded-md"
+            className={`bg-blue-600 text-white py-2 px-6 rounded-md ${
+              isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isSubmitting}
           >
-            Submit
+            {isSubmitting ? "Submitting..." : "Submit"}
           </button>
         </div>
       </form>

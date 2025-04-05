@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 const AddSubject = ({ setSubjectListClicked, setAssign }) => {
   const [formData, setFormData] = useState({
     subjectName: "",
@@ -14,7 +18,7 @@ const AddSubject = ({ setSubjectListClicked, setAssign }) => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
 
-  const [schoolId, setSchoolId] = useState("");
+  const [schoolId, setSchoolId] = useState([]);
 
   // Fetch class options
 //   useEffect(() => {
@@ -57,7 +61,7 @@ const AddSubject = ({ setSubjectListClicked, setAssign }) => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        `http://10.194.61.74:8080/academic/api/new/addNewSubject`,
+        `http://localhost:8086/academic/api/new/addNewSubject`,
         formData
       );
       console.log("Response data: {", response, "}.");

@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation"
 import ViewClass from "@/components/academic/ViewClass"
+export const dynamic = "force-dynamic";
 
 const ClassDetailsPage = () => {
   const params=useParams();

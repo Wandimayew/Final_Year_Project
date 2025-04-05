@@ -6,24 +6,30 @@ export const useAuthStore = create(
   subscribeWithSelector(
     persist(
       (set, get) => ({
-        user: null, // Will hold userId, schoolId, username, email, roles
+        user: null,
         token: null,
-        setAuth: (userData, token) => {
+        refreshToken: null,
+        setAuth: (userData, token, refreshToken) => {
           set({
-            user: {
-              userId: userData.userId,
-              schoolId: userData.schoolId,
-              username: userData.username,
-              email: userData.email,
-              roles: userData.roles,
-            },
-            token,
+            user: userData
+              ? {
+                  userId: userData.userId,
+                  schoolId: userData.schoolId,
+                  username: userData.username,
+                  email: userData.email,
+                  roles: userData.roles || [],
+                }
+              : get().user,
+            token: token || get().token,
+            refreshToken: refreshToken || get().refreshToken,
           });
-          if (token) localStorage.setItem("token", token); // Sync token to localStorage
+          if (token) localStorage.setItem("token", token);
+          if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
         },
         clearAuth: () => {
-          set({ user: null, token: null });
+          set({ user: null, token: null, refreshToken: null });
           localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
         },
         isAuthenticated: () => !!get().token,
         getUserId: () => get().user?.userId || null,
@@ -38,8 +44,52 @@ export const useAuthStore = create(
         partialize: (state) => ({
           user: state.user,
           token: state.token,
-        }), // Persist both user and token
+          refreshToken: state.refreshToken,
+        }),
       }
     )
   )
 );
+
+// @/lib/auth.js
+// import create from "zustand";
+// import { persist } from "zustand/middleware";
+
+// export const useAuthStore = create(
+//   persist(
+//     (set, get) => ({
+//       userId: null,
+//       schoolId: null,
+//       username: null,
+//       email: null,
+//       roles: [],
+//       token: null,
+//       refreshToken: null,
+//       setAuth: (user, token, refreshToken) =>
+//         set({
+//           userId: user.userId,
+//           schoolId: user.schoolId,
+//           username: user.username,
+//           email: user.email,
+//           roles: user.roles,
+//           token,
+//           refreshToken,
+//         }),
+//       getSchoolId: () => get().schoolId,
+//       clearAuth: () =>
+//         set({
+//           userId: null,
+//           schoolId: null,
+//           username: null,
+//           email: null,
+//           roles: [],
+//           token: null,
+//           refreshToken: null,
+//         }),
+//     }),
+//     {
+//       name: "auth-store", // Key in localStorage
+//       getStorage: () => localStorage,
+//     }
+//   )
+// );

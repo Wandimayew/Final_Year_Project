@@ -1,418 +1,305 @@
 "use client";
 
-import React, { useState } from "react";
-import axios from "axios";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import React, { useState, useEffect, Suspense, useMemo } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Card,
-  TextField,
-  InputAdornment,
-  TableSortLabel,
-  Box,
-  CircularProgress,
-  Typography,
-  Chip,
-  IconButton,
-} from "@mui/material";
-import {
-  Search as SearchIcon,
-  Warning as WarningIcon,
-  MoveToInbox as TrashIcon,
-  StarBorder as RemoveImportantIcon,
-} from "@mui/icons-material";
-import { styled } from "@mui/material/styles";
+  useEmailsByFolder,
+  useUpdateEmailStatus,
+} from "@/lib/api/communicationService/email";
+import { useAuthStore } from "@/lib/auth";
 import { useRouter } from "next/navigation";
+import { StarIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
-const StyledCard = styled(Card)(({ theme }) => ({
-  padding: theme.spacing(3),
-  marginLeft: 260,
-  marginTop: theme.spacing(2),
-  borderRadius: 16,
-  background: "linear-gradient(135deg, #ffffff 0%, #eceff1 100%)",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
-  transition: "transform 0.3s ease, box-shadow 0.3s ease",
-  "&:hover": {
-    transform: "translateY(-4px)",
-    boxShadow: "0 12px 32px rgba(0, 0, 0, 0.15)",
-  },
-}));
+const ImportantEmailsContent = () => {
+  const authState = useMemo(
+    () =>
+      useAuthStore.getState()
+        ? {
+            user: useAuthStore.getState().user,
+            isAuthenticated: useAuthStore.getState().isAuthenticated(),
+          }
+        : { user: null, isAuthenticated: false },
+    []
+  );
+  const { user, isAuthenticated } = authState;
+  const router = useRouter();
 
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  "&:hover": {
-    backgroundColor: "#e3f2fd",
-    transform: "scale(1.01)",
-    transition: "all 0.3s ease",
-  },
-  borderBottom: "1px solid #cfd8dc",
-  backgroundColor: "#fff",
-}));
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
 
-const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
+  const schoolId = user?.schoolId;
+  const folder = "IMPORTANT";
+  const pagination = { page: 0, size: 10, sort: `sentAt,${sortOrder}` };
 
-const fetchImportantEmails = async ({ schoolId, token }) => {
-  const response = await axios.get(
-    `${API_BASE_URL}/${schoolId}/emails/IMPORTANT`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
+  const {
+    data: emailsData,
+    isLoading,
+    error,
+  } = useEmailsByFolder(schoolId, folder, pagination);
+  const updateEmailStatus = useUpdateEmailStatus(schoolId);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/login");
     }
-  );
-  return response.data.data || [];
-};
+  }, [isAuthenticated, router]);
 
-const updateEmailStatus = async ({ schoolId, token, emailId, status }) => {
-  const response = await axios.put(
-    `${API_BASE_URL}/${schoolId}/emails/${emailId}/status`,
-    { status },
-    { headers: { Authorization: `Bearer ${token}` } }
+  const handleSort = () => {
+    setSortOrder(sortOrder === "desc" ? "asc" : "desc");
+  };
+
+  const handleMoveToTrash = (emailId) => {
+    updateEmailStatus.mutate({ emailId, status: "TRASH" });
+  };
+
+  const handleRemoveFromImportant = (emailId) => {
+    const email = filteredEmails.find((e) => e.emailId === emailId);
+    if (!email) return;
+    const newStatus = user.userId === email.senderId ? "SENT" : "INBOX";
+    updateEmailStatus.mutate({ emailId, status: newStatus });
+  };
+
+  const filteredEmails =
+    emailsData?.data?.filter(
+      (email) =>
+        email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        email.senderId.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
+
+  if (!isAuthenticated) return null;
+
+  return (
+    <div className="min-h-screen bg-gray-100 pl-60 pt-4">
+      <div className="p-4 md:p-8">
+        <div className="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6 flex-col md:flex-row gap-4">
+            <div className="flex items-center gap-3">
+              <StarIcon className="h-8 w-8 text-yellow-500" />
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+                Important Emails
+              </h1>
+            </div>
+            <button
+              onClick={() => router.push("/communication/email")}
+              className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+              aria-label="Close"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Search important emails..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-gray-50 transition-all"
+            />
+          </div>
+
+          {/* Emails Table */}
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <svg
+                className="animate-spin h-8 w-8 text-teal-600"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                  opacity="0.25"
+                />
+                <path
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                />
+              </svg>
+            </div>
+          ) : error ? (
+            <p className="text-center text-red-600 py-4">
+              {error.message || "Failed to fetch important emails."}
+            </p>
+          ) : filteredEmails.length === 0 ? (
+            <p className="text-center text-gray-500 py-4">
+              No important emails found.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="p-3 text-sm font-semibold text-gray-700">
+                      Sender
+                    </th>
+                    <th className="p-3 text-sm font-semibold text-gray-700">
+                      Subject
+                    </th>
+                    <th className="p-3 text-sm font-semibold text-gray-700">
+                      Message
+                    </th>
+                    <th className="p-3 text-sm font-semibold text-gray-700">
+                      Attachments
+                    </th>
+                    <th className="p-3 text-sm font-semibold text-gray-700">
+                      <button
+                        onClick={handleSort}
+                        className="flex items-center gap-1"
+                      >
+                        Time
+                        <svg
+                          className={`h-4 w-4 ${
+                            sortOrder === "asc" ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                    </th>
+                    <th className="p-3 text-sm font-semibold text-gray-700">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredEmails.map((email) => (
+                    <tr
+                      key={email.emailId}
+                      onClick={() =>
+                        router.push(
+                          `/communication/email/detail/${email.emailId}`
+                        )
+                      }
+                      className="border-b hover:bg-blue-50 transition-all cursor-pointer"
+                    >
+                      <td className="p-3 text-gray-800 font-medium">
+                        {email.senderId}
+                      </td>
+                      <td
+                        className="p-3 text-gray-800"
+                        style={{ fontWeight: email.isRead ? 400 : 600 }}
+                      >
+                        {email.subject}
+                      </td>
+                      <td className="p-3 text-gray-600">
+                        {email.body.substring(0, 30)}...
+                      </td>
+                      <td className="p-3">
+                        {email.attachments && email.attachments.length > 0 ? (
+                          email.attachments.map((att, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs mr-1 mb-1"
+                            >
+                              {att.fileName}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-gray-500">None</span>
+                        )}
+                      </td>
+                      <td className="p-3 text-gray-600">
+                        {new Date(email.sentAt).toLocaleString()}
+                      </td>
+                      <td className="p-3 flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMoveToTrash(email.emailId);
+                          }}
+                          disabled={updateEmailStatus.isLoading}
+                          className="p-2 text-red-600 hover:text-red-800 disabled:text-gray-400"
+                          aria-label="Move to Trash"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveFromImportant(email.emailId);
+                          }}
+                          disabled={updateEmailStatus.isLoading}
+                          className="p-2 text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+                          aria-label="Remove from Important"
+                        >
+                          <StarIcon className="h-5 w-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
-  return response.data;
 };
 
 const ImportantEmails = () => {
-  const { auth, loading: authLoading } = useAuth();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [orderBy, setOrderBy] = useState("sentAt");
-  const [order, setOrder] = useState("desc");
-  const router = useRouter();
-  const queryClient = useQueryClient();
+  const [isMounted, setIsMounted] = useState(false);
 
-  const {
-    data: emails = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["importantEmails", auth?.user?.schoolId],
-    queryFn: () =>
-      fetchImportantEmails({ schoolId: auth.user.schoolId, token: auth.token }),
-    enabled: !authLoading && !!auth,
-    select: (data) => {
-      const userId = auth.user.userId;
-      return data.filter((email) => {
-        const isSender = userId === email.senderId;
-        const isRecipient = userId === email.recipientId;
-        return (
-          (isSender &&
-            email.senderStatus === "IMPORTANT" &&
-            !email.senderDeleted) ||
-          (isRecipient &&
-            email.recipientStatus === "IMPORTANT" &&
-            !email.recipientDeleted)
-        );
-      });
-    },
-  });
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-  const moveToTrashMutation = useMutation({
-    mutationFn: ({ emailId }) =>
-      updateEmailStatus({
-        schoolId: auth.user.schoolId,
-        token: auth.token,
-        emailId,
-        status: "TRASH",
-      }),
-    onMutate: async ({ emailId }) => {
-      await queryClient.cancelQueries(["importantEmails", auth.user.schoolId]);
-      const previousEmails = queryClient.getQueryData([
-        "importantEmails",
-        auth.user.schoolId,
-      ]);
-      const userId = auth.user.userId;
-      queryClient.setQueryData(["importantEmails", auth.user.schoolId], (old) =>
-        old.map((email) =>
-          email.emailId === emailId
-            ? {
-                ...email,
-                [userId === email.senderId
-                  ? "senderStatus"
-                  : "recipientStatus"]: "TRASH",
-              }
-            : email
-        )
-      );
-      return { previousEmails };
-    },
-    onError: (err, { emailId }, context) => {
-      queryClient.setQueryData(
-        ["importantEmails", auth.user.schoolId],
-        context.previousEmails
-      );
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries(["importantEmails", auth.user.schoolId]);
-      queryClient.invalidateQueries(["emails"]);
-    },
-  });
-
-  const removeFromImportantMutation = useMutation({
-    mutationFn: ({ emailId, newStatus }) =>
-      updateEmailStatus({
-        schoolId: auth.user.schoolId,
-        token: auth.token,
-        emailId,
-        status: newStatus,
-      }),
-    onMutate: async ({ emailId }) => {
-      await queryClient.cancelQueries(["importantEmails", auth.user.schoolId]);
-      const previousEmails = queryClient.getQueryData([
-        "importantEmails",
-        auth.user.schoolId,
-      ]);
-      queryClient.setQueryData(["importantEmails", auth.user.schoolId], (old) =>
-        old.filter((email) => email.emailId !== emailId)
-      );
-      return { previousEmails };
-    },
-    onError: (err, { emailId }, context) => {
-      queryClient.setQueryData(
-        ["importantEmails", auth.user.schoolId],
-        context.previousEmails
-      );
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries(["importantEmails", auth.user.schoolId]);
-      queryClient.invalidateQueries(["emails"]);
-    },
-  });
-
-  const handleSort = (property) => {
-    const isAsc = orderBy === property && order === "asc";
-    setOrder(isAsc ? "desc" : "asc");
-    setOrderBy(property);
-  };
-
-  const handleMoveToTrash = (emailId) =>
-    moveToTrashMutation.mutate({ emailId });
-
-  const handleRemoveFromImportant = (emailId) => {
-    const email = emails.find((e) => e.emailId === emailId);
-    if (!email) return;
-    const userId = auth.user.userId;
-    const newStatus = userId === email.senderId ? "SENT" : "INBOX";
-    removeFromImportantMutation.mutate({ emailId, newStatus });
-  };
-
-  const sortedEmails = [...emails].sort((a, b) => {
-    if (orderBy === "sentAt")
-      return order === "asc"
-        ? new Date(a.sentAt) - new Date(b.sentAt)
-        : new Date(b.sentAt) - new Date(a.sentAt);
-    return 0;
-  });
-
-  const filteredEmails = sortedEmails.filter(
-    (email) =>
-      email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.senderId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (authLoading) return <div>Loading authentication...</div>;
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gray-100 pl-60 flex items-center justify-center">
+        <svg className="animate-spin h-8 w-8 text-teal-600" viewBox="0 0 24 24">
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+            fill="none"
+            opacity="0.25"
+          />
+          <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+      </div>
+    );
+  }
 
   return (
-    <StyledCard>
-      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-        <WarningIcon sx={{ color: "#ff9800", mr: 1, fontSize: 32 }} />
-        <Typography variant="h5" sx={{ color: "#455a64", fontWeight: 700 }}>
-          Important Emails
-        </Typography>
-      </Box>
-      <TextField
-        placeholder="Search Important Emails..."
-        variant="outlined"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon sx={{ color: "#78909c" }} />
-            </InputAdornment>
-          ),
-        }}
-        sx={{
-          mb: 2,
-          width: "100%",
-          "& .MuiOutlinedInput-root": {
-            borderRadius: 12,
-            backgroundColor: "#fafafa",
-            "&:hover fieldset": { borderColor: "#42a5f5" },
-            "&.Mui-focused fieldset": { borderColor: "#1976d2" },
-          },
-        }}
-      />
-      {isLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress sx={{ color: "#26a69a" }} />
-        </Box>
-      ) : isError ? (
-        <Typography sx={{ textAlign: "center", mt: 2, color: "#ef5350" }}>
-          {error?.response?.data?.message ||
-            "Failed to fetch important emails."}
-        </Typography>
-      ) : filteredEmails.length === 0 ? (
-        <Typography sx={{ textAlign: "center", mt: 2, color: "#78909c" }}>
-          No important emails found.
-        </Typography>
-      ) : (
-        <Table sx={{ minWidth: 650, backgroundColor: "transparent" }}>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: "#e0e0e0" }}>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === "senderId"}
-                  direction={orderBy === "senderId" ? order : "asc"}
-                  onClick={() => handleSort("senderId")}
-                  sx={{ fontWeight: 600, color: "#455a64" }}
-                >
-                  Sender
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === "subject"}
-                  direction={orderBy === "subject" ? order : "asc"}
-                  onClick={() => handleSort("subject")}
-                  sx={{ fontWeight: 600, color: "#455a64" }}
-                >
-                  Subject
-                </TableSortLabel>
-              </TableCell>
-              <TableCell sx={{ color: "#455a64", fontWeight: 600 }}>
-                Message
-              </TableCell>
-              <TableCell sx={{ color: "#455a64", fontWeight: 600 }}>
-                Attachments
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === "sentAt"}
-                  direction={orderBy === "sentAt" ? order : "asc"}
-                  onClick={() => handleSort("sentAt")}
-                  sx={{ fontWeight: 600, color: "#455a64" }}
-                >
-                  Time
-                </TableSortLabel>
-              </TableCell>
-              <TableCell sx={{ color: "#455a64", fontWeight: 600 }}>
-                Actions
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredEmails.map((email) => {
-              const userId = auth.user.userId;
-              const currentStatus =
-                userId === email.senderId
-                  ? email.senderStatus
-                  : email.recipientStatus;
-              const isDeleted =
-                userId === email.senderId
-                  ? email.senderDeleted
-                  : email.recipientDeleted;
-              return (
-                <StyledTableRow
-                  key={email.emailId}
-                  onClick={() =>
-                    router.push(`/communication/email/detail/${email.emailId}`)
-                  }
-                >
-                  <TableCell>
-                    <Typography sx={{ color: "#455a64", fontWeight: 500 }}>
-                      {email.senderId}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography
-                      sx={{
-                        color: "#455a64",
-                        fontWeight: email.isRead ? 400 : 600,
-                      }}
-                    >
-                      {email.subject}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography sx={{ color: "#78909c" }}>
-                      {email.body.substring(0, 30)}...
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {email.attachments && email.attachments.length > 0 ? (
-                      email.attachments.map((att, idx) => (
-                        <Chip
-                          key={idx}
-                          label={att.fileName}
-                          size="small"
-                          sx={{
-                            backgroundColor: "#bbdefb",
-                            color: "#1976d2",
-                            "&:hover": { backgroundColor: "#90caf9" },
-                            mr: 0.5,
-                            mb: 0.5,
-                          }}
-                        />
-                      ))
-                    ) : (
-                      <Typography sx={{ color: "#78909c" }}>None</Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Typography sx={{ color: "#78909c" }}>
-                      {new Date(email.sentAt).toLocaleString()}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <IconButton
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMoveToTrash(email.emailId);
-                      }}
-                      disabled={
-                        currentStatus === "TRASH" ||
-                        isDeleted ||
-                        moveToTrashMutation.isLoading
-                      }
-                      sx={{ color: "#ef5350", "&:hover": { color: "#d32f2f" } }}
-                    >
-                      {moveToTrashMutation.isLoading &&
-                      moveToTrashMutation.variables?.emailId ===
-                        email.emailId ? (
-                        <CircularProgress size={24} sx={{ color: "#ef5350" }} />
-                      ) : (
-                        <TrashIcon />
-                      )}
-                    </IconButton>
-                    <IconButton
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveFromImportant(email.emailId);
-                      }}
-                      disabled={
-                        isDeleted || removeFromImportantMutation.isLoading
-                      }
-                      sx={{ color: "#1976d2", "&:hover": { color: "#1565c0" } }}
-                    >
-                      {removeFromImportantMutation.isLoading &&
-                      removeFromImportantMutation.variables?.emailId ===
-                        email.emailId ? (
-                        <CircularProgress size={24} sx={{ color: "#1976d2" }} />
-                      ) : (
-                        <RemoveImportantIcon />
-                      )}
-                    </IconButton>
-                  </TableCell>
-                </StyledTableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      )}
-    </StyledCard>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-100 pl-60 flex items-center justify-center">
+          <svg
+            className="animate-spin h-8 w-8 text-teal-600"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+              opacity="0.25"
+            />
+            <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+        </div>
+      }
+    >
+      <ImportantEmailsContent />
+    </Suspense>
   );
 };
 

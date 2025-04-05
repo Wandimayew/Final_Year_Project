@@ -21,8 +21,9 @@ public class PermissionCheckController {
     private final PermissionService permissionService;
     private final JwtUtil jwtUtil;
 
-    private static final String SERVICE_TOKEN = "this-is-me-do-you-remember-me"; // Hardcoded for simplicity; use config in
-                                                                             // production
+    private static final String SERVICE_TOKEN = "this-is-me-do-you-remember-me"; // Hardcoded for simplicity; use config
+                                                                                 // in
+    // production
 
     /**
      * Validates the service token provided by the calling service.
@@ -59,9 +60,9 @@ public class PermissionCheckController {
         // Validate service token first
         validateServiceToken(serviceToken);
 
-        // Validate user token and set SecurityContext (assuming JwtAuthenticationFilter
-        // runs first)
-        if (!jwtUtil.validateToken(userToken.replace("Bearer ", ""))) {
+        // Validate user token
+        String token = userToken.replace("Bearer ", "");
+        if (!jwtUtil.validateToken(token)) {
             log.warn("Invalid user token for userId: {}", request.getUserId());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(PermissionCheckResponse.builder()
@@ -76,6 +77,7 @@ public class PermissionCheckController {
         // Validate schoolId
         validateSchoolId(request.getSchoolId());
 
+        // Check permission using PermissionService
         boolean hasPermission = permissionService.checkUserPermission(
                 request.getUserId(), request.getSchoolId(), request.getEndpoint(), request.getHttpMethod());
 

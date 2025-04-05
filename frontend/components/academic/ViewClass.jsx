@@ -8,6 +8,10 @@ import AddSection from "./AddSection";
 import EditSection from "./EditSection";
 import Popup from "../constant/PopUp";
 
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 const ViewClass = ({ id }) => {
   const [isAddSectionOpen, setAddSectionOpen] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
@@ -18,7 +22,7 @@ const ViewClass = ({ id }) => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `http://10.194.61.74:8080/academic/api/new/getClassDetails/${id}`
+          `http://localhost:8086/academic/api/new/getClassDetails/${id}`
         );
         setClassDetails(response.data);
       } catch (error) {

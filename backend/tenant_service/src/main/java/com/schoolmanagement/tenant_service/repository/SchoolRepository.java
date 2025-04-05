@@ -19,4 +19,5 @@ public interface SchoolRepository extends JpaRepository<School, String> {
 
     @Query("SELECT s FROM School s WHERE s.isActive = false")
     List<School> findAllSchoolThatIsNotActive();
+
 }

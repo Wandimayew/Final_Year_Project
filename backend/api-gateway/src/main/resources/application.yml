@@ -1,0 +1,97 @@
+spring:
+  application:
+    # name: ${SPRING_APPLICATION_NAME}
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true  # Ensures service IDs are lowercase in Eureka
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            exposedHeaders: "Access-Control-Allow-Origin"
+            maxAge: 3600
+      routes:
+        # Service Routes
+        - id: User_Service
+          uri: lb://user-management  
+          predicates:
+            - Path=/auth/api/**
+        - id: Tenant_Service
+          uri: lb://tenant-service  
+          predicates:
+            - Path=/tenant/api/**
+        - id: Communication_Service
+          uri: lb://communication-service  
+          predicates:
+            - Path=/communication/api/**
+
+eureka:
+  client:
+    serviceUrl:
+      # defaultZone: ${SERVICE_REGISTRY_URL}/eureka/
+      defaultZone: http://localhost:8761/eureka
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    # hostname: ${EUREKA_INSTANCE_HOSTNAME}
+    hostname: localhost
+    prefer-ip-address: false
+    # non-secure-port: ${SERVER_PORT}
+    non-secure-port: 8080
+    metadata-map:
+      appName: API_GATEWAY
+
+server:
+  # port: ${SERVER_PORT}
+  port: 8080
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /auth/v3/api-docs
+        name: User Service
+      - url: /academic/v3/api-docs
+        name: Academic Service
+      # ... (other Swagger URLs remain unchanged)
+    disable-swagger-default-url: true
+    display-request-duration: true
+    use-root-path: true
+  api-docs:
+    enabled: true
+    resolve-schema-properties: true
+  paths-to-match: /**
+  cache:
+    disabled: true
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: DEBUG
+    org.springdoc: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info 
+  endpoint:
+    health:
+      show-details: always

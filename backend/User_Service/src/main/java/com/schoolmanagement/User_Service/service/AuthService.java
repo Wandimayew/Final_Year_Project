@@ -5,16 +5,22 @@ import com.schoolmanagement.User_Service.dto.LoginRequest;
 import com.schoolmanagement.User_Service.dto.SignupRequest;
 import com.schoolmanagement.User_Service.dto.SignupResponse;
 import com.schoolmanagement.User_Service.dto.UserLoginActivityDTO;
+import com.schoolmanagement.User_Service.model.RefreshToken;
 import com.schoolmanagement.User_Service.model.Role;
 import com.schoolmanagement.User_Service.model.User;
+import com.schoolmanagement.User_Service.model.UserActivity;
+import com.schoolmanagement.User_Service.repository.RefreshTokenRepository;
 import com.schoolmanagement.User_Service.repository.RoleRepository;
+import com.schoolmanagement.User_Service.repository.UserActivityRepository;
 import com.schoolmanagement.User_Service.repository.UserRepository;
 import com.schoolmanagement.User_Service.utils.JwtUtil;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,8 +32,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
+import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,10 +46,12 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtils;
     private final AuthenticationManager authenticationManager;
+    private final UserActivityRepository userActivityRepository;
     private final SchoolPermissionService schoolPermissionService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
-    public JwtResponse authenticateUser(LoginRequest loginRequest) throws AuthenticationException {
+    public JwtResponse authenticateUser(LoginRequest loginRequest, HttpServletRequest request) {
         log.info("Authenticating user: {}", loginRequest.getUsername());
         Authentication auth;
         try {
@@ -62,17 +71,19 @@ public class AuthService {
                 .orElseThrow(() -> new AuthenticationException("User not found") {
                 });
 
-        log.info("User fetched from repository: {}", user);
-
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
-        String token = jwtUtils.generateJwtToken(user);
-        List<String> roleNames = jwtUtils.extractRoles(token);
+        String accessToken = jwtUtils.generateJwtToken(user);
+        String refreshToken = generateRefreshToken(user);
 
-        log.info("User {} authenticated successfully with roles: {}", loginRequest.getUsername(), roleNames);
+        logActivity(user.getUserId(), user.getSchoolId(), "LOGIN", "User logged in successfully", request);
+
+        List<String> roleNames = jwtUtils.extractRoles(accessToken);
+
         return JwtResponse.builder()
-                .token(token)
+                .token(accessToken)
+                .refreshToken(refreshToken)
                 .userId(user.getUserId())
                 .schoolId(user.getSchoolId())
                 .username(user.getUsername())
@@ -80,6 +91,102 @@ public class AuthService {
                 .roles(roleNames)
                 .message("Login successful")
                 .build();
+    }
+
+    @Transactional
+    public void logout(HttpServletRequest request) {
+        String token = extractTokenFromRequest(request);
+        if (token == null || !jwtUtils.validateToken(token)) {
+            log.warn("Invalid or missing token for logout");
+            throw new IllegalArgumentException("Invalid or missing token");
+        }
+
+        String userId = jwtUtils.extractUserId(token);
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        refreshTokenRepository.deleteByUserId(userId);
+        logActivity(userId, user.getSchoolId(), "LOGOUT", "User logged out successfully", request);
+        SecurityContextHolder.clearContext();
+        log.info("User {} logged out successfully", user.getUsername());
+    }
+
+    @Transactional
+    public JwtResponse refreshToken(String refreshToken, HttpServletRequest request) {
+        RefreshToken storedToken = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid refresh token"));
+
+        if (!storedToken.isActive() || storedToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            log.warn("Refresh token is inactive or expired: {}", refreshToken);
+            throw new IllegalArgumentException("Refresh token is invalid or expired");
+        }
+
+        User user = userRepository.findByUserId(storedToken.getUserId())
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        // Rotate refresh token
+        refreshTokenRepository.delete(storedToken); // Invalidate old token
+        String newRefreshToken = generateRefreshToken(user);
+
+        String newAccessToken = jwtUtils.generateJwtToken(user);
+        List<String> roleNames = jwtUtils.extractRoles(newAccessToken);
+
+        logActivity(user.getUserId(), user.getSchoolId(), "TOKEN_REFRESH", "Access token refreshed", request);
+
+        return JwtResponse.builder()
+                .token(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .userId(user.getUserId())
+                .schoolId(user.getSchoolId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .roles(roleNames)
+                .message("Token refreshed successfully")
+                .build();
+    }
+
+    private String generateRefreshToken(User user) {
+        String token = Base64.getEncoder().encodeToString(UUID.randomUUID().toString().getBytes());
+        RefreshToken refreshTokenEntity = new RefreshToken();
+        refreshTokenEntity.setToken(token);
+        refreshTokenEntity.setUserId(user.getUserId());
+        refreshTokenEntity.setSchoolId(user.getSchoolId());
+        refreshTokenEntity.setCreatedAt(LocalDateTime.now());
+        refreshTokenEntity.setExpiresAt(LocalDateTime.now().plusDays(1));
+        refreshTokenEntity.setActive(true);
+        refreshTokenRepository.save(refreshTokenEntity);
+        return token;
+    }
+
+    @Transactional
+    public List<UserLoginActivityDTO> getAllLoginActivity(String schoolId) {
+        log.info("Fetching all user activity for school: {}", schoolId);
+        List<UserActivity> activities = userActivityRepository.findBySchoolId(schoolId);
+
+        if (activities.isEmpty()) {
+            throw new EntityNotFoundException("No activity found for school: " + schoolId);
+        }
+
+        return activities.stream()
+                .map(activity -> new UserLoginActivityDTO(
+                        activity.getId(),
+                        activity.getUserId(),
+                        activity.getSchoolId(),
+                        activity.getActivityType(),
+                        activity.getDetails(),
+                        activity.getIpAddress(),
+                        activity.getDeviceInfo(),
+                        activity.getTimestamp()))
+                .collect(Collectors.toList());
+    }
+
+    public void logActivity(String userId, String schoolId, String activityType, String details,
+            HttpServletRequest request) {
+        String ipAddress = request.getRemoteAddr();
+        String deviceInfo = request.getHeader("User-Agent");
+        UserActivity activity = new UserActivity(userId, schoolId, activityType, details, ipAddress, deviceInfo);
+        userActivityRepository.save(activity);
+        log.info("Logged activity: {} for user: {} in school: {}", activityType, userId, schoolId);
     }
 
     @Transactional
@@ -110,7 +217,6 @@ public class AuthService {
         user.setUpdatedAt(LocalDateTime.now());
         user.setCreatedBy(userId);
 
-        // Assign default role (ROLE_STUDENT by default, unless specified)
         String defaultRole = signupRequest.getRoles() == null || signupRequest.getRoles().isEmpty()
                 ? "ROLE_STUDENT"
                 : signupRequest.getRoles().iterator().next();
@@ -161,7 +267,6 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Superadmin not found: " + superadminUserId));
 
         log.info("super admin is found : {}", superadmin);
-        // Create default permissions and roles for the school if not already created
 
         log.info("Assign Roles ROLE_ADMIN admin");
         User savedAdmin = userRepository.save(admin);
@@ -179,8 +284,6 @@ public class AuthService {
         schoolPermissionService.assignDefaultRoleToUser(savedAdmin, "ROLE_ADMIN", signupRequest.getSchoolId(),
                 superadmin);
         log.info("after assignDefaultRoleToUser");
-
-        // Assign ROLE_ADMIN to the new admin
 
         log.info("Admin registered with ID: {} for schoolId: {}", newUserId, signupRequest.getSchoolId());
 
@@ -213,29 +316,22 @@ public class AuthService {
         return schoolId + String.format("%03d", nextNumber);
     }
 
-
-
-    @Transactional
-    public List<UserLoginActivityDTO> getAllLoginActivity(String schoolId) {
-        List<User> userActivity= userRepository.findBySchoolId(schoolId);
-
-        if (userActivity.isEmpty()) {
-            throw new EntityNotFoundException("No user Found with in your school " + schoolId);
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
         }
+        return null;
+    }
 
-        List<UserLoginActivityDTO> activityList = userActivity.stream()
-                .map(user -> new UserLoginActivityDTO(
-                        user.getUserId(),
-                        user.getUsername(),
-                        user.getLastLogin() != null ? user.getLastLogin().toString() : null,
-                        user.getSchoolId()
-                ))
-                .sorted(Comparator.comparing(
-                        UserLoginActivityDTO::getLastLogin,
-                        Comparator.nullsLast(Comparator.reverseOrder()) // Newest first, nulls last
-                ))
+    @Scheduled(fixedRate = 24 * 60 * 60 * 1000) // Run daily
+    @Transactional
+    public void cleanupExpiredRefreshTokens() {
+        log.info("Running cleanup for expired refresh tokens");
+        List<RefreshToken> expiredTokens = refreshTokenRepository.findAll().stream()
+                .filter(token -> token.getExpiresAt().isBefore(LocalDateTime.now()))
                 .collect(Collectors.toList());
-
-        return   activityList;
+        refreshTokenRepository.deleteAll(expiredTokens);
+        log.info("Deleted {} expired refresh tokens", expiredTokens.size());
     }
 }

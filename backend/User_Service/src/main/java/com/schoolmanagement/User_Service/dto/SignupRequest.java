@@ -1,10 +1,10 @@
 package com.schoolmanagement.User_Service.dto;
 
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Data
 public class SignupRequest {
@@ -17,7 +17,6 @@ public class SignupRequest {
 
     private String password;
 
-    @JsonProperty("roles")
     private Set<String> roles;
 
     @JsonProperty("permissions")

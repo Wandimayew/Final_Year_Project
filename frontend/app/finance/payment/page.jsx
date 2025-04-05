@@ -324,6 +324,7 @@ import FeeSelection from "@/components/finance/FeeSelection";
 // import StudentSearch from "@/components/StudentSearch";
 // import FeeSelection from "@/components/FeeSelection";
 
+export const dynamic = "force-dynamic";
 
 export default function PaymentProcessing({ schoolId = "SCH-12345" }) {
     const [paymentData, setPaymentData] = useState({

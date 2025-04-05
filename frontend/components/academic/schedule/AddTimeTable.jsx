@@ -356,7 +356,7 @@ const TimetableConfigurator = () => {
 
   useEffect(() => {
     axios
-      .get("http://10.194.61.74:8080/academic/api/new/getAllStreamBySchool")
+      .get("http://localhost:8086/academic/api/new/getAllStreamBySchool")
       .then((response) => setStreams(response.data))
       .catch((error) => console.error("Failed to fetch streams:", error));
   }, []);
@@ -368,7 +368,7 @@ const TimetableConfigurator = () => {
 
   useEffect(() => {
     axios
-      .get("http://10.194.61.74:8080/academic/api/new/getAllSubjectBySchool")
+      .get("http://localhost:8086/academic/api/new/getAllSubjectBySchool")
       .then((res) => {
         setAllSubjects(res.data);
         const initialConstraints = {};
@@ -401,7 +401,7 @@ const TimetableConfigurator = () => {
       }));
       axios
         .get(
-          `http://10.194.61.74:8080/academic/api/new/getAllClassByStream/${streamId}`
+          `http://localhost:8086/academic/api/new/getAllClassByStream/${streamId}`
         )
         .then((res) =>
           setClassesByStream((prev) => ({ ...prev, [streamId]: res.data }))
@@ -426,7 +426,7 @@ const TimetableConfigurator = () => {
     if (!classDetails[classId]) {
       axios
         .get(
-          `http://10.194.61.74:8080/academic/api/new/getAllSectionByClass/${classId}`
+          `http://localhost:8086/academic/api/new/getAllSectionByClass/${classId}`
         )
         .then((res) =>
           setClassDetails((prev) => ({
@@ -439,7 +439,7 @@ const TimetableConfigurator = () => {
         );
       axios
         .get(
-          `http://10.194.61.74:8080/academic/api/new/getAllSubjectByClass/${classId}`
+          `http://localhost:8086/academic/api/new/getAllSubjectByClass/${classId}`
         )
         .then((res) =>
           setClassDetails((prev) => ({
@@ -467,7 +467,7 @@ const TimetableConfigurator = () => {
         if (!classDetails[classId]) {
           axios
             .get(
-              `http://10.194.61.74:8080/academic/api/new/getAllSectionByClass/${classId}`
+              `http://localhost:8086/academic/api/new/getAllSectionByClass/${classId}`
             )
             .then((res) =>
               setClassDetails((prev) => ({
@@ -480,7 +480,7 @@ const TimetableConfigurator = () => {
             );
           axios
             .get(
-              `http://10.194.61.74:8080/academic/api/new/getAllSubjectByClass/${classId}`
+              `http://localhost:8086/academic/api/new/getAllSubjectByClass/${classId}`
             )
             .then((res) =>
               setClassDetails((prev) => ({
@@ -701,7 +701,7 @@ const TimetableConfigurator = () => {
 
     try {
       const response = await axios.post(
-        "http://10.194.61.74:8080/academic/api/new/addNewTimeTable",
+        "http://localhost:8086/academic/api/new/addNewTimeTable",
         requestData
       );
       console.log("Generated response is:", response.data);

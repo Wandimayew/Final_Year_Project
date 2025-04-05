@@ -1,14 +1,9 @@
-import SchoolList from "@/components/school/SchoolList"
-import Layout from "@/components/layout/Layout"
-import React from 'react'
-
+import SchoolList from "@/components/school/SchoolList";
+import React from "react";
+export const dynamic = "force-dynamic";
 
 const page = () => {
-  return (
-    <Layout>
-      <SchoolList/>
-    </Layout>
-  )
-}
+  return <SchoolList />;
+};
 
-export default page
+export default page;

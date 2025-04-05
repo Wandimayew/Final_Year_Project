@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; // Import router
 import TimeTableList from "@/components/academic/schedule/TimeTableList";
 import Breadcrumb from "@/components/constant/Breadcrumb";
+export const dynamic = "force-dynamic";
 
 const TimeTablePage = () => {
   const [timetable, setTimetable] = useState(null); // Initialize state as null

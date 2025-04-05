@@ -2,7 +2,6 @@ package com.schoolmanagement.tenant_service.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -63,6 +62,11 @@ public class School_subscriptions {
     @PreUpdate
     protected void onUpdate() {
         updated_at = LocalDateTime.now();
+    }
+
+    public void setUpdated_by(String string) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setUpdated_by'");
     }
 
 }

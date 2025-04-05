@@ -1,356 +1,341 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useAuth } from "@/hooks/useAuth";
+import React, { useState, useEffect, Suspense, useMemo } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Card,
-  TextField,
-  InputAdornment,
-  TableSortLabel,
-  Box,
-  CircularProgress,
-  Typography,
-  Chip,
-  IconButton,
-} from "@mui/material";
-import {
-  Search as SearchIcon,
-  Send as SendIcon,
-  Delete as DeleteIcon,
-  MoveToInbox as TrashIcon,
-  Star as ImportantIcon,
-} from "@mui/icons-material";
-import { styled } from "@mui/material/styles";
+  useEmailsByFolder,
+  useUpdateEmailStatus,
+  useDeleteEmail,
+} from "@/lib/api/communicationService/email";
+import { useAuthStore } from "@/lib/auth";
 import { useRouter } from "next/navigation";
+import {
+  PaperAirplaneIcon,
+  TrashIcon,
+  StarIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/solid";
 
-const StyledCard = styled(Card)(({ theme }) => ({
-  padding: theme.spacing(3),
-  marginLeft: 260,
-  marginTop: theme.spacing(2),
-  borderRadius: 16,
-  background: "linear-gradient(135deg, #ffffff 0%, #eceff1 100%)",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
-  transition: "transform 0.3s ease, box-shadow 0.3s ease",
-  "&:hover": {
-    transform: "translateY(-4px)",
-    boxShadow: "0 12px 32px rgba(0, 0, 0, 0.15)",
-  },
-}));
+const SentEmailsContent = () => {
+  const authState = useMemo(
+    () =>
+      useAuthStore.getState()
+        ? {
+            user: useAuthStore.getState().user,
+            isAuthenticated: useAuthStore.getState().isAuthenticated(),
+          }
+        : { user: null, isAuthenticated: false },
+    []
+  );
+  const { user, isAuthenticated } = authState;
 
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  "&:hover": {
-    backgroundColor: "#e3f2fd",
-    transform: "scale(1.01)",
-    transition: "all 0.3s ease",
-  },
-  borderBottom: "1px solid #cfd8dc",
-  backgroundColor: "#fff",
-}));
+  console.log("User for Sent Email :", user);
+  console.log("Is Authenticated Sent Email :", isAuthenticated);
 
-const SentEmails = () => {
-  const { auth, loading: authLoading } = useAuth();
-  const [emails, setEmails] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [orderBy, setOrderBy] = useState("sentAt");
-  const [order, setOrder] = useState("desc");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  
   const router = useRouter();
 
-  const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
+
+  const schoolId = user?.schoolId;
+  const folder = "SENT";
+  const pagination = { page: 0, size: 10, sort: `sentAt,${sortOrder}` };
+
+  const {
+    data: emailsData,
+    isLoading,
+    error,
+  } = useEmailsByFolder(schoolId, folder, pagination);
+  const updateEmailStatus = useUpdateEmailStatus(schoolId);
+  const deleteEmail = useDeleteEmail(schoolId);
 
   useEffect(() => {
-    if (authLoading || !auth) return;
-    const { userId, schoolId } = auth.user;
-    const token = auth.token;
-
-    const fetchEmails = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(
-          `${API_BASE_URL}/${schoolId}/emails/SENT`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const fetchedEmails = response.data.data || [];
-        const filteredEmails = fetchedEmails.filter(
-          (email) =>
-            userId === email.senderId &&
-            !email.senderDeleted &&
-            email.senderStatus === "SENT"
-        );
-        setEmails(filteredEmails);
-      } catch (error) {
-        setError(
-          error.response?.data?.message || "Failed to fetch sent emails."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchEmails();
-  }, [auth, authLoading]);
-
-  const handleSort = (property) => {
-    const isAsc = orderBy === property && order === "asc";
-    setOrder(isAsc ? "desc" : "asc");
-    setOrderBy(property);
-  };
-
-  const handleMoveToTrash = async (emailId) => {
-    const { schoolId } = auth.user;
-    const token = auth.token;
-    try {
-      await axios.put(
-        `${API_BASE_URL}/${schoolId}/emails/${emailId}/status`,
-        { status: "TRASH" },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setEmails((prev) => prev.filter((email) => email.emailId !== emailId));
-    } catch (error) {
-      setError("Failed to move email to Trash.");
+    if (!isAuthenticated) {
+      router.replace("/login");
     }
+  }, [isAuthenticated, router]);
+
+  const handleSort = () => {
+    setSortOrder(sortOrder === "desc" ? "asc" : "desc");
   };
 
-  const handleMarkAsImportant = async (emailId) => {
-    const { schoolId } = auth.user;
-    const token = auth.token;
-    try {
-      await axios.put(
-        `${API_BASE_URL}/${schoolId}/emails/${emailId}/status`,
-        { status: "IMPORTANT" },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setEmails((prev) => prev.filter((email) => email.emailId !== emailId));
-    } catch (error) {
-      setError("Failed to mark email as Important.");
-    }
+  const handleMoveToTrash = (emailId) => {
+    updateEmailStatus.mutate({ emailId, status: "TRASH" });
   };
 
-  const handleDeleteEmail = async (emailId) => {
+  const handleMarkAsImportant = (emailId) => {
+    updateEmailStatus.mutate({ emailId, status: "IMPORTANT" });
+  };
+
+  const handleDeleteEmail = (emailId) => {
     if (
       !confirm(
         "Are you sure you want to delete this email permanently? It may still exist for the recipient."
       )
     )
       return;
-    const { schoolId } = auth.user;
-    const token = auth.token;
-    try {
-      await axios.delete(`${API_BASE_URL}/${schoolId}/emails/${emailId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setEmails((prev) => prev.filter((email) => email.emailId !== emailId));
-    } catch (error) {
-      setError("Failed to delete email.");
-    }
+    deleteEmail.mutate(emailId);
   };
 
-  const sortedEmails = [...emails].sort((a, b) => {
-    if (orderBy === "sentAt")
-      return order === "asc"
-        ? new Date(a.sentAt) - new Date(b.sentAt)
-        : new Date(b.sentAt) - new Date(a.sentAt);
-    return 0;
-  });
+  const filteredEmails =
+    emailsData?.data?.filter(
+      (email) =>
+        email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        email.recipientId.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
-  const filteredEmails = sortedEmails.filter(
-    (email) =>
-      email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.recipientId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (authLoading) return <div>Loading authentication...</div>;
+  if (!isAuthenticated) return null;
 
   return (
-    <StyledCard>
-      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-        <SendIcon sx={{ color: "#26a69a", mr: 1, fontSize: 32 }} />
-        <Typography variant="h5" sx={{ color: "#455a64", fontWeight: 700 }}>
-          Sent Emails
-        </Typography>
-      </Box>
-      <TextField
-        placeholder="Search Sent Emails..."
-        variant="outlined"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon sx={{ color: "#78909c" }} />
-            </InputAdornment>
-          ),
-        }}
-        sx={{
-          mb: 2,
-          width: "100%",
-          "& .MuiOutlinedInput-root": {
-            borderRadius: 12,
-            backgroundColor: "#fafafa",
-            "&:hover fieldset": { borderColor: "#42a5f5" },
-            "&.Mui-focused fieldset": { borderColor: "#1976d2" },
-          },
-        }}
-      />
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress sx={{ color: "#26a69a" }} />
-        </Box>
-      ) : error ? (
-        <Typography sx={{ textAlign: "center", mt: 2, color: "#ef5350" }}>
-          {error}
-        </Typography>
-      ) : filteredEmails.length === 0 ? (
-        <Typography sx={{ textAlign: "center", mt: 2, color: "#78909c" }}>
-          No sent emails found.
-        </Typography>
-      ) : (
-        <Table sx={{ minWidth: 650, backgroundColor: "transparent" }}>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: "#e0e0e0" }}>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === "recipientId"}
-                  direction={orderBy === "recipientId" ? order : "asc"}
-                  onClick={() => handleSort("recipientId")}
-                  sx={{ fontWeight: 600, color: "#455a64" }}
-                >
-                  Recipient
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === "subject"}
-                  direction={orderBy === "subject" ? order : "asc"}
-                  onClick={() => handleSort("subject")}
-                  sx={{ fontWeight: 600, color: "#455a64" }}
-                >
-                  Subject
-                </TableSortLabel>
-              </TableCell>
-              <TableCell sx={{ color: "#455a64", fontWeight: 600 }}>
-                Message
-              </TableCell>
-              <TableCell sx={{ color: "#455a64", fontWeight: 600 }}>
-                Attachments
-              </TableCell>
-              <TableCell>
-                <TableSortLabel
-                  active={orderBy === "sentAt"}
-                  direction={orderBy === "sentAt" ? order : "asc"}
-                  onClick={() => handleSort("sentAt")}
-                  sx={{ fontWeight: 600, color: "#455a64" }}
-                >
-                  Time
-                </TableSortLabel>
-              </TableCell>
-              <TableCell sx={{ color: "#455a64", fontWeight: 600 }}>
-                Actions
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredEmails.map((email) => (
-              <StyledTableRow
-                key={email.emailId}
-                onClick={() =>
-                  router.push(`/communication/email/detail/${email.emailId}`)
-                }
+    <div className="min-h-screen bg-gray-100 pl-60 pt-4">
+      <div className="p-4 md:p-8">
+        <div className="bg-white rounded-xl shadow-lg p-6 transition-all hover:shadow-xl">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6 flex-col md:flex-row gap-4">
+            <div className="flex items-center gap-3">
+              <PaperAirplaneIcon className="h-8 w-8 text-teal-600" />
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+                Sent Emails
+              </h1>
+            </div>
+            <button
+              onClick={() => router.push("/communication/email")}
+              className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+              aria-label="Close"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Search sent emails..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-gray-50 transition-all"
+            />
+          </div>
+
+          {/* Emails Table */}
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <svg
+                className="animate-spin h-8 w-8 text-teal-600"
+                viewBox="0 0 24 24"
               >
-                <TableCell>
-                  <Typography sx={{ color: "#455a64", fontWeight: 500 }}>
-                    {email.recipientId}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography
-                    sx={{
-                      color: "#455a64",
-                      fontWeight: email.isRead ? 400 : 600,
-                    }}
-                  >
-                    {email.subject}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography sx={{ color: "#78909c" }}>
-                    {email.body.substring(0, 30)}...
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  {email.attachments && email.attachments.length > 0 ? (
-                    email.attachments.map((att, idx) => (
-                      <Chip
-                        key={idx}
-                        label={att.fileName}
-                        size="small"
-                        sx={{
-                          backgroundColor: "#bbdefb",
-                          color: "#1976d2",
-                          "&:hover": { backgroundColor: "#90caf9" },
-                          mr: 0.5,
-                          mb: 0.5,
-                        }}
-                      />
-                    ))
-                  ) : (
-                    <Typography sx={{ color: "#78909c" }}>None</Typography>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Typography sx={{ color: "#78909c" }}>
-                    {new Date(email.sentAt).toLocaleString()}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMoveToTrash(email.emailId);
-                    }}
-                    disabled={email.senderStatus === "TRASH"}
-                    sx={{ color: "#ef5350", "&:hover": { color: "#d32f2f" } }}
-                  >
-                    <TrashIcon />
-                  </IconButton>
-                  <IconButton
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMarkAsImportant(email.emailId);
-                    }}
-                    disabled={email.senderStatus === "IMPORTANT"}
-                    sx={{ color: "#ff9800", "&:hover": { color: "#f57c00" } }}
-                  >
-                    <ImportantIcon />
-                  </IconButton>
-                  <IconButton
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteEmail(email.emailId);
-                    }}
-                    sx={{ color: "#ef5350", "&:hover": { color: "#d32f2f" } }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </StyledTableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
-    </StyledCard>
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                  opacity="0.25"
+                />
+                <path
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                />
+              </svg>
+            </div>
+          ) : error ? (
+            <p className="text-center text-red-600 py-4">
+              {error.message || "Failed to fetch sent emails."}
+            </p>
+          ) : filteredEmails.length === 0 ? (
+            <p className="text-center text-gray-500 py-4">
+              No sent emails found.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="p-3 text-sm font-semibold text-gray-700">
+                      Recipient
+                    </th>
+                    <th className="p-3 text-sm font-semibold text-gray-700">
+                      Subject
+                    </th>
+                    <th className="p-3 text-sm font-semibold text-gray-700">
+                      Message
+                    </th>
+                    <th className="p-3 text-sm font-semibold text-gray-700">
+                      Attachments
+                    </th>
+                    <th className="p-3 text-sm font-semibold text-gray-700">
+                      <button
+                        onClick={handleSort}
+                        className="flex items-center gap-1"
+                      >
+                        Time
+                        <svg
+                          className={`h-4 w-4 ${
+                            sortOrder === "asc" ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                    </th>
+                    <th className="p-3 text-sm font-semibold text-gray-700">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredEmails.map((email) => (
+                    <tr
+                      key={email.emailId}
+                      onClick={() =>
+                        router.push(
+                          `/communication/email/detail/${email.emailId}`
+                        )
+                      }
+                      className="border-b hover:bg-blue-50 transition-all cursor-pointer"
+                    >
+                      <td className="p-3 text-gray-800 font-medium">
+                        {email.recipientId}
+                      </td>
+                      <td
+                        className="p-3 text-gray-800"
+                        style={{ fontWeight: email.isRead ? 400 : 600 }}
+                      >
+                        {email.subject}
+                      </td>
+                      <td className="p-3 text-gray-600">
+                        {email.body.substring(0, 30)}...
+                      </td>
+                      <td className="p-3">
+                        {email.attachments && email.attachments.length > 0 ? (
+                          email.attachments.map((att, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs mr-1 mb-1"
+                            >
+                              {att.fileName}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-gray-500">None</span>
+                        )}
+                      </td>
+                      <td className="p-3 text-gray-600">
+                        {new Date(email.sentAt).toLocaleString()}
+                      </td>
+                      <td className="p-3 flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMoveToTrash(email.emailId);
+                          }}
+                          disabled={
+                            email.senderStatus === "TRASH" ||
+                            updateEmailStatus.isLoading
+                          }
+                          className="p-2 text-red-600 hover:text-red-800 disabled:text-gray-400"
+                          aria-label="Move to Trash"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMarkAsImportant(email.emailId);
+                          }}
+                          disabled={
+                            email.senderStatus === "IMPORTANT" ||
+                            updateEmailStatus.isLoading
+                          }
+                          className="p-2 text-yellow-600 hover:text-yellow-800 disabled:text-gray-400"
+                          aria-label="Mark as Important"
+                        >
+                          <StarIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteEmail(email.emailId);
+                          }}
+                          disabled={deleteEmail.isLoading}
+                          className="p-2 text-red-600 hover:text-red-800 disabled:text-gray-400"
+                          aria-label="Delete"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SentEmails = () => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <svg className="animate-spin h-8 w-8 text-teal-600" viewBox="0 0 24 24">
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+            fill="none"
+            opacity="0.25"
+          />
+          <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+          <svg
+            className="animate-spin h-8 w-8 text-teal-600"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+              opacity="0.25"
+            />
+            <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+        </div>
+      }
+    >
+      <SentEmailsContent />
+    </Suspense>
   );
 };
 

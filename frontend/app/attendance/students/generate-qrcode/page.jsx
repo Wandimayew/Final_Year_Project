@@ -16,6 +16,8 @@ import {
   FaTrash,
 } from "react-icons/fa";
 
+export const dynamic = 'force-dynamic';
+
 const QRCodesList = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);

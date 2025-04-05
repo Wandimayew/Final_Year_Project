@@ -1,12 +1,10 @@
-import React from 'react'
-import Layout from '@/components/layout/Layout'
+import React from "react";
+import Layout from "@/components/layout/Layout";
 
-const SettingLayout = ({children}) => {
-  return (
-    <Layout>
-        {children}
-    </Layout>
-  )
-}
+// Force dynamic rendering for all pages using this layout
+export const dynamic = "force-dynamic";
+const SettingLayout = ({ children }) => {
+  return <Layout>{children}</Layout>;
+};
 
-export default SettingLayout
+export default SettingLayout;

@@ -13,10 +13,14 @@ import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 const ClassList = ({ classListClicked, setClassListClicked }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [classes, setClasses] = useState([]);
-  const [school, setSchool] = useState("");
+  const [school, setSchool] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState(null);
   const [classDetails, setSelectedClassDetails] = useState([]);
   const [id, setId] = useState(null);
@@ -26,7 +30,7 @@ const ClassList = ({ classListClicked, setClassListClicked }) => {
   const getClassList = async () => {
     try {
       const response = await axios.get(
-        `http://10.194.61.74:8080/academic/api/new/getAllClassBySchool`
+        `http://localhost:8086/academic/api/new/getAllClassBySchool`
       );
       setClasses(response.data);
     } catch (error) {

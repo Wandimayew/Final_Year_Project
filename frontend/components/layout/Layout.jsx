@@ -1,10 +1,9 @@
 "use client";
-
-import { useState, memo } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import { memo, useState } from "react";
+export const dynamic = "force-dynamic";
 
-// Memoize Layout to prevent unnecessary re-renders
 const Layout = memo(({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
 
@@ -28,5 +27,4 @@ const Layout = memo(({ children }) => {
 });
 
 Layout.displayName = "Layout";
-
 export default Layout;

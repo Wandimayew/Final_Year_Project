@@ -1,8 +1,6 @@
 package com.schoolmanagement.User_Service.model;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -41,9 +39,8 @@ public class Permission {
     @Size(max = 255, message = "Description cannot exceed 255 characters")
     private String description;
 
-    @NotNull(message = "Active status cannot be null")
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive;
+    private Boolean is_active;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

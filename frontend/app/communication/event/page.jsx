@@ -1,5 +1,6 @@
 import React from 'react'
 import EventListDisplay from '@/components/event/EventListDisplay'
+export const dynamic = "force-dynamic";
 
 const EventPage = () => {
   return (

@@ -1,11 +1,11 @@
 package com.schoolmanagement.communication_service.controller;
 
+import com.schoolmanagement.communication_service.config.CustomUserPrincipal;
 import com.schoolmanagement.communication_service.config.JwtToken;
 import com.schoolmanagement.communication_service.dto.request.AnnouncementRequest;
 import com.schoolmanagement.communication_service.dto.request.CancelRequest;
 import com.schoolmanagement.communication_service.dto.response.AnnouncementResponse;
 import com.schoolmanagement.communication_service.dto.response.ApiResponse;
-import com.schoolmanagement.communication_service.model.Announcement;
 import com.schoolmanagement.communication_service.service.AnnouncementService;
 import com.schoolmanagement.communication_service.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -35,16 +35,16 @@ public class AnnouncementController {
     private final AnnouncementService announcementService;
     private final JwtUtil jwtUtil;
 
-    /**
-     * Validates that the schoolId from the path matches the schoolId in the JWT
-     * token.
-     *
-     * @param schoolId the school ID from the path
-     * @param token    the JWT token from the request header
-     * @throws SecurityException if the school IDs do not match
-     */
-    private void validateSchoolId(String schoolId, String token) {
-        String tokenSchoolId = jwtUtil.extractSchoolId(token);
+    private String getUserIdFromSecurityContext() {
+        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        return principal.getUserId();
+    }
+
+    private void validateSchoolId(String schoolId) {
+        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        String tokenSchoolId = principal.getSchoolId();
         if (!schoolId.equals(tokenSchoolId)) {
             log.error("School ID mismatch: Path schoolId={}, Token schoolId={}", schoolId, tokenSchoolId);
             throw new SecurityException("Unauthorized: School ID mismatch");
@@ -56,15 +56,14 @@ public class AnnouncementController {
      *
      * @param schoolId       the ID of the school
      * @param announcementId the ID of the announcement
-     * @param token          the JWT token from the request header
      * @return a ResponseEntity containing the announcement response
      */
-    @GetMapping("/{schoolId}/announcements/{announcementId}")
+    @GetMapping("/{schoolId}/getAnnouncementById/{announcementId}")
     public ResponseEntity<ApiResponse<AnnouncementResponse>> getAnnouncementById(
             @PathVariable String schoolId,
-            @PathVariable Long announcementId,
-            @JwtToken String token) {
-        validateSchoolId(schoolId, token);
+            @PathVariable Long announcementId) {
+        validateSchoolId(schoolId);
+
         log.info("Fetching announcement ID: {} for schoolId: {}", announcementId, schoolId);
         return announcementService.getAnnouncementById(schoolId, announcementId);
     }
@@ -73,14 +72,12 @@ public class AnnouncementController {
      * Retrieves all active announcements for a school.
      *
      * @param schoolId the ID of the school
-     * @param token    the JWT token from the request header
      * @return a ResponseEntity containing a list of announcement responses
      */
-    @GetMapping("/{schoolId}/announcements")
+    @GetMapping("/{schoolId}/getAllAnnouncements")
     public ResponseEntity<ApiResponse<List<AnnouncementResponse>>> getAllAnnouncements(
-            @PathVariable String schoolId,
-            @JwtToken String token) {
-        validateSchoolId(schoolId, token);
+            @PathVariable String schoolId) {
+        validateSchoolId(schoolId);
         log.info("Fetching all announcements for schoolId: {}", schoolId);
         return announcementService.getAllAnnouncements(schoolId);
     }
@@ -90,18 +87,16 @@ public class AnnouncementController {
      *
      * @param schoolId            the ID of the school
      * @param announcementRequest the request containing announcement details
-     * @param token               the JWT token from the request header
      * @return a ResponseEntity containing the created announcement response
      */
-    @PostMapping("/{schoolId}/announcements")
+    @PostMapping("/{schoolId}/createAnnouncement")
     public ResponseEntity<ApiResponse<AnnouncementResponse>> createAnnouncement(
             @PathVariable String schoolId,
-            @Valid @RequestBody AnnouncementRequest announcementRequest,
-            @JwtToken String token) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+            @Valid @RequestBody AnnouncementRequest announcementRequest) {
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         log.info("Creating announcement for schoolId: {} by userId: {}", schoolId, userId);
-        return announcementService.createAnnouncement(schoolId, announcementRequest,userId);
+        return announcementService.createAnnouncement(schoolId, announcementRequest, userId);
     }
 
     /**
@@ -110,17 +105,15 @@ public class AnnouncementController {
      * @param schoolId            the ID of the school
      * @param announcementId      the ID of the announcement to update
      * @param announcementRequest the updated announcement details
-     * @param token               the JWT token from the request header
      * @return a ResponseEntity containing the updated announcement response
      */
-    @PutMapping("/{schoolId}/announcements/{announcementId}")
+    @PutMapping("/{schoolId}/updateAnnouncement/{announcementId}")
     public ResponseEntity<ApiResponse<AnnouncementResponse>> updateAnnouncement(
             @PathVariable String schoolId,
             @PathVariable Long announcementId,
-            @Valid @RequestBody AnnouncementRequest announcementRequest,
-            @JwtToken String token) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+            @Valid @RequestBody AnnouncementRequest announcementRequest) {
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         log.info("Updating announcement ID: {} for schoolId: {} by userId: {}", announcementId, schoolId, userId);
         return announcementService.updateAnnouncement(schoolId, announcementId, announcementRequest);
     }
@@ -131,16 +124,14 @@ public class AnnouncementController {
      *
      * @param schoolId       the ID of the school
      * @param announcementId the ID of the announcement to approve
-     * @param token          the JWT token from the request header
      * @return a ResponseEntity containing the approved announcement response
      */
-    @PutMapping("/{schoolId}/announcements/{announcementId}/approve")
+    @PutMapping("/{schoolId}/approveAnnouncement/{announcementId}/approve")
     public ResponseEntity<ApiResponse<AnnouncementResponse>> approveAnnouncement(
             @PathVariable String schoolId,
-            @PathVariable Long announcementId,
-            @JwtToken String token) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+            @PathVariable Long announcementId) {
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         log.info("Approving announcement ID: {} for schoolId: {} by userId: {}", announcementId, schoolId, userId);
         return announcementService.approveAnnouncement(schoolId, announcementId, userId);
     }
@@ -151,17 +142,15 @@ public class AnnouncementController {
      *
      * @param schoolId       the ID of the school
      * @param announcementId the ID of the announcement to request approval for
-     * @param token          the JWT token from the request header
      * @return a ResponseEntity containing the announcement response after
      *         requesting approval
      */
-    @PutMapping("/{schoolId}/announcements/{announcementId}/request-approval")
+    @PutMapping("/{schoolId}/requestApprove/{announcementId}/request-approval")
     public ResponseEntity<ApiResponse<AnnouncementResponse>> requestApproveAnnouncement(
             @PathVariable String schoolId,
-            @PathVariable Long announcementId,
-            @JwtToken String token) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+            @PathVariable Long announcementId) {
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         log.info("Requesting approval for announcement ID: {} for schoolId: {} by userId: {}",
                 announcementId, schoolId, userId);
         return announcementService.requestApproveAnnouncement(schoolId, announcementId, userId);
@@ -172,15 +161,13 @@ public class AnnouncementController {
      * Intended for admin users (role check assumed in service or filter).
      *
      * @param schoolId the ID of the school
-     * @param token    the JWT token from the request header
      * @return a ResponseEntity containing a list of pending announcement responses
      */
-    @GetMapping("/{schoolId}/announcements/pending-approval")
+    @GetMapping("/{schoolId}/getAllRequestApproval/pending-approval")
     public ResponseEntity<ApiResponse<List<AnnouncementResponse>>> getAllRequestApproval(
-            @PathVariable String schoolId,
-            @JwtToken String token) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+            @PathVariable String schoolId) {
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         log.info("Fetching all pending approval requests for schoolId: {} by userId: {}", schoolId, userId);
         return announcementService.getAllRequestApproval(schoolId, userId);
     }
@@ -190,16 +177,14 @@ public class AnnouncementController {
      * school.
      *
      * @param schoolId the ID of the school
-     * @param token    the JWT token from the request header
      * @return a ResponseEntity containing a list of the creator's pending
      *         announcements
      */
     @GetMapping("/{schoolId}/announcements/creator-pending")
     public ResponseEntity<ApiResponse<List<AnnouncementResponse>>> getCreatorPendingAnnouncements(
-            @PathVariable String schoolId,
-            @JwtToken String token) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+            @PathVariable String schoolId) {
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         log.info("Fetching creator's pending announcements for schoolId: {} by userId: {}", schoolId, userId);
         return announcementService.getCreatorPendingAnnouncements(schoolId, userId);
     }
@@ -209,7 +194,6 @@ public class AnnouncementController {
      * user for a school, with pagination support.
      *
      * @param schoolId the ID of the school
-     * @param token    the JWT token from the request header
      * @param pageable pagination information (page number, size, sorting)
      * @return a ResponseEntity containing an ApiResponse with a page of the
      *         creator's announcements
@@ -217,10 +201,9 @@ public class AnnouncementController {
     @GetMapping("/{schoolId}/announcements/my-announcements")
     public ResponseEntity<ApiResponse<Page<AnnouncementResponse>>> getMyAnnouncements(
             @PathVariable String schoolId,
-            @JwtToken String token,
             Pageable pageable) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         log.info("Fetching creator's announcements for schoolId: {} by userId: {}", schoolId, userId);
         return announcementService.getMyAnnouncements(schoolId, userId, pageable);
     }
@@ -230,7 +213,6 @@ public class AnnouncementController {
      * user for a school, with pagination support.
      *
      * @param schoolId the ID of the school
-     * @param token    the JWT token from the request header
      * @param pageable pagination information (page number, size, sorting)
      * @return a ResponseEntity containing an ApiResponse with a page of the
      *         creator's announcements
@@ -238,10 +220,9 @@ public class AnnouncementController {
     @GetMapping("/{schoolId}/announcements/my-announcements/status-draft")
     public ResponseEntity<ApiResponse<Page<AnnouncementResponse>>> getMyAnnouncementsByDraft(
             @PathVariable String schoolId,
-            @JwtToken String token,
             Pageable pageable) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         log.info("Fetching creator's announcements draft for schoolId: {} by userId: {}", schoolId, userId);
         return announcementService.getMyAnnouncementsDraft(schoolId, userId, pageable);
     }
@@ -255,17 +236,15 @@ public class AnnouncementController {
      * @param announcementId the ID of the announcement to cancel
      * @param request        the request body containing the rejection reason
      *                       (optional)
-     * @param token          the JWT token from the request header
      * @return a ResponseEntity containing the canceled announcement response
      */
-    @PutMapping("/{schoolId}/announcements/{announcementId}/cancel")
+    @PutMapping("/{schoolId}/cancelAnnouncement/{announcementId}/cancel")
     public ResponseEntity<ApiResponse<AnnouncementResponse>> cancelAnnouncement(
             @PathVariable String schoolId,
             @PathVariable Long announcementId,
-            @RequestBody(required = false) CancelRequest request,
-            @JwtToken String token) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+            @RequestBody(required = false) CancelRequest request) {
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         String rejectionReason = request != null ? request.getRejectionReason() : null;
         log.info("Canceling announcement ID: {} for schoolId: {} by userId: {} with reason: {}",
                 announcementId, schoolId, userId, rejectionReason);
@@ -280,17 +259,15 @@ public class AnnouncementController {
      * @param announcementId the ID of the announcement
      * @param status         the new status to apply (e.g., "DRAFT", "PUBLISHED",
      *                       "ARCHIVED")
-     * @param token          the JWT token from the request header
      * @return a ResponseEntity containing the updated announcement response
      */
-    @PutMapping("/{schoolId}/announcements/{announcementId}/status")
+    @PutMapping("/{schoolId}/updateAnnouncementStatus/{announcementId}/status")
     public ResponseEntity<ApiResponse<AnnouncementResponse>> updateAnnouncementStatus(
             @PathVariable String schoolId,
             @PathVariable Long announcementId,
-            @RequestParam("status") String status,
-            @JwtToken String token) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+            @RequestParam("status") String status) {
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         log.info("Updating status of announcement ID: {} for schoolId: {} to status: {} by userId: {}",
                 announcementId, schoolId, status, userId);
         return announcementService.updateAnnouncementStatus(schoolId, announcementId, status, userId);
@@ -301,16 +278,14 @@ public class AnnouncementController {
      *
      * @param schoolId       the ID of the school
      * @param announcementId the ID of the announcement to delete
-     * @param token          the JWT token from the request header
      * @return a ResponseEntity with the deletion status
      */
-    @DeleteMapping("/{schoolId}/announcements/{announcementId}")
+    @DeleteMapping("/{schoolId}/deleteAnnouncement/{announcementId}")
     public ResponseEntity<ApiResponse<AnnouncementResponse>> deleteAnnouncement(
             @PathVariable String schoolId,
-            @PathVariable Long announcementId,
-            @JwtToken String token) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+            @PathVariable Long announcementId) {
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         log.info("Soft deleting announcement ID: {} for schoolId: {} by userId: {}",
                 announcementId, schoolId, userId);
         return announcementService.deleteAnnouncement(schoolId, announcementId);

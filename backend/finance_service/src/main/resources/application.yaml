@@ -10,7 +10,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/finance_service
     username: root
-    password: toor
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       minimum-idle: 5

@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 const qrCodeApi = axios.create({
-  baseURL: 'http://10.194.61.72:8081/student/api',
+  baseURL: 'http://localhost:8080/student/api',
 });
 
 // ================== QR CODE API FUNCTIONS ==================

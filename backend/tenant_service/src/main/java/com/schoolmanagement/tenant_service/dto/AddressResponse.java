@@ -2,8 +2,6 @@ package com.schoolmanagement.tenant_service.dto;
 
 import java.time.LocalDateTime;
 
-import com.schoolmanagement.tenant_service.model.School;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;

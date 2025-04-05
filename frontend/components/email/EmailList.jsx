@@ -1,145 +1,66 @@
 "use client";
 
-import React, { useState } from "react";
-import axios from "axios";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import React, { useState, useEffect, Suspense, useMemo } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Paper,
-  TextField,
-  InputAdornment,
-  TableSortLabel,
-  Box,
-  Typography,
-  CircularProgress,
-  Pagination,
-  Chip,
-  IconButton,
-  Card,
-} from "@mui/material";
-import {
-  Search as SearchIcon,
-  Mail as MailIcon,
-  Delete as DeleteIcon,
-  MoveToInbox as TrashIcon,
-  Star as ImportantIcon,
-} from "@mui/icons-material";
-import { styled } from "@mui/material/styles";
+  useEmailsByFolder,
+  useUpdateEmailStatus,
+  useDeleteEmail,
+} from "@/lib/api/communicationService/email";
+import { useAuthStore } from "@/lib/auth";
 import { useRouter } from "next/navigation";
+import {
+  MagnifyingGlassIcon,
+  EnvelopeIcon,
+  TrashIcon,
+  StarIcon,
+  XMarkIcon,
+  PaperClipIcon,
+} from "@heroicons/react/24/solid";
 
-const StyledCard = styled(Card)(({ theme }) => ({
-  padding: theme.spacing(3),
-  marginLeft: 260,
-  marginTop: theme.spacing(2),
-  borderRadius: 16,
-  background: "linear-gradient(135deg, #ffffff 0%, #eceff1 100%)",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
-  transition: "transform 0.3s ease, box-shadow 0.3s ease",
-  "&:hover": {
-    transform: "translateY(-4px)",
-    boxShadow: "0 12px 32px rgba(0, 0, 0, 0.15)",
-  },
-}));
-
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  "&:hover": {
-    backgroundColor: "#e3f2fd",
-    transform: "scale(1.01)",
-    transition: "all 0.3s ease",
-  },
-  borderBottom: "1px solid #cfd8dc",
-  backgroundColor: "#fff",
-}));
-
-const AttachmentPreview = styled(Box)(({ theme }) => ({
-  display: "flex",
-  flexWrap: "wrap",
-  gap: theme.spacing(1),
-  alignItems: "center",
-}));
-
-const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
-
-const fetchEmails = async ({
-  schoolId,
-  token,
-  folder,
-  page,
-  pageSize,
-  orderBy,
-  order,
-}) => {
-  const validPage = isNaN(page) || page < 1 ? 1 : page;
-  const response = await axios.get(
-    `${API_BASE_URL}/${schoolId}/emails/${folder.toUpperCase()}`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      params: {
-        page: validPage - 1,
-        size: pageSize,
-        sort: `${orderBy},${order}`,
-      },
-    }
+// Main component
+const EmailListContent = ({ folder }) => {
+  const authState = useMemo(
+    () =>
+      useAuthStore.getState()
+        ? {
+            user: useAuthStore.getState().user,
+            isAuthenticated: useAuthStore.getState().isAuthenticated(),
+          }
+        : { user: null, isAuthenticated: false },
+    []
   );
-  return response.data;
-};
+  const { user, isAuthenticated } = authState;
+  const router = useRouter();
 
-const updateEmailStatus = async ({ schoolId, token, emailId, status }) => {
-  const response = await axios.put(
-    `${API_BASE_URL}/${schoolId}/emails/${emailId}/status`,
-    { status },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  return response.data;
-};
-
-const deleteEmail = async ({ schoolId, token, emailId }) => {
-  const response = await axios.delete(
-    `${API_BASE_URL}/${schoolId}/emails/${emailId}`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
-  return response.data;
-};
-
-const EmailList = ({ folder }) => {
-  const { auth, loading: authLoading } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [orderBy, setOrderBy] = useState("sentAt");
   const [order, setOrder] = useState("desc");
   const [page, setPage] = useState(1);
   const pageSize = 10;
-  const router = useRouter();
-  const queryClient = useQueryClient();
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["emails", folder, auth?.user?.schoolId, page, orderBy, order],
-    queryFn: () =>
-      fetchEmails({
-        schoolId: auth.user.schoolId,
-        token: auth.token,
-        folder,
-        page,
-        pageSize,
-        orderBy,
-        order,
-      }),
-    enabled: !authLoading && !!auth,
-    retry: 3,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
-  });
+  const { data, isLoading, isError, error } = useEmailsByFolder(
+    user?.schoolId,
+    folder,
+    {
+      page: page - 1,
+      pageSize,
+      sort: `${orderBy},${order}`,
+    }
+  );
+  const updateStatusMutation = useUpdateEmailStatus(user?.schoolId);
+  const deleteEmailMutation = useDeleteEmail(user?.schoolId);
 
   const emails = data?.data || [];
   const totalPages = data?.totalPages || 1;
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isAuthenticated, router]);
+
   const filteredEmailsServer = emails.filter((email) => {
-    const userId = auth?.user?.userId;
+    const userId = user?.userId;
     const isSender = userId === email.senderId;
     const isRecipient = userId === email.recipientId;
     return (
@@ -148,45 +69,12 @@ const EmailList = ({ folder }) => {
     );
   });
 
-  const moveToTrashMutation = useMutation({
-    mutationFn: ({ emailId }) =>
-      updateEmailStatus({
-        schoolId: auth.user.schoolId,
-        token: auth.token,
-        emailId,
-        status: "TRASH",
-      }),
-    onSuccess: () =>
-      queryClient.invalidateQueries(["emails", folder, auth.user.schoolId]),
-    onError: (error) => console.error("Error moving to trash:", error),
-    retry: 2,
-    retryDelay: 1000,
-  });
-
-  const markAsImportantMutation = useMutation({
-    mutationFn: ({ emailId }) =>
-      updateEmailStatus({
-        schoolId: auth.user.schoolId,
-        token: auth.token,
-        emailId,
-        status: "IMPORTANT",
-      }),
-    onSuccess: () =>
-      queryClient.invalidateQueries(["emails", folder, auth.user.schoolId]),
-    onError: (error) => console.error("Error marking as important:", error),
-    retry: 2,
-    retryDelay: 1000,
-  });
-
-  const deleteEmailMutation = useMutation({
-    mutationFn: ({ emailId }) =>
-      deleteEmail({ schoolId: auth.user.schoolId, token: auth.token, emailId }),
-    onSuccess: () =>
-      queryClient.invalidateQueries(["emails", folder, auth.user.schoolId]),
-    onError: (error) => console.error("Error deleting email:", error),
-    retry: 2,
-    retryDelay: 1000,
-  });
+  const filteredEmails = filteredEmailsServer.filter(
+    (email) =>
+      email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      email.senderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      email.recipientId.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleSort = (property) => {
     const isAsc = orderBy === property && order === "asc";
@@ -197,304 +85,412 @@ const EmailList = ({ folder }) => {
 
   const handleEmailClick = (emailId) =>
     router.push(`/communication/email/detail/${emailId}`);
-  const handlePageChange = (event, newPage) =>
-    setPage(isNaN(newPage) || newPage < 1 ? 1 : newPage);
-  const handleMoveToTrash = (emailId) =>
-    moveToTrashMutation.mutate({ emailId });
-  const handleMarkAsImportant = (emailId) =>
-    markAsImportantMutation.mutate({ emailId });
+  const handlePageChange = (newPage) => setPage(Math.max(1, newPage));
+  const handleMoveToTrash = (emailId) => {
+    updateStatusMutation.mutate(
+      { emailId, status: "TRASH" },
+      { onError: () => alert("Failed to move email to Trash.") }
+    );
+  };
+  const handleMarkAsImportant = (emailId) => {
+    updateStatusMutation.mutate(
+      { emailId, status: "IMPORTANT" },
+      { onError: () => alert("Failed to mark email as Important.") }
+    );
+  };
   const handleDeleteEmail = (emailId) => {
     if (
-      confirm(
+      !confirm(
         "Are you sure you want to delete this email permanently? It may still exist for the other party."
       )
     ) {
-      deleteEmailMutation.mutate({ emailId });
+      return;
     }
+    deleteEmailMutation.mutate(emailId, {
+      onError: () => alert("Failed to delete email."),
+    });
   };
 
-  const filteredEmails = filteredEmailsServer.filter(
-    (email) =>
-      email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.senderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.recipientId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (authLoading) return <div>Loading authentication...</div>;
+  if (!isAuthenticated) return null;
 
   return (
-    <StyledCard>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <MailIcon sx={{ color: "#1976d2", mr: 1, fontSize: 32 }} />
-          <Typography variant="h5" sx={{ color: "#455a64", fontWeight: 700 }}>
-            {folder.charAt(0).toUpperCase() + folder.slice(1)}
-          </Typography>
-        </Box>
-        <TextField
-          placeholder="Search Emails..."
-          variant="outlined"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ color: "#78909c" }} />
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            width: "35%",
-            "& .MuiOutlinedInput-root": {
-              borderRadius: 12,
-              backgroundColor: "#fafafa",
-              "&:hover fieldset": { borderColor: "#42a5f5" },
-              "&.Mui-focused fieldset": { borderColor: "#1976d2" },
-            },
-          }}
-        />
-      </Box>
-      {isLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress sx={{ color: "#26a69a" }} />
-        </Box>
-      ) : isError ? (
-        <Typography sx={{ textAlign: "center", mt: 2, color: "#ef5350" }}>
-          {error?.response?.data?.message ||
-            `Failed to fetch ${folder} emails.`}
-        </Typography>
-      ) : filteredEmails.length === 0 ? (
-        <Typography sx={{ textAlign: "center", mt: 2, color: "#78909c" }}>
-          No emails found.
-        </Typography>
-      ) : (
-        <>
-          <Table sx={{ minWidth: 650, backgroundColor: "transparent" }}>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: "#e0e0e0" }}>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === "senderId"}
-                    direction={orderBy === "senderId" ? order : "asc"}
-                    onClick={() => handleSort("senderId")}
-                    sx={{ fontWeight: 600, color: "#455a64" }}
-                  >
-                    Sender
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === "subject"}
-                    direction={orderBy === "subject" ? order : "asc"}
-                    onClick={() => handleSort("subject")}
-                    sx={{ fontWeight: 600, color: "#455a64" }}
-                    style={{ width: "200px" }}
-                  >
-                    Subject
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell sx={{ color: "#455a64", fontWeight: 600 }}>
-                  Preview
-                </TableCell>
-                <TableCell sx={{ color: "#455a64", fontWeight: 600 }}>
-                  Attachments
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={orderBy === "sentAt"}
-                    direction={orderBy === "sentAt" ? order : "asc"}
-                    onClick={() => handleSort("sentAt")}
-                    sx={{ fontWeight: 600, color: "#455a64" }}
-                  >
-                    Time
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell sx={{ color: "#455a64", fontWeight: 600 }}>
-                  Status
-                </TableCell>
-                <TableCell sx={{ color: "#455a64", fontWeight: 600 }}>
-                  Actions
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredEmails.map((email) => {
-                const userId = auth.user.userId;
-                const currentStatus =
-                  userId === email.senderId
-                    ? email.senderStatus
-                    : email.recipientStatus;
-                const isDeleted =
-                  userId === email.senderId
-                    ? email.senderDeleted
-                    : email.recipientDeleted;
-                return (
-                  <StyledTableRow key={email.emailId}>
-                    <TableCell onClick={() => handleEmailClick(email.emailId)}>
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <MailIcon sx={{ mr: 1, color: "#42a5f5" }} />
-                        <Typography sx={{ color: "#455a64", fontWeight: 500 }}>
-                          {email.senderId}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell
-                      onClick={() => handleEmailClick(email.emailId)}
-                      style={{ width: "200px" }}
-                    >
-                      <Typography
-                        sx={{
-                          color: "#455a64",
-                          fontWeight: email.isRead ? 400 : 600,
-                        }}
-                      >
-                        {email.subject}
-                      </Typography>
-                    </TableCell>
-                    <TableCell onClick={() => handleEmailClick(email.emailId)}>
-                      <Typography sx={{ color: "#78909c" }}>
-                        {email.body.substring(0, 30)}...
-                      </Typography>
-                    </TableCell>
-                    <TableCell onClick={() => handleEmailClick(email.emailId)}>
-                      <AttachmentPreview>
-                        {email.attachments && email.attachments.length > 0 ? (
-                          email.attachments.map((att, idx) => (
-                            <Chip
-                              key={idx}
-                              label={att.fileName}
-                              size="small"
-                              sx={{
-                                backgroundColor: "#bbdefb",
-                                color: "#1976d2",
-                                "&:hover": { backgroundColor: "#90caf9" },
+    <div className="min-h-screen bg-gray-100 pl-60">
+      {" "}
+      {/* Added pl-60 to offset sidebar */}
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
+        <div className="bg-white rounded-xl shadow-lg p-6 transform transition-all hover:shadow-xl">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <div className="flex items-center gap-3">
+              <EnvelopeIcon className="h-8 w-8 text-blue-600" />
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 capitalize">
+                {folder}
+              </h1>
+            </div>
+            <div className="relative w-full md:w-1/3">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search Emails..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50"
+              />
+            </div>
+          </div>
+
+          {/* Email Table */}
+          {isLoading ? (
+            <div className="flex justify-center mt-4">
+              <svg
+                className="animate-spin h-8 w-8 text-blue-600"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                  opacity="0.25"
+                />
+                <path
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                />
+              </svg>
+            </div>
+          ) : isError ? (
+            <p className="text-center text-red-600 mt-2">
+              {error?.message || `Failed to fetch ${folder} emails.`}
+            </p>
+          ) : filteredEmails.length === 0 ? (
+            <p className="text-center text-gray-500 mt-2">No emails found.</p>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-gray-200">
+                    <tr>
+                      <th className="p-3 font-semibold text-gray-700">
+                        <button
+                          onClick={() => handleSort("senderId")}
+                          className="flex items-center gap-1"
+                        >
+                          Sender
+                          {orderBy === "senderId" &&
+                            (order === "asc" ? "↑" : "↓")}
+                        </button>
+                      </th>
+                      <th className="p-3 font-semibold text-gray-700 w-1/4">
+                        <button
+                          onClick={() => handleSort("subject")}
+                          className="flex items-center gap-1"
+                        >
+                          Subject
+                          {orderBy === "subject" &&
+                            (order === "asc" ? "↑" : "↓")}
+                        </button>
+                      </th>
+                      <th className="p-3 font-semibold text-gray-700">
+                        Preview
+                      </th>
+                      <th className="p-3 font-semibold text-gray-700">
+                        Attachments
+                      </th>
+                      <th className="p-3 font-semibold text-gray-700">
+                        <button
+                          onClick={() => handleSort("sentAt")}
+                          className="flex items-center gap-1"
+                        >
+                          Time
+                          {orderBy === "sentAt" &&
+                            (order === "asc" ? "↑" : "↓")}
+                        </button>
+                      </th>
+                      <th className="p-3 font-semibold text-gray-700">
+                        Status
+                      </th>
+                      <th className="p-3 font-semibold text-gray-700">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredEmails.map((email) => {
+                      const userId = user.userId;
+                      const currentStatus =
+                        userId === email.senderId
+                          ? email.senderStatus
+                          : email.recipientStatus;
+                      const isDeleted =
+                        userId === email.senderId
+                          ? email.senderDeleted
+                          : email.recipientDeleted;
+                      return (
+                        <tr
+                          key={email.emailId}
+                          className="border-b border-gray-200 hover:bg-blue-50 hover:scale-[1.01] transition-all cursor-pointer"
+                          onClick={() => handleEmailClick(email.emailId)}
+                        >
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <EnvelopeIcon className="h-5 w-5 text-blue-500" />
+                              <span className="text-gray-700 font-medium">
+                                {email.senderId}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span
+                              className={`text-gray-700 ${
+                                email.isRead ? "font-normal" : "font-semibold"
+                              }`}
+                            >
+                              {email.subject}
+                            </span>
+                          </td>
+                          <td className="p-3 text-gray-500">
+                            {email.body.substring(0, 30)}...
+                          </td>
+                          <td className="p-3">
+                            {email.attachments &&
+                            email.attachments.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {email.attachments.map((att, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full"
+                                  >
+                                    {att.fileName}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-500">None</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-gray-500">
+                            {email.sentAt
+                              ? new Date(email.sentAt).toLocaleString()
+                              : "Not sent"}
+                          </td>
+                          <td className="p-3">
+                            <span
+                              className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                currentStatus === "TRASH"
+                                  ? "bg-red-500 text-white"
+                                  : "bg-teal-500 text-white"
+                              }`}
+                            >
+                              {currentStatus}
+                            </span>
+                          </td>
+                          <td className="p-3 flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMoveToTrash(email.emailId);
                               }}
-                            />
-                          ))
-                        ) : (
-                          <Typography sx={{ color: "#78909c" }}>
-                            None
-                          </Typography>
-                        )}
-                      </AttachmentPreview>
-                    </TableCell>
-                    <TableCell onClick={() => handleEmailClick(email.emailId)}>
-                      <Typography sx={{ color: "#78909c" }}>
-                        {email.sentAt
-                          ? new Date(email.sentAt).toLocaleString()
-                          : "Not sent"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell onClick={() => handleEmailClick(email.emailId)}>
-                      <Chip
-                        label={currentStatus}
-                        size="small"
-                        sx={{
-                          backgroundColor:
-                            currentStatus === "TRASH" ? "#ef5350" : "#26a69a",
-                          color: "#fff",
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <IconButton
-                        onClick={() => handleMoveToTrash(email.emailId)}
-                        disabled={
-                          currentStatus === "TRASH" ||
-                          isDeleted ||
-                          moveToTrashMutation.isLoading
-                        }
-                        sx={{
-                          color: "#ef5350",
-                          "&:hover": { color: "#d32f2f" },
-                        }}
-                      >
-                        {moveToTrashMutation.isLoading &&
-                        moveToTrashMutation.variables?.emailId ===
-                          email.emailId ? (
-                          <CircularProgress
-                            size={24}
-                            sx={{ color: "#ef5350" }}
-                          />
-                        ) : (
-                          <TrashIcon />
-                        )}
-                      </IconButton>
-                      <IconButton
-                        onClick={() => handleMarkAsImportant(email.emailId)}
-                        disabled={
-                          currentStatus === "IMPORTANT" ||
-                          isDeleted ||
-                          markAsImportantMutation.isLoading
-                        }
-                        sx={{
-                          color: "#ff9800",
-                          "&:hover": { color: "#f57c00" },
-                        }}
-                      >
-                        {markAsImportantMutation.isLoading &&
-                        markAsImportantMutation.variables?.emailId ===
-                          email.emailId ? (
-                          <CircularProgress
-                            size={24}
-                            sx={{ color: "#ff9800" }}
-                          />
-                        ) : (
-                          <ImportantIcon />
-                        )}
-                      </IconButton>
-                      <IconButton
-                        onClick={() => handleDeleteEmail(email.emailId)}
-                        disabled={isDeleted || deleteEmailMutation.isLoading}
-                        sx={{
-                          color: "#ef5350",
-                          "&:hover": { color: "#d32f2f" },
-                        }}
-                      >
-                        {deleteEmailMutation.isLoading &&
-                        deleteEmailMutation.variables?.emailId ===
-                          email.emailId ? (
-                          <CircularProgress
-                            size={24}
-                            sx={{ color: "#ef5350" }}
-                          />
-                        ) : (
-                          <DeleteIcon />
-                        )}
-                      </IconButton>
-                    </TableCell>
-                  </StyledTableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <Pagination
-              count={totalPages}
-              page={page}
-              onChange={handlePageChange}
-              sx={{
-                "& .MuiPaginationItem-root": {
-                  color: "#1976d2",
-                  "&.Mui-selected": {
-                    backgroundColor: "#42a5f5",
-                    color: "#fff",
-                  },
-                  "&:hover": { backgroundColor: "#bbdefb" },
-                },
-              }}
+                              disabled={
+                                currentStatus === "TRASH" ||
+                                isDeleted ||
+                                updateStatusMutation.isLoading
+                              }
+                              className="text-red-600 hover:text-red-800 disabled:text-red-300"
+                              aria-label="Move to Trash"
+                            >
+                              {updateStatusMutation.isLoading &&
+                              updateStatusMutation.variables?.emailId ===
+                                email.emailId &&
+                              updateStatusMutation.variables?.status ===
+                                "TRASH" ? (
+                                <svg
+                                  className="animate-spin h-5 w-5"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                    fill="none"
+                                    opacity="0.25"
+                                  />
+                                  <path
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                  />
+                                </svg>
+                              ) : (
+                                <TrashIcon className="h-5 w-5" />
+                              )}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMarkAsImportant(email.emailId);
+                              }}
+                              disabled={
+                                currentStatus === "IMPORTANT" ||
+                                isDeleted ||
+                                updateStatusMutation.isLoading
+                              }
+                              className="text-yellow-500 hover:text-yellow-600 disabled:text-yellow-300"
+                              aria-label="Mark Important"
+                            >
+                              {updateStatusMutation.isLoading &&
+                              updateStatusMutation.variables?.emailId ===
+                                email.emailId &&
+                              updateStatusMutation.variables?.status ===
+                                "IMPORTANT" ? (
+                                <svg
+                                  className="animate-spin h-5 w-5"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                    fill="none"
+                                    opacity="0.25"
+                                  />
+                                  <path
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                  />
+                                </svg>
+                              ) : (
+                                <StarIcon className="h-5 w-5" />
+                              )}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteEmail(email.emailId);
+                              }}
+                              disabled={
+                                isDeleted || deleteEmailMutation.isLoading
+                              }
+                              className="text-red-600 hover:text-red-800 disabled:text-red-300"
+                              aria-label="Delete"
+                            >
+                              {deleteEmailMutation.isLoading &&
+                              deleteEmailMutation.variables ===
+                                email.emailId ? (
+                                <svg
+                                  className="animate-spin h-5 w-5"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                    fill="none"
+                                    opacity="0.25"
+                                  />
+                                  <path
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                  />
+                                </svg>
+                              ) : (
+                                <XMarkIcon className="h-5 w-5" />
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex justify-center mt-6">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(page - 1)}
+                    disabled={page === 1}
+                    className="px-3 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 disabled:bg-gray-200 disabled:text-gray-400"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-gray-700">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => handlePageChange(page + 1)}
+                    disabled={page === totalPages}
+                    className="px-3 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 disabled:bg-gray-200 disabled:text-gray-400"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Wrapper component for hydration and suspense
+const EmailList = ({ folder }) => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24">
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+            fill="none"
+            opacity="0.25"
+          />
+          <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+          <svg
+            className="animate-spin h-8 w-8 text-blue-600"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+              opacity="0.25"
             />
-          </Box>
-        </>
-      )}
-    </StyledCard>
+            <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+        </div>
+      }
+    >
+      <EmailListContent folder={folder} />
+    </Suspense>
   );
 };
 

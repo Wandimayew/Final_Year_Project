@@ -1,14 +1,12 @@
-// components/notification/NotificationCounter.js
 "use client";
-
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import axios from "axios";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/api/userManagementService/user";
 
-const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
+const API_BASE_URL = "http://localhost:8084/communication/api";
 
 const fetchUnreadNotifications = async ({ schoolId, userId, token }) => {
   const res = await axios.get(
@@ -31,14 +29,13 @@ const NotificationCounter = ({ schoolId, userId }) => {
     queryFn: () =>
       fetchUnreadNotifications({ schoolId, userId, token: auth?.token }),
     enabled: !authLoading && !!auth?.token && !!schoolId && !!userId,
-    staleTime: 10000, // 10s stale time
+    staleTime: 10000,
   });
 
   useEffect(() => {
     if (!auth?.token || !userId) return;
-
     const socket = new SockJS(
-      `http://10.194.61.74:8083/notifications?token=${auth.token}`
+      `http://localhost:8084/notifications?token=${auth.token}`
     );
     const client = new Client({
       webSocketFactory: () => socket,
@@ -62,13 +59,13 @@ const NotificationCounter = ({ schoolId, userId }) => {
         });
       },
     });
-
     client.activate();
     setStompClient(client);
     return () => client.deactivate();
-  }, [auth?.token, userId, schoolId,queryClient]);
+  }, [auth?.token, userId, schoolId, queryClient]);
 
-  if (!notifications.length) return null;
+  // Move the early return AFTER all hooks
+  if (authLoading || !auth?.token || !notifications.length) return null;
 
   return (
     <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-[10px] font-semibold rounded-full min-h-[20px] min-w-[20px] px-1 flex items-center justify-center leading-none">

@@ -1,12 +1,11 @@
-import React from 'react'
-import Layout from '@/components/layout/Layout'
+import React from "react";
+import Layout from "@/components/layout/Layout";
 
-const AcademicLayout = ({children}) => {
-  return (
-    <Layout>
-        {children}
-    </Layout>
-  )
-}
+// Force dynamic rendering for all pages using this layout
+export const dynamic = "force-dynamic";
 
-export default AcademicLayout
+const AcademicLayout = ({ children }) => {
+  return <Layout>{children}</Layout>;
+};
+
+export default AcademicLayout;

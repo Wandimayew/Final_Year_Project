@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.schoolmanagement.User_Service.model.Permission;
 import com.schoolmanagement.User_Service.model.Role;
+import com.schoolmanagement.User_Service.model.User;
 import com.schoolmanagement.User_Service.model.UserRolePermission;
 
 @Repository
@@ -53,7 +54,26 @@ public interface UserRolePermissionRepository extends JpaRepository<UserRolePerm
 
         boolean existsByRoleAndPermissionAndSchoolId(Role role, Permission permission, String schoolId);
 
-        @Query("SELECT urp FROM UserRolePermission urp WHERE urp.role.roleId = :roleId AND urp.schoolId = :schoolId AND urp.type = 'default' AND urp.isActive = true")
+        @Query("SELECT urp FROM UserRolePermission urp WHERE urp.role.roleId = :roleId AND urp.schoolId = :schoolId AND urp.isActive = true")
         List<UserRolePermission> findPermissionsByRoleAndSchool(@Param("roleId") Long roleId,
                         @Param("schoolId") String schoolId);
+
+        // List<UserRolePermission> findByUserAndPermissionIdAndSchoolId(User user, Long
+        // permissionId, String schoolId);
+
+        @Query("SELECT urp FROM UserRolePermission urp " +
+                        "WHERE urp.user = :user AND urp.permission.permissionId = :permissionId " +
+                        "AND urp.schoolId = :schoolId AND urp.isActive = true")
+        List<UserRolePermission> findByUserAndPermissionIdAndSchoolId(
+                        @Param("user") User user,
+                        @Param("permissionId") Long permissionId,
+                        @Param("schoolId") String schoolId);
+
+        // New similar query: Find by user and role
+        @Query("SELECT urp FROM UserRolePermission urp " +
+                        "WHERE urp.user = :user AND urp.role.roleId = :roleId " +
+                        "AND urp.isActive = true")
+        List<UserRolePermission> findByUserAndRoleId(
+                        @Param("user") User user,
+                        @Param("roleId") Long roleId);
 }

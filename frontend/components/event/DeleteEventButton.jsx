@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { CircularProgress } from "@mui/material";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
+const API_BASE_URL = "http://localhost:8084/communication/api";
 
 const DeleteEventButton = ({ announcementId }) => {
   const { auth } = useAuth();

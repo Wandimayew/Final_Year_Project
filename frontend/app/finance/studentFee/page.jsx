@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAssignFeeToStudent, useSchoolFees } from '@/lib/api/financeService/fee';
 // import { financeApi } from '@/lib/api';
+export const dynamic = "force-dynamic";
 
 export default function AssignFeeToStudentPage() {
   const [formData, setFormData] = useState({

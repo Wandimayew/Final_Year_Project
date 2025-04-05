@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.schoolmanagement.tenant_service.dto.PaymentApprovalRequest;
+import com.schoolmanagement.tenant_service.dto.PaymentRequest;
 import com.schoolmanagement.tenant_service.dto.School_subscriptionsRequest;
 import com.schoolmanagement.tenant_service.dto.School_subscriptionsResponse;
 import com.schoolmanagement.tenant_service.model.School;
@@ -16,6 +18,7 @@ import com.schoolmanagement.tenant_service.repository.SchoolRepository;
 import com.schoolmanagement.tenant_service.repository.School_subscriptionsRepository;
 import com.schoolmanagement.tenant_service.repository.Subscription_plansRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -126,6 +129,48 @@ public class School_SubscriptionService {
         return ResponseEntity.ok(convertToSchoolSubscriptionResponse(existingSchoolSubscription));
     }
 
+    public ResponseEntity<School_subscriptionsResponse> getSchoolSubscriptionByStatus(String school_id,
+            String status) {
+        School schoolExists = schoolRepository.findBySchool_id(school_id);
+        if (schoolExists == null) {
+            log.error("School not found with id {}", school_id);
+            return ResponseEntity.notFound().build();
+        }
+
+        School_subscriptions existingSchoolSubscription = school_subscriptionsRepository
+                .findBySchoolAndStatus(schoolExists, status);
+        if (existingSchoolSubscription == null) {
+            log.error("School subscription not found with status {} for school id {}", status, school_id);
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(convertToSchoolSubscriptionResponse(existingSchoolSubscription));
+    }
+
+    public ResponseEntity<School_subscriptionsResponse> makeSubscriptionPayment(PaymentRequest paymentRequest) {
+        School schoolExists = schoolRepository.findBySchool_id(paymentRequest.getSchoolId());
+        if (schoolExists == null) {
+            log.error("School not found with id {}", paymentRequest.getSchoolId());
+            return ResponseEntity.notFound().build();
+        }
+
+        School_subscriptions existingSchoolSubscription = school_subscriptionsRepository
+                .findBySchoolAndStatusAndId(schoolExists, paymentRequest.getStatus(),
+                        paymentRequest.getSubscriptionId());
+        if (existingSchoolSubscription == null) {
+            log.error("School subscription not found with status {} and subscription id {} for school id {}",
+                    paymentRequest.getStatus(), paymentRequest.getSubscriptionId(), paymentRequest.getSchoolId());
+            return ResponseEntity.notFound().build();
+        }
+
+        existingSchoolSubscription.setStatus("PENDING");
+        existingSchoolSubscription.setUpdated_at(LocalDateTime.now());
+        existingSchoolSubscription.setUpdated_by("admin");
+
+        school_subscriptionsRepository.save(existingSchoolSubscription);
+
+        return ResponseEntity.ok(convertToSchoolSubscriptionResponse(existingSchoolSubscription));
+    }
+
     public ResponseEntity<List<School_subscriptionsResponse>> getAllSchoolSubscription(String school_id) {
         School schoolExists = schoolRepository.findBySchool_id(school_id);
         if (schoolExists == null) {
@@ -155,4 +200,44 @@ public class School_SubscriptionService {
                 .isActive(newSchoolSubscription.isActive())
                 .build();
     }
+
+    public ResponseEntity<List<School_subscriptionsResponse>> getSubscriptionByStatus(String status) {
+
+        List<School_subscriptions> subscriptions = school_subscriptionsRepository.findAllByStatus(status);
+
+        log.info("School Subscriptions with status : {} are : {}", status, subscriptions);
+        if (subscriptions.isEmpty()) {
+            log.info("School Subscriptions with status : {} are are empty", status);
+            throw new EntityNotFoundException("School Subscriptions are not found with status " + status);
+        }
+
+        return ResponseEntity.ok(subscriptions.stream().map(this::convertToSchoolSubscriptionResponse)
+                .collect(Collectors.toList()));
+    }
+
+    public ResponseEntity<String> makeSubscriptionPaid(
+            PaymentApprovalRequest paymentApprovalRequest) {
+
+        School_subscriptions subscription = school_subscriptionsRepository.findBySubscriptionAndStatus(
+                paymentApprovalRequest.getSubscriptionId(), paymentApprovalRequest.getCurrentStatus());
+        log.info("School Subscriptions with status : {} are : {}", paymentApprovalRequest.getCurrentStatus(),
+                subscription);
+
+        if (subscription == null || subscription.getSchool().getSchool_id() != paymentApprovalRequest.getSchoolId()) {
+            log.info("School Subscriptions with status : {} are are empty", paymentApprovalRequest.getCurrentStatus());
+            throw new EntityNotFoundException("School Subscription is not found with subscription id "
+                    + paymentApprovalRequest.getSubscriptionId() + " and status "
+                    + paymentApprovalRequest.getCurrentStatus());
+        }
+
+        subscription.setStatus(paymentApprovalRequest.getNewStatus());
+        subscription.setUpdated_at(LocalDateTime.now());
+        subscription.setUpdated_by("admin");
+
+        school_subscriptionsRepository.save(subscription);
+
+        return ResponseEntity.ok("School subscription for school id " + paymentApprovalRequest.getSchoolId()
+                + " updated to " + paymentApprovalRequest.getNewStatus());
+    }
+
 }

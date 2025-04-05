@@ -11,6 +11,7 @@ import { useCreateUser } from "@/lib/api/users";
 import InputField from "@/components/InputField";
 import ImageUpload from "@/components/ImageUpload";
 import SectionHeader from "@/components/SectionHeader";
+export const dynamic = "force-dynamic";
 
 const AdmissionForm = () => {
   const [showProfilePicture, setShowProfilePicture] = useState(null);

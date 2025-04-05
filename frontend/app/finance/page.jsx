@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useDashboardStats, useMonthlyReport, useOutstandingFees } from "@/lib/api/financeService/financialReport";
+import { useOutstandingFees } from '@/lib/api/financeService/fee';
+import { useDashboardStats, useMonthlyReport } from "@/lib/api/financeService/financialReport";
+export const dynamic = "force-dynamic";
 
 export default function FinancialDashboard({ schoolId=1 }) {
   const [year, setYear] = useState(new Date().getFullYear());

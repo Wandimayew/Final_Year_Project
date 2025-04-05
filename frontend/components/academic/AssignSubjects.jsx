@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
   const [streams, setStreams] = useState([]);
   const [classes, setClasses] = useState([]);
@@ -18,7 +22,7 @@ const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
     const fetchStreams = async () => {
       try {
         const response = await axios.get(
-          `http://10.194.61.74:8080/academic/api/new/getAllStreamBySchool`
+          `http://localhost:8086/academic/api/new/getAllStreamBySchool`
         );
         console.log("assigning the the selected stream {: ", response);
 
@@ -44,7 +48,7 @@ const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
 
         try {
           const response = await axios.get(
-            `http://10.194.61.74:8080/academic/api/new/getAllClassByStream/${selectedStream}`
+            `http://localhost:8086/academic/api/new/getAllClassByStream/${selectedStream}`
           );
           console.log("stream response {", response, "}.");
 
@@ -66,7 +70,7 @@ const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
     const fetchSubjects = async () => {
       try {
         const response = await axios.get(
-          `http://10.194.61.74:8080/academic/api/new/getAllSubjectBySchool`
+          `http://localhost:8086/academic/api/new/getAllSubjectBySchool`
         );
         console.log("subject data: {", response.data, "}.");
         setSubjects(response.data);
@@ -101,7 +105,7 @@ const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
       console.log("selected subjects : ", selectedSubjects);
 
       const response = await axios.post(
-        `http://10.194.61.74:8080/academic/api/new/assign-subjects/${selectedClass}`,
+        `http://localhost:8086/academic/api/new/assign-subjects/${selectedClass}`,
         selectedSubjects
       );
 

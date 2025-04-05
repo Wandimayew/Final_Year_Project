@@ -4,7 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 const financeApi = axios.create({
-  baseURL: 'http://localhost:8087/api/finance', 
+  baseURL:
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/finance", // Use env var for flexibility
 });
 
 // Create a new fee
@@ -19,6 +20,9 @@ export const useCreateFee = () => {
     onSuccess: (newFee) => {
       queryClient.invalidateQueries({ queryKey: ["fees"] });
       queryClient.setQueryData(["fees", newFee.feeId], newFee);
+    },
+    onError: (error) => {
+      console.error("Error creating fee:", error);
     },
   });
 };
@@ -36,6 +40,9 @@ export const useUpdateFee = () => {
       queryClient.invalidateQueries({ queryKey: ["fees"] });
       queryClient.setQueryData(["fees", updatedFee.feeId], updatedFee);
     },
+    onError: (error) => {
+      console.error("Error updating fee:", error);
+    },
   });
 };
 
@@ -52,6 +59,9 @@ export const useDeleteFee = () => {
       queryClient.invalidateQueries({ queryKey: ["fees"] });
       queryClient.removeQueries({ queryKey: ["fees", deletedFeeId] });
     },
+    onError: (error) => {
+      console.error("Error deleting fee:", error);
+    },
   });
 };
 
@@ -60,10 +70,16 @@ export const useSchoolFees = (schoolId) => {
   return useQuery({
     queryKey: ["fees", "school", schoolId],
     queryFn: async () => {
-      const response = await financeApi.get(`/fees/school/${schoolId}`);
-      return response.data;
+      try {
+        const response = await financeApi.get(`/fees/school/${schoolId}`);
+        return response.data || []; // Return empty array if no data
+      } catch (error) {
+        console.error("Error fetching school fees:", error);
+        return []; // Fallback to empty array on error
+      }
     },
     enabled: !!schoolId, // Only run if schoolId is provided
+    placeholderData: [], // Provide placeholder data during build
   });
 };
 
@@ -78,9 +94,12 @@ export const useAssignFeeToStudent = () => {
     },
     onSuccess: (newStudentFee) => {
       queryClient.invalidateQueries({ queryKey: ["studentFees"] });
-      queryClient.invalidateQueries({ 
-        queryKey: ["studentFees", "student", newStudentFee.studentId] 
+      queryClient.invalidateQueries({
+        queryKey: ["studentFees", "student", newStudentFee.studentId],
       });
+    },
+    onError: (error) => {
+      console.error("Error assigning fee to student:", error);
     },
   });
 };
@@ -90,10 +109,13 @@ export const useStudentFees = (studentId, schoolId) => {
   return useQuery({
     queryKey: ["studentFees", "student", studentId, schoolId],
     queryFn: async () => {
-      const response = await financeApi.get(`/fees/student/${studentId}/school/${schoolId}`);
-      return response.data;
+      const response = await financeApi.get(
+        `/fees/student/${studentId}/school/${schoolId}`
+      );
+      return response.data || [];
     },
     enabled: !!studentId && !!schoolId,
+    placeholderData: [],
   });
 };
 
@@ -103,9 +125,10 @@ export const useOutstandingFees = (schoolId) => {
     queryKey: ["fees", "outstanding", schoolId],
     queryFn: async () => {
       const response = await financeApi.get(`/fees/outstanding/${schoolId}`);
-      return response.data;
+      return response.data || [];
     },
     enabled: !!schoolId,
+    placeholderData: [],
   });
 };
 
@@ -123,6 +146,9 @@ export const useUpdateStudentFeePayment = () => {
     onSuccess: (updatedStudentFee) => {
       queryClient.invalidateQueries({ queryKey: ["studentFees"] });
       queryClient.invalidateQueries({ queryKey: ["fees", "outstanding"] });
+    },
+    onError: (error) => {
+      console.error("Error updating student fee payment:", error);
     },
   });
 };

@@ -1,23 +1,23 @@
-"use client";
+// "use client";
 
-import { useState, useEffect } from "react";
+// import { useState, useEffect } from "react";
 
-export const useAuth = () => {
-  const [auth, setAuth] = useState(null);
-  const [loading, setLoading] = useState(true);
+// export const useAuth = () => {
+//   const [auth, setAuth] = useState(null);
+//   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const authData = localStorage.getItem("auth-store");
-    if (authData) {
-      setAuth(JSON.parse(authData));
-    }
-    setLoading(false);
-  }, []);
+//   useEffect(() => {
+//     const authData = localStorage.getItem("auth-store");
+//     if (authData) {
+//       setAuth(JSON.parse(authData));
+//     }
+//     setLoading(false);
+//   }, []);
 
-  const logout = () => {
-    localStorage.removeItem("auth-store");
-    setAuth(null);
-  };
+//   const logout = () => {
+//     localStorage.removeItem("auth-store");
+//     setAuth(null);
+//   };
 
-  return { auth, loading, logout };
-};
+//   return { auth, loading, logout };
+// };

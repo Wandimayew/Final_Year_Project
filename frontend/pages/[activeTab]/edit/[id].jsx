@@ -1,8 +1,10 @@
+'use client'
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 import { staffService } from "../../../services/api";
 import EditForm from "../../../components/employee/EditForm";
 import { toast } from "react-toastify";
+export const dynamic = "force-dynamic";
 
 export default function EditPage() {
   const router = useRouter();

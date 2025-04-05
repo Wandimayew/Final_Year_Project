@@ -3,38 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { useRoles } from "@/lib/api/userManagementService/role";
 import { useAuthStore } from "@/lib/auth";
-import {
-  Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Typography,
-  CircularProgress,
-  TableSortLabel,
-  Button,
-} from "@mui/material";
-import { styled } from "@mui/system";
 import { useRouter } from "next/navigation";
-import { ArrowBack as ArrowBackIcon } from "@mui/icons-material";
-
-// Styled components for enhanced UI
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  fontWeight: 600,
-  color: "#333",
-  borderBottom: "2px solid #e0e0e0",
-}));
-
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  "&:hover": {
-    backgroundColor: "#f5f5f5",
-    cursor: "pointer",
-    transition: "background-color 0.2s ease-in-out",
-  },
-}));
+import {
+  ArrowLeftIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+} from "@heroicons/react/24/outline";
 
 const RoleList = () => {
   const { getSchoolId } = useAuthStore();
@@ -79,12 +53,34 @@ const RoleList = () => {
   // Handle row click
   const handleRowClick = (roleId) => {
     console.log("Role clicked:", roleId);
-    router.push(`/user/role/details/${roleId}`); // Navigate to RoleDetailsPage
+    router.push(`/user/role/details/${roleId}`);
   };
 
-  // Prevent rendering during SSR until hydrated
   if (!isHydrated) {
-    return null; // Or a loading skeleton
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <svg
+          className="animate-spin h-8 w-8 text-blue-500"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+          ></path>
+        </svg>
+      </div>
+    );
   }
 
   if (!schoolId) {
@@ -92,110 +88,127 @@ const RoleList = () => {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f7fa" }}>
-      {/* Back Button with Top Padding */}
-      <Box sx={{ pt: 4, pl: 4 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<ArrowBackIcon />}
+    <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+      {/* Back Button */}
+      <div className="max-w-6xl mx-auto mb-6">
+        <button
           onClick={() => router.push("/dashboard")}
-          sx={{
-            bgcolor: "#1976d2",
-            "&:hover": { bgcolor: "#115293" },
-          }}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
+          <ArrowLeftIcon className="w-5 h-5 mr-2" />
           Back to Dashboard
-        </Button>
-      </Box>
+        </button>
+      </div>
 
       {/* Main Content */}
-      <Box sx={{ p: 4, maxWidth: "1200px", mx: "auto" }}>
-        <Paper
-          sx={{
-            p: 3,
-            borderRadius: 2,
-            boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
-            bgcolor: "white",
-          }}
-        >
-          <Typography
-            variant="h5"
-            sx={{ fontWeight: 700, color: "#333", mb: 3 }}
-          >
-            Roles for School: {schoolId}
-          </Typography>
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white shadow-lg rounded-xl p-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-6">
+            Roles for School: <span className="text-blue-600">{schoolId}</span>
+          </h1>
 
           {isLoading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-              <CircularProgress />
-            </Box>
+            <div className="flex justify-center py-12">
+              <svg
+                className="animate-spin h-10 w-10 text-blue-500"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+                ></path>
+              </svg>
+            </div>
           ) : error ? (
-            <Typography color="error" align="center" sx={{ py: 4 }}>
+            <p className="text-center text-red-600 py-6">
               Failed to load roles: {error.message}
-            </Typography>
+            </p>
           ) : rolesList.length === 0 ? (
-            <Typography align="center" sx={{ py: 4, color: "#666" }}>
+            <p className="text-center text-gray-500 py-8">
               No roles found for this school.
-            </Typography>
+            </p>
           ) : (
-            <TableContainer>
-              <Table sx={{ minWidth: 650 }} aria-label="role table">
-                <TableHead>
-                  <TableRow>
-                    <StyledTableCell>
-                      <TableSortLabel
-                        active={sortBy === "name"}
-                        direction={sortBy === "name" ? sortOrder : "asc"}
-                        onClick={() => handleSort("name")}
-                      >
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                      onClick={() => handleSort("name")}
+                    >
+                      <div className="flex items-center cursor-pointer">
                         Name
-                      </TableSortLabel>
-                    </StyledTableCell>
-                    <StyledTableCell>
-                      <TableSortLabel
-                        active={sortBy === "description"}
-                        direction={sortBy === "description" ? sortOrder : "asc"}
-                        onClick={() => handleSort("description")}
-                      >
+                        {sortBy === "name" &&
+                          (sortOrder === "asc" ? (
+                            <ArrowUpIcon className="w-4 h-4 ml-1 text-blue-500" />
+                          ) : (
+                            <ArrowDownIcon className="w-4 h-4 ml-1 text-blue-500" />
+                          ))}
+                      </div>
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                      onClick={() => handleSort("description")}
+                    >
+                      <div className="flex items-center cursor-pointer">
                         Description
-                      </TableSortLabel>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">Actions</StyledTableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
+                        {sortBy === "description" &&
+                          (sortOrder === "asc" ? (
+                            <ArrowUpIcon className="w-4 h-4 ml-1 text-blue-500" />
+                          ) : (
+                            <ArrowDownIcon className="w-4 h-4 ml-1 text-blue-500" />
+                          ))}
+                      </div>
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
                   {sortedRoles.map((role) => (
-                    <StyledTableRow
+                    <tr
                       key={role.roleId}
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
                       onClick={() => handleRowClick(role.roleId)}
                     >
-                      <TableCell>{role.name}</TableCell>
-                      <TableCell>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {role.name}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
                         {role.description || "No description"}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          color="primary"
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            router.push(`/user/role/update/${role.roleId}`); // Updated path
+                            router.push(`/user/role/update/${role.roleId}`);
                           }}
+                          className="px-3 py-1 border border-blue-500 text-blue-500 rounded-md hover:bg-blue-500 hover:text-white transition-colors"
                         >
                           Edit
-                        </Button>
-                      </TableCell>
-                    </StyledTableRow>
+                        </button>
+                      </td>
+                    </tr>
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                </tbody>
+              </table>
+            </div>
           )}
-        </Paper>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 

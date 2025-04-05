@@ -1,6 +1,6 @@
 spring:
     application: 
-        name: academic_service
+        name: ACADEMIC_SERVICE
     datasource:
         url: jdbc:mysql://localhost:3306/Academic_Service
         username: root  
@@ -18,18 +18,18 @@ spring:
                 dialect: org.hibernate.dialect.MySQLDialect
     profiles:
         active: dev
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 server:
-  port: 8082
+  port: 8086
 
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://10.194.61.74:8761/eureka/  # URL of the Eureka Server
+      defaultZone: http://eureka-server:8761/eureka/ # URL of the Eureka Server
     registerWithEureka: true  # Register this client with Eureka
     fetchRegistry: true  # Fetch the registry to discover other services
-  instance:
-    preferIpAddress: true  # Use IP address instead of hostname (optional but recommended)
-    # prefer-ip-address: true
-    ip-address: 10.194.61.62  # Replace with Machine 2’s actual IP (e.g., 10.194.61.x)
-    hostname: 10.194.61.62    # Optional, ensures consistency
-    non-secure-port: 8082
+ 

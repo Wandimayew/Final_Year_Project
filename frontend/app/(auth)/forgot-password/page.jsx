@@ -1,36 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
+import { useAuth } from "@/lib/api/userManagementService/user"; // Adjust path
+export const dynamic = "force-dynamic";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false); // State to track success
+  const { forgotPassword, isLoading, error, isSuccess } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    try {
-      const response = await axios.post(
-        "http://10.194.61.72:8080/auth/api/forgot-password",
-        { email }
-      );
-      setMessage(
-        "A password reset link has been sent to your email. Please check your inbox. and you can close this page."
-      );
-      setIsSuccess(true); // Mark as success
-      console.log("Response message:", response.data);
-    } catch (error) {
-      setMessage("Error sending reset link. Please try again.");
-      setIsSuccess(false); // Mark as failure
-    }
+    await forgotPassword(email);
   };
+
+  const message = isSuccess
+    ? "A password reset link has been sent to your email. Please check your inbox and you can close this page."
+    : error
+    ? "Error sending reset link. Please try again."
+    : "";
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
-        {!isSuccess && (
+        {!isSuccess ? (
           <>
             <h2 className="text-2xl font-bold text-center mb-6">
               Forgot Password
@@ -47,21 +39,42 @@ export default function ForgotPassword() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  disabled={isSuccess} // Disable input if success
+                  disabled={isLoading}
                 />
               </div>
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
-                disabled={isSuccess} // Disable button if success
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center"
+                disabled={isLoading}
               >
-                Send Reset Link
+                {isLoading ? (
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+                    ></path>
+                  </svg>
+                ) : null}
+                {isLoading ? "Sending..." : "Send Reset Link"}
               </button>
             </form>
           </>
-        )}
+        ) : null}
 
-        {/* Conditional message */}
         {message && (
           <p
             className={`mt-4 text-center ${

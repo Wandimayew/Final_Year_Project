@@ -23,7 +23,7 @@ const AddressPopup = ({ show, onClose, onSave }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-white p-6 rounded-lg w-96">
-        <h3 className="text-lg font-semibold mb-4">Enter Address</h3>
+        <h3 className="text-lg font-semibold mb-4 text-black">Enter Address</h3>
         <div className="space-y-4">
           {['city', 'country', 'zone', 'region'].map((field) => (
             <div key={field}>

@@ -1,6 +1,7 @@
 spring:
   application:
-    name: TENANT_SERVICE
+    # name: ${SPRING_APPLICATION_NAME}
+    name: tenant-service
     file:
       uploads:
         photos-output-path: ./uploads
@@ -8,9 +9,12 @@ spring:
     ansi:
       enabled: ALWAYS
   datasource:
-    url: jdbc:mysql://localhost:3306/Tenant_Service
+    # url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/Tenant_Service?createDatabaseIfNotExist=true
+    # username: ${MYSQL_USER}
     username: root
     password: root
+    # password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       minimum-idle: 5
@@ -29,8 +33,14 @@ spring:
       enabled: true
       max-file-size: 50MB
       max-request-size: 50MB
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 server:
-  port: 8084
+  # port: ${SERVER_PORT}
+  port: 8081
 
 app:
   jwtSecret: zWR3i+mURw4kppEwVNhxZdqblotfvWseQGKI1SdLI9Y=
@@ -38,22 +48,23 @@ app:
 
 user:
   service:
-    url: http://localhost:8085
+    # url: ${USER_SERVICE}
+    url: http://localhost:8080
+
 
 tenant:
   service:
     token: this-is-me-do-you-remember-me
 
-
-# eureka:
-#   client:
-#     serviceUrl:
-#       defaultZone: http://10.194.61.74:8761/eureka/  # URL of the Eureka Server
-#     registerWithEureka: true  # Register this client with Eureka
-#     fetchRegistry: true  # Fetch the registry to discover other services
-#   instance:
-#     preferIpAddress: true  # Use IP address instead of hostname (optional but recommended)
-#     # prefer-ip-address: true
-#     ipAddress: 10.194.53.23  # Replace with Machine 2’s actual IP (e.g., 10.194.61.x)
-#     hostname: 10.194.53.23  # Optional, ensures consistency
-#     non-secure-port: 8084
+eureka:
+  client:
+    serviceUrl:
+      # defaultZone: ${SERVICE_REGISTRY_URL}/eureka/
+      defaultZone: http://localhost:8761/eureka
+    enabled: true  # URL of the Eureka Server
+    registerWithEureka: true  # Register this client with Eureka
+    fetchRegistry: true 
+  instance:
+    # hostname: ${EUREKA_INSTANCE_HOSTNAME}
+    hostname: localhost
+    prefer-ip-address: false

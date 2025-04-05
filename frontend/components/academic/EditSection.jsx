@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 const EditSection = ({ section, classId, onClose, type, setClassDetails }) => {
   const [sectionName, setSectionName] = useState(section?.sectionName || "");
   const [capacity, setCapacity] = useState(section?.capacity || 0);
@@ -14,7 +17,7 @@ const EditSection = ({ section, classId, onClose, type, setClassDetails }) => {
     setLoading(true);
     try {
       await axios.put(
-        `http://10.194.61.74:8080/academic/api/new/editSectionById/${section.sectionId}`,
+        `http://localhost:8086/academic/api/new/editSectionById/${section.sectionId}`,
         {
           sectionName,
           capacity: parseInt(capacity, 10),
@@ -44,7 +47,7 @@ const EditSection = ({ section, classId, onClose, type, setClassDetails }) => {
     setLoading(true);
     try {
       await axios.delete(
-        `http://10.194.61.74:8080/academic/api/new/deleteSectionById/${section.sectionId}`
+        `http://localhost:8086/academic/api/new/deleteSectionById/${section.sectionId}`
       );
       toast.success("Section deleted successfully!");
 

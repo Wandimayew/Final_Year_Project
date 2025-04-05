@@ -1,5 +1,8 @@
 import axios from "axios";
 
+
+export const dynamic = "force-dynamic";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://10.194.61.74:8080/staff/api";
 
 const api = axios.create({

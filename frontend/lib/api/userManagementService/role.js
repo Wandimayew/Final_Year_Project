@@ -4,47 +4,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/auth";
 import axios from "axios";
 
-// Role-specific axios instance
-const roleService = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://10.194.61.72:8080/auth/api",
-  timeout: 15000,
-  withCredentials: true,
-});
+import { createApiService } from "@/lib/api";
 
-roleService.interceptors.request.use(
-  async (config) => {
-    const { token } = useAuthStore.getState();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
+export const userService = createApiService(
+  process.env.NEXT_PUBLIC_API_URL_FOR_USER || "http://localhost:8080/auth/api"
 );
-
-roleService.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const { token: refreshToken } = await authApi.refreshToken(); // Assuming authApi is imported or defined elsewhere
-        useAuthStore.getState().setAuth(null, refreshToken);
-        originalRequest.headers.Authorization = `Bearer ${refreshToken}`;
-        return roleService(originalRequest);
-      } catch (refreshError) {
-        useAuthStore.getState().clearAuth();
-        window.location.href = "/login";
-        return Promise.reject(refreshError);
-      }
-    }
-    const message =
-      error.response?.data?.message || "An unexpected error occurred";
-    return Promise.reject({ message, status: error.response?.status });
-  }
-);
-
+// Use userService for role-related requests
+const roleService = userService;
 // Role API methods based on backend RoleController
 const roleApi = {
   getRoles: async (schoolId) => {
@@ -209,12 +175,16 @@ export function useAssignPermissionsToUserForRole() {
   return useMutation({
     mutationFn: ({ schoolId, request }) =>
       roleApi.assignPermissionsToUserForRole(schoolId, request),
-    onSuccess: (_, { schoolId }) => {
-      queryClient.invalidateQueries({ queryKey: ["users", schoolId] });
+    onSuccess: (_, { schoolId, request }) => {
+      queryClient.invalidateQueries({
+        queryKey: ["users", schoolId, request.userId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["userPermissions", schoolId, request.userId],
+      });
     },
-    onError: (error) => {
-      console.error("Permission assignment failed:", error.message);
-    },
+    onError: (error) =>
+      console.error("Permission assignment failed:", error.message),
   });
 }
 

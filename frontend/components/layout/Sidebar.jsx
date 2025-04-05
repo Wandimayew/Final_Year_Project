@@ -1,27 +1,27 @@
 "use client";
-
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MENU_ITEMS } from "@/config/menuItems";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { filterMenuByRole } from "../utility/RoleFilter";
 import { useAuthStore } from "@/lib/auth";
+import { memo } from "react";
 
-// Memoize the Sidebar to prevent unnecessary re-renders
 const Sidebar = memo(({ isMenuOpen }) => {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
+  const authData = useMemo(() => useAuthStore.getState(), []);
+  const userRole = authData?.user?.roles || [];
 
-  // Use a stable selector to avoid re-creating the object on every render
-  const user = useAuthStore((state) => state.user);
-  const userRole = user?.roles || "ROLE_GUEST";
-  console.log("user information is ",user);
-  
+  console.log("Auth data for users : ", authData);
 
   useEffect(() => {
     const filteredItems = filterMenuByRole(MENU_ITEMS, userRole);
+    console.log("meun items before filtering : ", MENU_ITEMS);
+    console.log("user roles for filtering : ", userRole);
+    console.log("user roles menu after filtered : ", filteredItems);
     setMenuItems(filteredItems);
   }, [userRole]);
 
@@ -45,15 +45,11 @@ const Sidebar = memo(({ isMenuOpen }) => {
     return (
       <div key={item.id}>
         <div
-          className={`
-            flex items-center justify-between py-1 cursor-pointer font-bold
-            ${
-              isItemActive
-                ? "bg-navy-700 text-[#1672EE]"
-                : "text-[#555] hover:text-[#1672EE]"
-            }
-            rounded-lg transition-colors duration-150
-          `}
+          className={`flex items-center justify-between py-1 cursor-pointer font-bold ${
+            isItemActive
+              ? "bg-indigo-100 text-indigo-600"
+              : "text-[#555] hover:text-indigo-600"
+          } rounded-lg transition-colors duration-150 px-2`}
           onClick={() => (hasSubItems ? toggleExpand(item.id) : null)}
         >
           <Link
@@ -61,7 +57,7 @@ const Sidebar = memo(({ isMenuOpen }) => {
             className="flex items-center flex-1 gap-3"
             onClick={(e) => hasSubItems && e.preventDefault()}
           >
-            <span className="glassmorphism p-2 rounded-md text-[#1672EE]">
+            <span className="glassmorphism p-2 rounded-md text-indigo-600">
               <item.icon size={25} />
             </span>
             {isMenuOpen && <span className="text-sm">{item.label}</span>}
@@ -74,32 +70,26 @@ const Sidebar = memo(({ isMenuOpen }) => {
               <FaChevronRight className="w-3 h-3" />
             ))}
         </div>
-
         {isMenuOpen && hasSubItems && isExpanded && (
           <div className="ml-8 mt-1 space-y-1">
-            <div className="max-h-60 overflow-y-auto">
-              {item.subItems.map((subItem) => (
-                <Link
-                  key={subItem.id}
-                  href={subItem.href}
-                  className={`
-                    flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-bold
-                    ${
-                      isActive(subItem.href)
-                        ? "bg-navy-700 text-[#1672EE]"
-                        : "text-[#555] hover:text-[#1672EE]"
-                    }
-                  `}
-                >
-                  {subItem.icon && (
-                    <span className="text-[#1672EE]">
-                      <subItem.icon size={18} />
-                    </span>
-                  )}
-                  <span>{subItem.label}</span>
-                </Link>
-              ))}
-            </div>
+            {item.subItems.map((subItem) => (
+              <Link
+                key={subItem.id}
+                href={subItem.href}
+                className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-bold ${
+                  isActive(subItem.href)
+                    ? "bg-indigo-100 text-indigo-600"
+                    : "text-[#555] hover:text-indigo-600"
+                }`}
+              >
+                {subItem.icon && (
+                  <span className="text-indigo-600">
+                    <subItem.icon size={18} />
+                  </span>
+                )}
+                <span>{subItem.label}</span>
+              </Link>
+            ))}
           </div>
         )}
       </div>
@@ -108,18 +98,16 @@ const Sidebar = memo(({ isMenuOpen }) => {
 
   return (
     <aside
-      className={`h-screen bg-[#fff] text-[#555] flex flex-col fixed left-0 top-20 transition-all duration-300 ${
+      className={`fixed left-0 top-20 bottom-0 transition-all duration-300 bg-white text-[#555] shadow-md z-10 ${
         isMenuOpen ? "w-64" : "w-16"
       }`}
     >
-      <nav className="flex-1 p-2 space-y-2 overflow-y-auto">
+      <nav className="h-full p-2 overflow-y-auto scroll-smooth">
         {menuItems.map((menu) => renderMenuItem(menu))}
       </nav>
     </aside>
   );
 });
 
-// Add display name for better debugging
 Sidebar.displayName = "Sidebar";
-
 export default Sidebar;

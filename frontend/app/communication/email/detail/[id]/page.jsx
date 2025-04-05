@@ -4,6 +4,7 @@ import React from "react";
 import EmailDetail from "@/components/email/EmailDetail";
 import MailBoxFolder from "@/components/email/MailBoxFolder";
 import { useParams } from "next/navigation";
+export const dynamic = "force-dynamic";
 
 const EmailDetailPage = () => {
   const params = useParams();

@@ -1,5 +1,6 @@
 package com.schoolmanagement.communication_service.controller;
 
+import com.schoolmanagement.communication_service.config.CustomUserPrincipal;
 import com.schoolmanagement.communication_service.config.JwtToken;
 import com.schoolmanagement.communication_service.dto.request.NotificationRequest;
 import com.schoolmanagement.communication_service.dto.response.ApiResponse;
@@ -10,6 +11,7 @@ import com.schoolmanagement.communication_service.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,8 +33,16 @@ public class NotificationController {
      * @param token    the JWT token from the request header
      * @throws SecurityException if the school IDs do not match
      */
-    private void validateSchoolId(String schoolId, String token) {
-        String tokenSchoolId = jwtUtil.extractSchoolId(token);
+     private String getUserIdFromSecurityContext() {
+        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        return principal.getUserId();
+    }
+
+    private void validateSchoolId(String schoolId) {
+        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        String tokenSchoolId = principal.getSchoolId();
         if (!schoolId.equals(tokenSchoolId)) {
             log.error("School ID mismatch: Path schoolId={}, Token schoolId={}", schoolId, tokenSchoolId);
             throw new SecurityException("Unauthorized: School ID mismatch");
@@ -82,17 +92,17 @@ public class NotificationController {
     public ResponseEntity<ApiResponse<List<NotificationResponse>>> getUnreadNotifications(
             @PathVariable String schoolId,
             @JwtToken String token) {
-        validateSchoolId(schoolId, token);
+        validateSchoolId(schoolId);
         String userId = jwtUtil.extractUserId(token);
         log.info("Fetching unread notifications for userId: {} in schoolId: {}", userId, schoolId);
         return notificationService.getUnreadNotifications(schoolId, userId);
     }
 
-    @PostMapping("/{schoolId}/notifications/mark-read/{notificationId}")
+    @PostMapping("/{schoolId}/mark-read/notifications/{notificationId}")
     public ResponseEntity<ApiResponse<String>> markNotificationAsRead(@PathVariable String schoolId,
             @PathVariable Long notificationId,
             @JwtToken String token) {
-        validateSchoolId(schoolId, token);
+        validateSchoolId(schoolId);
         String userId = jwtUtil.extractUserId(token);
         log.info("Marking notification as read with ID: {}", notificationId);
         return notificationService.markNotificationAsRead(notificationId, userId);

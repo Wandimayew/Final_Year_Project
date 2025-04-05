@@ -1,49 +1,15 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "@/lib/auth";
-import axios from "axios";
 
-// Permission-specific axios instance
-const permissionService = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://10.194.61.72:8080/auth/api",
-  timeout: 15000,
-  withCredentials: true,
-});
+import { createApiService } from "@/lib/api";
 
-permissionService.interceptors.request.use(
-  async (config) => {
-    const { token } = useAuthStore.getState();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
+export const userService = createApiService(
+  process.env.NEXT_PUBLIC_API_URL_FOR_USER || "http://localhost:8080/auth/api"
 );
 
-permissionService.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const { token: refreshToken } = await authApi.refreshToken();
-        useAuthStore.getState().setAuth(null, refreshToken);
-        originalRequest.headers.Authorization = `Bearer ${refreshToken}`;
-        return permissionService(originalRequest);
-      } catch (refreshError) {
-        useAuthStore.getState().clearAuth();
-        window.location.href = "/login";
-        return Promise.reject(refreshError);
-      }
-    }
-    const message =
-      error.response?.data?.message || "An unexpected error occurred";
-    return Promise.reject({ message, status: error.response?.status });
-  }
-);
+// Use userService for permission-related requests
+const permissionService = userService;
 
 // Permission API methods based on PermissionController
 const permissionApi = {
@@ -122,6 +88,22 @@ export function usePermission(schoolId, permissionId) {
   });
 }
 
+export function useUserPermissions(schoolId, userId) {
+  return useQuery({
+    queryKey: ["userPermissions", schoolId, userId],
+    queryFn: () => permissionApi.getUserPermissions(schoolId, userId),
+    enabled: !!schoolId && !!userId,
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+    onSuccess: (data) => console.log("Refetching userPermissions", data),
+    onError: (error) =>
+      console.error(
+        `Failed to fetch permissions for user ${userId}:`,
+        error.message
+      ),
+  });
+}
+
 export function useCreatePermission() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -174,21 +156,21 @@ export function useDeletePermission() {
     },
   });
 }
-export function useUserPermissions(schoolId, userId) {
-  return useQuery({
-    queryKey: ["userPermissions", schoolId, userId],
-    queryFn: () => permissionApi.getUserPermissions(schoolId, userId),
-    enabled: !!schoolId && !!userId,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    retry: 2,
-    onError: (error) => {
-      console.error(
-        `Failed to fetch permissions for user ${userId}:`,
-        error.message
-      );
-    },
-  });
-}
+// export function useUserPermissions(schoolId, userId) {
+//   return useQuery({
+//     queryKey: ["userPermissions", schoolId, userId],
+//     queryFn: () => permissionApi.getUserPermissions(schoolId, userId),
+//     enabled: !!schoolId && !!userId,
+//     staleTime: 5 * 60 * 1000,
+//     retry: 2,
+//     onSuccess: (data) => console.log("Refetching userPermissions", data),
+//     onError: (error) =>
+//       console.error(
+//         `Failed to fetch permissions for user ${userId}:`,
+//         error.message
+//       ),
+//   });
+// }
 
 export function usePermissionByName(schoolId, name) {
   return useQuery({

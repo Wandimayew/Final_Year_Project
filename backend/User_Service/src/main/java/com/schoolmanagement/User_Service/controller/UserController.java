@@ -2,7 +2,9 @@ package com.schoolmanagement.User_Service.controller;
 
 import com.schoolmanagement.User_Service.config.CustomUserPrincipal;
 import com.schoolmanagement.User_Service.dto.SignupRequest;
+import com.schoolmanagement.User_Service.dto.UserLoginActivityDTO;
 import com.schoolmanagement.User_Service.dto.UserResponseDTO;
+import com.schoolmanagement.User_Service.dto.UserRoleCountDTO;
 import com.schoolmanagement.User_Service.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +38,9 @@ public class UserController {
     }
 
     @PutMapping("/{schoolId}/users/{userId}")
-    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable String schoolId, @PathVariable String userId,
+    public ResponseEntity<UserResponseDTO> updateUser(
+            @PathVariable String schoolId,
+            @PathVariable String userId,
             @Valid @RequestBody SignupRequest updatedUserDetails) {
         log.info("Updating user with ID: {} in schoolId: {}", userId, schoolId);
         validateSchoolId(schoolId);
@@ -47,14 +51,17 @@ public class UserController {
     }
 
     @GetMapping("/{schoolId}/users/{userId}")
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable String schoolId, @PathVariable String userId) {
+    public ResponseEntity<UserResponseDTO> getUserById(
+            @PathVariable String schoolId,
+            @PathVariable String userId) {
         log.debug("Fetching user with ID: {} in schoolId: {}", userId, schoolId);
         validateSchoolId(schoolId);
         return userService.getUserById(userId, schoolId);
     }
 
     @GetMapping("/{schoolId}/users/roles")
-    public ResponseEntity<List<UserResponseDTO>> getUsersByRoles(@PathVariable String schoolId,
+    public ResponseEntity<List<UserResponseDTO>> getUsersByRoles(
+            @PathVariable String schoolId,
             @RequestParam("roleIds") List<Long> roleIds) {
         log.debug("Fetching users with roleIds: {} in schoolId: {}", roleIds, schoolId);
         validateSchoolId(schoolId);
@@ -62,7 +69,9 @@ public class UserController {
     }
 
     @DeleteMapping("/{schoolId}/users/{userId}")
-    public ResponseEntity<String> deleteUserById(@PathVariable String schoolId, @PathVariable String userId) {
+    public ResponseEntity<String> deleteUserById(
+            @PathVariable String schoolId,
+            @PathVariable String userId) {
         log.info("Deleting user with ID: {} in schoolId: {}", userId, schoolId);
         validateSchoolId(schoolId);
         CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
@@ -72,14 +81,17 @@ public class UserController {
     }
 
     @GetMapping("/{schoolId}/users")
-    public ResponseEntity<List<UserResponseDTO>> getUsersBySchool(@PathVariable String schoolId) {
+    public ResponseEntity<List<UserResponseDTO>> getUsersBySchool(
+            @PathVariable String schoolId) {
         log.debug("Fetching all users for schoolId: {}", schoolId);
         validateSchoolId(schoolId);
         return userService.getUsersBySchool(schoolId);
     }
 
     @GetMapping("/{schoolId}/users/{userId}/email")
-    public ResponseEntity<String> getUserEmail(@PathVariable String schoolId, @PathVariable String userId) {
+    public ResponseEntity<String> getUserEmail(
+            @PathVariable String schoolId,
+            @PathVariable String userId) {
         log.debug("Fetching email for userId: {} in schoolId: {}", userId, schoolId);
         validateSchoolId(schoolId);
         String email = userService.getEmailByUserId(schoolId, userId);
@@ -87,7 +99,8 @@ public class UserController {
     }
 
     @GetMapping("/{schoolId}/users/role")
-    public ResponseEntity<List<String>> getUserIdsByRole(@PathVariable String schoolId,
+    public ResponseEntity<List<String>> getUserIdsByRole(
+            @PathVariable String schoolId,
             @RequestParam String role) {
         log.info("Fetching user IDs with role: {} in schoolId: {}", role, schoolId);
         validateSchoolId(schoolId);
@@ -96,7 +109,8 @@ public class UserController {
     }
 
     @PutMapping("/{schoolId}/change-password")
-    public ResponseEntity<UserResponseDTO> changePassword(@PathVariable String schoolId,
+    public ResponseEntity<UserResponseDTO> changePassword(
+            @PathVariable String schoolId,
             @RequestParam String currentPassword,
             @RequestParam String newPassword) {
         log.info("Changing password for user in schoolId: {}", schoolId);
@@ -105,5 +119,41 @@ public class UserController {
                 .getAuthentication().getPrincipal();
         String userId = principal.getUserId();
         return userService.changePassword(userId, schoolId, currentPassword, newPassword);
+    }
+
+    @GetMapping("/{schoolId}/users-counts")
+    public ResponseEntity<UserRoleCountDTO> getUserCountsByRole(
+            @PathVariable String schoolId) {
+        log.debug("Fetching user counts by role for schoolId: {}", schoolId);
+        // validateSchoolId(schoolId);
+        UserRoleCountDTO roleCounts = userService.getUserCountsByRole(schoolId);
+        return ResponseEntity.ok(roleCounts);
+    }
+
+    @GetMapping("/getAllAdminActivity")
+    public ResponseEntity<UserLoginActivityDTO> getAllAdminActivity() {
+        // validateSchoolId(schoolId);
+        UserLoginActivityDTO getAdminsActivity = userService.getAllAdminActivity();
+        return ResponseEntity.ok(getAdminsActivity);
+    }
+
+    @GetMapping("/getAllAdmins")
+    public ResponseEntity<UserLoginActivityDTO> getAllAdmins() {
+        // validateSchoolId(schoolId);
+        UserLoginActivityDTO getAdmins = userService.getAllAdmins();
+        return ResponseEntity.ok(getAdmins);
+    }
+
+    @DeleteMapping("/{schoolId}/user/remove-permissions/{userId}/{permissionId}")
+    public ResponseEntity<String> removePermissionFromUser(
+            @PathVariable String schoolId,
+            @PathVariable String userId,
+            @PathVariable Long permissionId) {
+        log.info("removing permission with ID: {} from userId :{} in schoolId: {}", permissionId, userId, schoolId);
+        validateSchoolId(schoolId);
+        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        String updaterUserId = principal.getUserId();
+        return userService.removePermissionFromUser(userId, schoolId, permissionId, updaterUserId);
     }
 }

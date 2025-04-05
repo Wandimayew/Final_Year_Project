@@ -25,7 +25,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/parent-guardians")
+@RequestMapping("/student/api/parent-guardians")
 @RequiredArgsConstructor
 public class ParentGuardianController {
     private final ParentGuardianService parentGuardianService;

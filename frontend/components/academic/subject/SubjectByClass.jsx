@@ -1,7 +1,7 @@
 import React from 'react'
 import SubjectTable from '@/components/constant/SubjectTable'
 
-const SubjectByClass = ({subjectData}) => {
+const SubjectByClass = ({ subjectData = [] }) => {
     console.log("Subjects in subject by class ", subjectData);
     
   return (

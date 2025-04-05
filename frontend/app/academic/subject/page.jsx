@@ -5,6 +5,7 @@ import AddSubject from "@/components/academic/AddSubject";
 import AssignSubjects from "@/components/academic/AssignSubjects";
 import Layout from "@/components/layout/Layout";
 import { useState } from "react";
+export const dynamic = "force-dynamic";
 
 const SubjectPage = () => {
   const [subjectList, setSubjectList] = useState(true);

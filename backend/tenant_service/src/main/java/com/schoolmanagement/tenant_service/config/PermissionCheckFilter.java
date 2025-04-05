@@ -41,7 +41,10 @@ public class PermissionCheckFilter extends OncePerRequestFilter {
         CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal();
         String userId = principal.getUserId();
-        String schoolId = determineSchoolId(requestPath, httpMethod);
+        String schoolId = principal.getSchoolId();
+        // String schoolId = determineSchoolId(requestPath, httpMethod);
+        log.info("school id is {}", schoolId);
+        log.info("user id is {}", userId);
 
         PermissionCheckRequest permissionRequest = PermissionCheckRequest.builder()
                 .userId(userId)
@@ -83,9 +86,6 @@ public class PermissionCheckFilter extends OncePerRequestFilter {
     }
 
     private String determineSchoolId(String requestPath, String httpMethod) {
-        if (requestPath.equals("/tenant/api/addNewSchool") && httpMethod.equals("POST")) {
-            return "GLOBALS";
-        }
         String[] parts = requestPath.split("/");
         return parts.length > 4 ? parts[4] : null;
     }

@@ -6,7 +6,6 @@ import java.time.format.DateTimeFormatter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-import lombok.Getter;
 
 @Data
 @Table(name = "address")

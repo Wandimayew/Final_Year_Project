@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+export const dynamic = "force-dynamic";
 
 const BASE_URL = "http://localhost:8083/api";
 const ACADEMIC_URL = "http://localhost:8084/academic/api";

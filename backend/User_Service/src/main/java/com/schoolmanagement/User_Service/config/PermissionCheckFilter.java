@@ -7,17 +7,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
+
 
 @Component
 @RequiredArgsConstructor
@@ -25,8 +22,8 @@ import java.util.Set;
 public class PermissionCheckFilter extends OncePerRequestFilter {
 
     private final PermissionTemplateService permissionTemplateService;
-    // private static final java.util.logging.Logger log = LoggerFactory.getLogger(PermissionCheckFilter.class);
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+    private final PublicEndpointChecker publicEndpointChecker;
+    private final PermissionMatcher permissionMatcher;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -36,57 +33,43 @@ public class PermissionCheckFilter extends OncePerRequestFilter {
 
         log.debug("Checking permissions for {} {}", httpMethod, requestPath);
 
-        if (isPublicEndpoint(requestPath)) {
+        // Check if the endpoint is public
+        if (publicEndpointChecker.isPublicEndpoint(requestPath)) {
+            log.debug("Public endpoint detected: {} {}", httpMethod, requestPath);
             chain.doFilter(request, response);
             return;
         }
 
-        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
-        Set<String> userPermissions = principal.getPermissions();
-
-        log.info("User Permissions for accessing : {}", userPermissions);
-
-        List<PermissionTemplate> templates = permissionTemplateService.getAllTemplates();
-        log.info("templates for permissionTemplate : {}", templates);
-        PermissionTemplate matchingTemplate = null;
-        for (PermissionTemplate template : templates) {
-            log.info("templates in for loop for matching : {}", template);
-            if (pathMatcher.match(template.getEndpoint(), requestPath)
-                    && template.getHttpMethod().equalsIgnoreCase(httpMethod)) {
-                matchingTemplate = template;
-                break;
-            }
+        // Authenticate and extract user principal
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserPrincipal)) {
+            log.warn("No valid CustomUserPrincipal found for {} {}", httpMethod, requestPath);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+            return;
         }
 
-        log.info("permission matching : {}",matchingTemplate );
-        if (matchingTemplate != null) {
-            String requiredPermission = matchingTemplate.getName();
+        CustomUserPrincipal principal = (CustomUserPrincipal) authentication.getPrincipal();
+        Set<String> userPermissions = principal.getPermissions();
 
-            log.info("required permission : {}",requiredPermission);
-            if (!userPermissions.contains(requiredPermission)) {
-                log.warn("User {} lacks permission {} for {} {}", principal.getUserId(), requiredPermission, httpMethod,
-                        requestPath);
-                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Insufficient permissions: " + requiredPermission);
-                return;
-            }
-        } else {
+        log.info("User {} permissions: {}", principal.getUserId(), userPermissions);
+
+        // Match permission and validate
+        PermissionTemplate matchingTemplate = permissionMatcher.findMatchingTemplate(requestPath, httpMethod);
+        if (matchingTemplate == null) {
             log.warn("No permission template found for {} {}", httpMethod, requestPath);
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "No permission template found for this endpoint");
             return;
         }
 
-        chain.doFilter(request, response);
-    }
-
-    private boolean isPublicEndpoint(String path) {
-        String[] publicPaths = { "/swagger-ui/**", "/v3/api-docs/**", "/auth/api/login" };
-        log.info("Path to be accessed is {}", path);
-        for (String publicPath : publicPaths) {
-            if (pathMatcher.match(publicPath, path)) {
-                return true;
-            }
+        String requiredPermission = matchingTemplate.getName();
+        if (!userPermissions.contains(requiredPermission)) {
+            log.warn("User {} lacks permission {} for {} {}", principal.getUserId(), requiredPermission, httpMethod,
+                    requestPath);
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Insufficient permissions: " + requiredPermission);
+            return;
         }
-        return false;
+
+        log.debug("Permission granted for {} {} with permission {}", httpMethod, requestPath, requiredPermission);
+        chain.doFilter(request, response);
     }
 }

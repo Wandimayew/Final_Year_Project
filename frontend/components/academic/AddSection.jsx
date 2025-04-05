@@ -4,11 +4,14 @@
 import React, { useState, useEffect } from "react";
 import axios, { formToJSON } from "axios";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 const AddSection = ({onClose, classOptions }) => {
   // State for the form inputs
   const [sectionName, setSectionName] = useState("");
   const [capacity, setCapacity] = useState("");
-  const [classId, setClassId] = useState("");
+  const [classId, setClassId] = useState([]);
 
   // State for errors
   const [errors, setErrors] = useState({});
@@ -37,7 +40,7 @@ const AddSection = ({onClose, classOptions }) => {
       // Example API call to submit data
       console.log("datas for section ", sectionName,capacity,classOptions);
       
-      await axios.post(`http://10.194.61.74:8080/academic/api/new/addNewSection`, {
+      await axios.post(`http://localhost:8086/academic/api/new/addNewSection`, {
         sectionName,
         capacity: parseInt(capacity, 10),
         classId: classOptions,

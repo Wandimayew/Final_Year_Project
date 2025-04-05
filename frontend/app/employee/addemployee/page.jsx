@@ -1,11 +1,10 @@
 import CreateEmployee from '@/components/employee/CreateEmployee'
-import Layout from '@/components/layout/Layout'
 import React from 'react'
+export const dynamic = 'force-dynamic';
+
 const addEmployee = () => {
   return (
-    <Layout>
         <CreateEmployee/>
-    </Layout>
   )
 }
 

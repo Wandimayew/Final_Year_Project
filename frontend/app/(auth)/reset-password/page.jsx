@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react"; // Added Suspense
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import axios from "axios";
+import { useAuth } from "@/lib/api/userManagementService/user";
+export const dynamic = "force-dynamic";
 
-// Child component to handle useSearchParams
+// Child component for Suspense
 function ResetPasswordContent() {
   const [newPassword, setNewPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [token, setToken] = useState(null);
+  const { resetPassword, isLoading, error, isSuccess } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [token, setToken] = useState(null);
 
   useEffect(() => {
     const tokenFromUrl = searchParams.get("token");
@@ -21,24 +22,20 @@ function ResetPasswordContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!token) {
       setMessage("Token is missing.");
       return;
     }
-
-    try {
-      const response = await axios.post(
-        "http://10.194.61.74:8080/auth/api/reset-password",
-        { token, newPassword }
-      );
-      setMessage(response.data);
-      console.log("resetting password response: ", response.data);
-      router.push("/login");
-    } catch (error) {
-      setMessage("Error resetting password. Please try again.");
-    }
+    await resetPassword({ token, newPassword });
   };
+
+  const message = isSuccess
+    ? "Password reset successfully. Redirecting to login..."
+    : error
+    ? "Error resetting password. Please try again."
+    : token === null
+    ? "Token is missing."
+    : "";
 
   return (
     <div className="w-full max-w-md p-8 bg-white shadow-lg rounded-lg">
@@ -55,21 +52,52 @@ function ResetPasswordContent() {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             required
+            disabled={isLoading || isSuccess}
           />
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center"
+          disabled={isLoading || isSuccess}
         >
-          Reset Password
+          {isLoading ? (
+            <svg
+              className="animate-spin h-5 w-5 mr-2 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+              ></path>
+            </svg>
+          ) : null}
+          {isLoading ? "Resetting..." : "Reset Password"}
         </button>
       </form>
-      {message && <p className="mt-4 text-center text-green-500">{message}</p>}
+      {message && (
+        <p
+          className={`mt-4 text-center ${
+            isSuccess ? "text-green-500" : "text-red-500"
+          }`}
+        >
+          {message}
+        </p>
+      )}
     </div>
   );
 }
 
-// Main page component with Suspense
 export default function ResetPassword() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

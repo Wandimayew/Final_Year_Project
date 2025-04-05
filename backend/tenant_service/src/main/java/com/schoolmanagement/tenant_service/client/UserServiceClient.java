@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "user-service", url = "${user.service.url:http://localhost:8085}", configuration = FeignConfig.class)
+@FeignClient(name = "user-service", url = "${user.service.url:http://localhost:8080}", configuration = FeignConfig.class)
 public interface UserServiceClient {
 
     @PostMapping("/auth/api/internal/check-permission")

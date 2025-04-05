@@ -3,15 +3,14 @@ package com.schoolmanagement.communication_service.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import com.schoolmanagement.communication_service.config.JwtToken;
+import com.schoolmanagement.communication_service.config.CustomUserPrincipal;
 import com.schoolmanagement.communication_service.dto.request.CommunicationPreferenceRequest;
 import com.schoolmanagement.communication_service.dto.response.ApiResponse;
 import com.schoolmanagement.communication_service.dto.response.CommunicationPreferenceResponse;
 import com.schoolmanagement.communication_service.service.CommunicationPreferenceService;
-import com.schoolmanagement.communication_service.utils.JwtUtil;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 public class CommunicationPreferenceController {
 
     private final CommunicationPreferenceService communicationPreferenceService;
-    private final JwtUtil jwtUtil;
 
     /**
      * Validates that the schoolId from the path matches the schoolId in the JWT
@@ -32,30 +30,38 @@ public class CommunicationPreferenceController {
      * @param token    the JWT token from the request header
      * @throws SecurityException if the school IDs do not match
      */
-    private void validateSchoolId(String schoolId, String token) {
-        String tokenSchoolId = jwtUtil.extractSchoolId(token);
+        private String getUserIdFromSecurityContext() {
+        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        return principal.getUserId();
+    }
+
+    private void validateSchoolId(String schoolId) {
+        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        String tokenSchoolId = principal.getSchoolId();
         if (!schoolId.equals(tokenSchoolId)) {
             log.error("School ID mismatch: Path schoolId={}, Token schoolId={}", schoolId, tokenSchoolId);
             throw new SecurityException("Unauthorized: School ID mismatch");
         }
     }
 
+
     @GetMapping("/{schoolId}/getCommunicationPreferenceById/{communicationPreference_id}")
     public ResponseEntity<ApiResponse<CommunicationPreferenceResponse>> getCommunicationPreferenceById(
             @PathVariable String schoolId,
-            @PathVariable("communicationPreference_id") Long communicationPreferenceId, @JwtToken String token) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+            @PathVariable("communicationPreference_id") Long communicationPreferenceId) {
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         log.info("Fetching communication preference for user id : {}", userId);
         return communicationPreferenceService.getPreferenceById(schoolId, communicationPreferenceId, userId);
     }
 
     @GetMapping("/{schoolId}/getCommunicationPreferenceByUserId")
     public ResponseEntity<ApiResponse<CommunicationPreferenceResponse>> getCommunicationPreferenceByUserId(
-            @PathVariable String schoolId,
-            @JwtToken String token) {
-        validateSchoolId(schoolId, token);
-        String userId = jwtUtil.extractUserId(token);
+            @PathVariable String schoolId) {
+        validateSchoolId(schoolId);
+        String userId = getUserIdFromSecurityContext();
         log.info("Fetching communication preference for user id : {}", userId);
         return communicationPreferenceService.getCommunicationPreferenceByUserId(schoolId, userId);
     }

@@ -9,7 +9,7 @@ import ActionButton from "../common/ActionButton";
 import Loader from "../shared/Loader";
 
 const API_BASE_URL =
-    `http://10.194.61.74:8080/communication/api`
+    `http://localhost:8084/communication/api`
 const fetchAnnouncements = async (schoolId,token, isMyEvents, userId) => {
   
   console.log("school id", schoolId);

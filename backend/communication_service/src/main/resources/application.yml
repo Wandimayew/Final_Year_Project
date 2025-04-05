@@ -1,63 +1,83 @@
 spring:
-    application: 
-        name: communication_service
-    datasource:
-        url: jdbc:mysql://localhost:3306/Communication_Service
-        username: root
-        password: root
-        driver-class-name: com.mysql.cj.jdbc.Driver
-        hikari:
-            minimum-idle: 5
-            maximum-pool-size: 10
-            idle-timeout: 600000
-    jpa:
-        hibernate:
-            ddl-auto: update
-        properties:
-            hibernate:
-                dialect: org.hibernate.dialect.MySQLDialect
-    profiles:
-        active: dev
-    mail:
-        host: smtp.gmail.com
-        port: 587
-        username: wandimayew8@gmail.com
-        password: jrbt rotv xjwz tfqk
-        properties:
-            mail:
-                smtp:
-                    auth: true
-                    starttls:
-                        enable: true
-                debug: true
-    rabbitmq:
-        host: localhost
-        port: 5672
-        username: guest
-        password: guest
-        virtual-host: /
+  application:
+    name: communication-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/Communication_Service
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 600000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  profiles:
+    active: dev
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:wandimayew8@gmail.com} # Use env var with default
+    password: ${MAIL_PASSWORD:jrbt rotv xjwz tfqk}  # Use env var with default (secure this!)
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        debug: true
+  rabbitmq:
+    host: localhost # Use Docker service name
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
 server:
-  port: 8081
+  port: 8084
 
 user:
-    management:
-        service:
-            url: http://user_service # Replace with actual service URL or use service discovery
+  management:
+    service:
+      url: http://localhost:8080
 
+communication:
+  service:
+    token: this-is-me-do-you-remember-me
+
+app:
+  jwtSecret: zWR3i+mURw4kppEwVNhxZdqblotfvWseQGKI1SdLI9Y=
+  jwtExpirationMs: 86400000 # 24 hours in milliseconds
+  
 cloudinary:
   cloud-name: dcpehgnee
   api-key: 843599552916561
-  api-secret: D6q2oDpQf-NJdyqhKv8NJhl6k9k
+  api-secret: ${CLOUDINARY_API_SECRET:D6q2oDpQf-NJdyqhKv8NJhl6k9k} # Secure this via env var
 
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost/eureka/  # URL of the Eureka Server
+      # defaultZone: ${SERVICE_REGISTRY_URL}/eureka/
+      defaultZone: http://localhost:8761/eureka
+    enabled: true  # URL of the Eureka Server
     registerWithEureka: true  # Register this client with Eureka
-    fetchRegistry: true  # Fetch the registry to discover other services
+    fetchRegistry: true 
   instance:
-    preferIpAddress: true  # Use IP address instead of hostname (optional but recommended)
-    # prefer-ip-address: true
-    ip-address: 10.194.61.62  # Replace with Machine 2’s actual IP (e.g., 10.194.61.x)
-    hostname: 10.194.61.62    # Optional, ensures consistency
-    non-secure-port: 8081
+    # hostname: ${EUREKA_INSTANCE_HOSTNAME}
+    hostname: localhost
+    prefer-ip-address: false

@@ -4,6 +4,8 @@ import QRCodeGenerator from '@/components/attendance/QRCodeGenerator';
 import QRCodeScanner from '@/components/attendance/QRCodeScanner';
 import AttendanceList from '@/components/attendance/AttendanceList';
 
+export const dynamic = 'force-dynamic';
+
 export default function AttendancePage() {
   const [activeTab, setActiveTab] = useState('generate'); // 'generate', 'scan', 'list'
 

@@ -3,8 +3,10 @@ package com.schoolmanagement.communication_service.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import com.schoolmanagement.communication_service.config.CustomUserPrincipal;
 import com.schoolmanagement.communication_service.dto.request.NotificationTemplateRequest;
 import com.schoolmanagement.communication_service.dto.response.ApiResponse;
 import com.schoolmanagement.communication_service.dto.response.NotificationTemplateResponse;
@@ -20,6 +22,22 @@ import lombok.extern.slf4j.Slf4j;
 public class NotificationTemplateController {
 
     private final NotificationTemplateService notificationTemplateService;
+
+        private String getUserIdFromSecurityContext() {
+        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        return principal.getUserId();
+    }
+
+    private void validateSchoolId(String schoolId) {
+        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        String tokenSchoolId = principal.getSchoolId();
+        if (!schoolId.equals(tokenSchoolId)) {
+            log.error("School ID mismatch: Path schoolId={}, Token schoolId={}", schoolId, tokenSchoolId);
+            throw new SecurityException("Unauthorized: School ID mismatch");
+        }
+    }
 
     @GetMapping("/{schoolId}/getNotificationTemplateById/{notificationTemplate_id}")
     public ResponseEntity<ApiResponse<NotificationTemplateResponse>> getNotificationTemplateById(

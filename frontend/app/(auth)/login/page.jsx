@@ -8,6 +8,8 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { useAuth } from "@/lib/api/userManagementService/user";
+import { User } from "lucide-react";
+export const dynamic = "force-dynamic";
 
 const Login = ({ setLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -68,6 +70,7 @@ const Login = ({ setLogin }) => {
               required
               disabled={isLoading}
             />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           </div>
           <div>
             <label
@@ -137,3 +140,4 @@ const Login = ({ setLogin }) => {
 };
 
 export default Login;
+

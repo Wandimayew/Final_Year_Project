@@ -1,5 +1,6 @@
 import React from 'react'
 import CreateUser from '@/components/user/CreateUser'
+export const dynamic = "force-dynamic";
 
 const CreateUserPage = () => {
   return (

@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/api/qrcodes")
+@RequestMapping("/student/api/qrcodes")
 @RequiredArgsConstructor
 @Slf4j
 public class QRCodeController {

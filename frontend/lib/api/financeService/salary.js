@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 const financeApi = axios.create({
-  baseURL: 'http://localhost:8087/api/finance', 
+  baseURL: 'http://localhost:8080/api/finance', 
 });
 
 // Process salary payment

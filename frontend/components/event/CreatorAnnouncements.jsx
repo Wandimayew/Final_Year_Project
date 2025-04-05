@@ -18,7 +18,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 
-const API_BASE_URL = "http://10.194.61.74:8080/communication/api";
+const API_BASE_URL = "http://localhost:8084/communication/api";
 
 const StatusTabs = ({ activeTab, setActiveTab }) => {
   const tabs = [

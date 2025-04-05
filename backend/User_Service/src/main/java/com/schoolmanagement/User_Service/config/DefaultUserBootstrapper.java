@@ -8,173 +8,194 @@ import com.schoolmanagement.User_Service.repository.PermissionRepository;
 import com.schoolmanagement.User_Service.repository.RoleRepository;
 import com.schoolmanagement.User_Service.repository.UserRepository;
 import com.schoolmanagement.User_Service.repository.UserRolePermissionRepository;
-import com.schoolmanagement.User_Service.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class DefaultUserBootstrapper implements ApplicationRunner {
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final PermissionRepository permissionRepository;
-    private final UserRolePermissionRepository userRolePermissionRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+        private final UserRepository userRepository;
+        private final RoleRepository roleRepository;
+        private final PermissionRepository permissionRepository;
+        private final UserRolePermissionRepository userRolePermissionRepository;
+        private final PasswordEncoder passwordEncoder;
 
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-        String schoolId = "GLOBAL"; // Default school ID for initial setup
-        String adminSchoolId = "admin"; // Default school ID for initial setup
-        String username = "wandi";
+        @Override
+        public void run(org.springframework.boot.ApplicationArguments args) {
+                String username = "wandi";
+                String schoolId = "admin";
 
-        if (!userRepository.existsByUsername(username)) {
-            // Create default permissions
-            // Permission addUsersPermission = new Permission();
-            // addUsersPermission.setName("CREATE_USER");
-            // addUsersPermission.setDescription("Permission to add new users");
-            // addUsersPermission.setSchoolId(adminSchoolId);
-            // addUsersPermission.setCreatedBy("system");
-            // addUsersPermission.setEndpoint("/auth/api/{schoolId}/register");
-            // addUsersPermission.setHttpMethod("POST");
-            // addUsersPermission.setCreatedAt(LocalDateTime.now());
-            // addUsersPermission.setUpdatedAt(LocalDateTime.now());
-            // addUsersPermission.setIsActive(true);
-            // permissionRepository.save(addUsersPermission);
+                if (!userRepository.existsByUsername(username)) {
+                        // Create superadmin role
+                        Role superadminRole = createRole("ROLE_SUPERADMIN",
+                                        "Super administrator role with all permissions", schoolId);
+                        roleRepository.save(superadminRole);
 
-            Permission createSchoolPermission = new Permission();
-            createSchoolPermission.setName("CREATE_SCHOOL");
-            createSchoolPermission.setDescription("Permission to create a new school");
-            createSchoolPermission.setSchoolId(adminSchoolId);
-            createSchoolPermission.setCreatedBy("system");
-            createSchoolPermission.setEndpoint("/tenant/api/addNewSchool");
-            createSchoolPermission.setHttpMethod("POST");
-            createSchoolPermission.setCreatedAt(LocalDateTime.now());
-            createSchoolPermission.setUpdatedAt(LocalDateTime.now());
-            createSchoolPermission.setIsActive(true);
-            permissionRepository.save(createSchoolPermission);
-            
+                        // Create user
+                        User defaultUser = createUser(username, schoolId);
+                        userRepository.save(defaultUser);
 
-            Permission getUserActivityPermission = new Permission();
-            getUserActivityPermission.setName("GET_USER_ACTIVITY");
-            getUserActivityPermission.setDescription("Permission to create a new school");
-            getUserActivityPermission.setSchoolId(adminSchoolId);
-            getUserActivityPermission.setCreatedBy("system");
-            getUserActivityPermission.setEndpoint("/tenant/api/addNewSchool");
-            getUserActivityPermission.setHttpMethod("POST");
-            getUserActivityPermission.setCreatedAt(LocalDateTime.now());
-            getUserActivityPermission.setUpdatedAt(LocalDateTime.now());
-            getUserActivityPermission.setIsActive(true);
-            permissionRepository.save(getUserActivityPermission);
-
-            Permission getAdminActivityPermission = new Permission();
-            getAdminActivityPermission.setName("GET_ADMIN_ACTIVITY");
-            getAdminActivityPermission.setDescription("Permission to create a new school");
-            getAdminActivityPermission.setSchoolId(adminSchoolId);
-            getAdminActivityPermission.setCreatedBy("system");
-            getAdminActivityPermission.setEndpoint("/tenant/api/addNewSchool");
-            getAdminActivityPermission.setHttpMethod("POST");
-            getAdminActivityPermission.setCreatedAt(LocalDateTime.now());
-            getAdminActivityPermission.setUpdatedAt(LocalDateTime.now());
-            getAdminActivityPermission.setIsActive(true);
-            permissionRepository.save(getAdminActivityPermission);
-
-            Permission registerAdminPermission = new Permission();
-            registerAdminPermission.setName("REGISTER_ADMIN");
-            registerAdminPermission.setDescription("Permission to register an admin user");
-            registerAdminPermission.setSchoolId(adminSchoolId);
-            registerAdminPermission.setCreatedBy("system");
-            registerAdminPermission.setEndpoint("/auth/api/register");
-            registerAdminPermission.setHttpMethod("POST");
-            registerAdminPermission.setCreatedAt(LocalDateTime.now());
-            registerAdminPermission.setUpdatedAt(LocalDateTime.now());
-            registerAdminPermission.setIsActive(true);
-            permissionRepository.save(registerAdminPermission);
-
-            // Create default User Role
-            Role userRole = new Role();
-            userRole.setName("ROLE_USER");
-            userRole.setDescription("User role");
-            userRole.setSchoolId(adminSchoolId);
-            userRole.setCreatedBy("system");
-            userRole.setCreatedAt(LocalDateTime.now());
-            userRole.setUpdatedAt(LocalDateTime.now());
-            userRole.setIsActive(true);
-            roleRepository.save(userRole);
-
-            // Create default Superadmin role (instead of just ROLE_ADMIN)
-            Role superadminRole = new Role();
-            superadminRole.setName("ROLE_SUPERADMIN"); // Changed to reflect full privileges
-            superadminRole.setDescription("Super administrator role with all permissions");
-            superadminRole.setSchoolId(adminSchoolId);
-            superadminRole.setCreatedBy("system");
-            superadminRole.setCreatedAt(LocalDateTime.now());
-            superadminRole.setUpdatedAt(LocalDateTime.now());
-            superadminRole.setIsActive(true);
-            roleRepository.save(superadminRole);
-
-            // Create default user and assign roles
-            User defaultUser = User.builder()
-                    .userId("wandi-1")
-                    .schoolId(adminSchoolId) // Consider using "GLOBAL" for consistency
-                    .username(username)
-                    .email("wondimayewaschalew@gmail.com")
-                    .password(passwordEncoder.encode("wandi123"))
-                    .isActive(true)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .createdBy("system")
-                    .build();
-
-            // Assign the role to the user via the @ManyToMany relationship
-            Set<Role> roles = new HashSet<>();
-            roles.add(superadminRole);
-            defaultUser.setRoles(roles);
-
-            // Save the user (this will populate user_roles)
-            userRepository.save(defaultUser);
-
-            // Link user, role, and permissions via UserRolePermission
-            // UserRolePermission urpAddUsers = new UserRolePermission();
-            // urpAddUsers.setSchoolId(adminSchoolId);
-            // urpAddUsers.setUser(defaultUser);
-            // urpAddUsers.setRole(superadminRole);
-            // urpAddUsers.setPermission(addUsersPermission);
-            // urpAddUsers.setIsActive(true);
-            // urpAddUsers.setCreatedBy("system");
-            // urpAddUsers.setCreatedAt(LocalDateTime.now());
-            // urpAddUsers.setUpdatedAt(LocalDateTime.now());
-            // userRolePermissionRepository.save(urpAddUsers);
-
-            UserRolePermission urpCreateSchool = new UserRolePermission();
-            urpCreateSchool.setSchoolId(adminSchoolId);
-            urpCreateSchool.setUser(defaultUser);
-            urpCreateSchool.setRole(superadminRole);
-            urpCreateSchool.setPermission(createSchoolPermission);
-            urpCreateSchool.setIsActive(true);
-            urpCreateSchool.setCreatedBy("system");
-            urpCreateSchool.setCreatedAt(LocalDateTime.now());
-            urpCreateSchool.setUpdatedAt(LocalDateTime.now());
-            userRolePermissionRepository.save(urpCreateSchool);
-
-            UserRolePermission urpRegisterAdmin = new UserRolePermission();
-            urpRegisterAdmin.setSchoolId(adminSchoolId);
-            urpRegisterAdmin.setUser(defaultUser);
-            urpRegisterAdmin.setRole(superadminRole);
-            urpRegisterAdmin.setPermission(registerAdminPermission);
-            urpRegisterAdmin.setIsActive(true);
-            urpRegisterAdmin.setCreatedBy("system");
-            urpRegisterAdmin.setCreatedAt(LocalDateTime.now());
-            urpRegisterAdmin.setUpdatedAt(LocalDateTime.now());
-            userRolePermissionRepository.save(urpRegisterAdmin);
+                        // Assign permissions via role
+                        assignPermissionsToUser(defaultUser, superadminRole, schoolId);
+                }
         }
-    }
+
+        private Role createRole(String name, String description, String schoolId) {
+                Role role = new Role();
+                role.setName(name);
+                role.setDescription(description);
+                role.setSchoolId(schoolId);
+                role.setCreatedBy("system");
+                role.setCreatedAt(LocalDateTime.now());
+                role.setUpdatedAt(LocalDateTime.now());
+                role.setIsActive(true);
+                return role;
+        }
+
+        private User createUser(String username, String schoolId) {
+                return User.builder()
+                                .userId("wandi-1")
+                                .schoolId(schoolId)
+                                .username(username)
+                                .email("wondimayewaschalew@gmail.com")
+                                .password(passwordEncoder.encode("wandi123"))
+                                .isActive(true)
+                                .createdAt(LocalDateTime.now())
+                                .updatedAt(LocalDateTime.now())
+                                .createdBy("system")
+                                .roles(new HashSet<>())
+                                .build();
+        }
+
+        private void assignPermissionsToUser(User user, Role role, String schoolId) {
+                List<Permission> permissions = List.of(
+                                // AuthController Permissions (Superadmin-specific)
+                                createPermission("REGISTER_ADMIN", "Permission to register an admin user",
+                                                "/auth/api/register", "POST", schoolId),
+                                createPermission("VIEW_LOGIN_ACTIVITY", "View login activity for any school",
+                                                "/auth/api/*/activity", "GET", schoolId),
+                                createPermission("LOGOUT_USER", "Logout and clear token",
+                                                "/auth/api/logout", "POST", schoolId),
+
+                                // User Controller Permissions
+                                createPermission("VIEW_SCHOOL_ADMINS",
+                                                "View the Admin of all registered school on the system",
+                                                "/auth/api/getAllAdmins", "GET", schoolId),
+                                createPermission("VIEW_SCHOOL_ADMINS_ACTIVITY",
+                                                "View Admins Activity of all registered school on the system",
+                                                "/auth/api/getAllAdminActivity", "GET", schoolId),
+                                // PasswordResetController Permissions
+                                createPermission("APPROVE_PASSWORD_RESET", "Approve a password reset request",
+                                                "/auth/api/approve-password-reset", "POST", schoolId),
+                                createPermission("VIEW_PENDING_PASSWORD_RESETS", "View pending password reset requests",
+                                                "/auth/api/pending-password-resets", "GET", schoolId),
+
+                                // PermissionCheckController Permissions
+                                createPermission("CHECK_PERMISSION", "Check permission for any user",
+                                                "/auth/api/internal/check-permission", "POST", schoolId),
+
+                                // SchoolPermissionController Permissions
+                                createPermission("BOOTSTRAP_PERMISSIONS", "Bootstrap permissions for any school",
+                                                "/auth/api/internal/schools/*/bootstrap-permissions", "POST", schoolId),
+
+                                // Tenant Service Permissions (SchoolController) - Full school management
+                                createPermission("ADD_SCHOOL", "Add a new school", "/tenant/api/addNewSchool", "POST",
+                                                schoolId),
+                                createPermission("EDIT_SCHOOL", "Edit an existing school",
+                                                "/tenant/api/editSchoolById/*", "PUT", schoolId),
+                                createPermission("VIEW_ALL_SCHOOLS", "View all schools", "/tenant/api/getAllSchools",
+                                                "GET", schoolId),
+                                createPermission("VIEW_SCHOOL_BY_ID", "View school by ID",
+                                                "/tenant/api/getSchoolById/*", "GET", schoolId),
+                                createPermission("DELETE_SCHOOL_BY_ID", "Delete school by ID",
+                                                "/tenant/api/deleteSchoolById/*", "DELETE", schoolId),
+                                createPermission("VIEW_SCHOOL_STATS", "View school statistics",
+                                                "/tenant/api/getSchoolStats/*", "GET", schoolId),
+                                createPermission("VIEW_SCHOOL_COUNT",
+                                                "View the Numbers of school registered on the system",
+                                                "/tenant/api/getSchoolCount", "GET", schoolId),
+                                createPermission("VIEW_SCHOOL_NAME", "View schools names",
+                                                "/tenant/api/getSchoolName/*", "GET", schoolId),
+
+                                // Tenant Service Permissions (SubscriptionPlanController) - Subscription plan
+                                // management
+                                createPermission("ADD_SUBSCRIPTION_PLAN", "Add a new subscription plan",
+                                                "/tenant/api/addNewSubscriptionPlan", "POST", schoolId),
+                                createPermission("EDIT_SUBSCRIPTION_PLAN", "Edit a subscription plan",
+                                                "/tenant/api/editSubscriptioPlanById/*", "PUT", schoolId),
+                                createPermission("VIEW_ALL_SUBSCRIPTION_PLANS", "View all subscription plans",
+                                                "/tenant/api/getAllSubscriptionPlans", "GET", schoolId),
+                                createPermission("VIEW_SUBSCRIPTION_PLAN_BY_ID", "View subscription plan by ID",
+                                                "/tenant/api/getSubscriptionPlanById/*", "GET", schoolId),
+                                createPermission("DELETE_SUBSCRIPTION_PLAN", "Delete subscription plan by ID",
+                                                "/tenant/api/deleteSubscriptioPlanById/*", "DELETE", schoolId),
+                                createPermission("VIEW_SCHOOLS_BY_PLAN", "View schools subscribed to a plan",
+                                                "/tenant/api/getSchoolsByPlanId/*", "GET", schoolId),
+
+                                // Tenant Service Permissions (SchoolSubscriptionController) - Subscription
+                                // management
+                                createPermission("ADD_SCHOOL_SUBSCRIPTION", "Add a new school subscription",
+                                                "/tenant/api/*/addNewSchoolSubscription", "POST", schoolId),
+                                createPermission("EDIT_SCHOOL_SUBSCRIPTION", "Edit a school subscription",
+                                                "/tenant/api/*/editSchoolSubscriptionById/*", "PUT", schoolId),
+                                createPermission("DELETE_SCHOOL_SUBSCRIPTION", "Delete school subscription by ID",
+                                                "/tenant/api/*/deleteSchoolSubscriptionById/*", "DELETE", schoolId),
+                                createPermission("VIEW_ALL_SCHOOL_SUBSCRIPTIONS", "View all school subscriptions",
+                                                "/tenant/api/*/getAllSchoolSubscriptions", "GET", schoolId),
+                                createPermission("VIEW_SUBSCRIPTIONS_BY_STATUS", "View subscriptions by status",
+                                                "/tenant/api/getSubscriptionPending/*", "GET", schoolId),
+                                createPermission("VIEW_SCHOOL_SUBSCRIPTION_BY_STATUS",
+                                                "View school subscription by status",
+                                                "/tenant/api/*/getSchoolSubscriptionByStatus/*", "GET", schoolId),
+                                createPermission("MAKE_SUBSCRIPTION_PAYMENT", "Make a subscription payment",
+                                                "/tenant/api/makeSubscriptionPayment", "POST", schoolId),
+                                createPermission("APPROVE_SUBSCRIPTION_PAYMENT", "Approve a subscription payment",
+                                                "/tenant/api/makeSubscriptionPaid", "POST", schoolId),
+                                createPermission("VIEW_SCHOOL_SUBSCRIPTION_BY_ID", "View school subscription by ID",
+                                                "/tenant/api/*/getSchoolSubscriptionById/*", "GET", schoolId),
+
+                                // UserController Permissions (System-wide user management)
+                                createPermission("VIEW_USER_COUNTS_BY_ROLE", "View user counts by role for any school",
+                                                "/auth/api/*/users-counts", "GET", schoolId));
+
+                permissionRepository.saveAll(permissions);
+
+                permissions.forEach(permission -> {
+                        UserRolePermission urp = new UserRolePermission();
+                        urp.setSchoolId(schoolId);
+                        urp.setUser(user);
+                        urp.setRole(role);
+                        urp.setPermission(permission);
+                        urp.setIsActive(true);
+                        urp.setCreatedBy("system");
+                        urp.setCreatedAt(LocalDateTime.now());
+                        urp.setUpdatedAt(LocalDateTime.now());
+                        userRolePermissionRepository.save(urp);
+                });
+
+                user.getRoles().add(role);
+                userRepository.save(user);
+        }
+
+        private Permission createPermission(String name, String description, String endpoint, String httpMethod,
+                        String schoolId) {
+                Permission permission = new Permission();
+                permission.setName(name);
+                permission.setDescription(description);
+                permission.setEndpoint(endpoint);
+                permission.setHttpMethod(httpMethod);
+                permission.setSchoolId(schoolId);
+                permission.setCreatedBy("system");
+                permission.setCreatedAt(LocalDateTime.now());
+                permission.setUpdatedAt(LocalDateTime.now());
+                permission.setIs_active(true);
+                return permission;
+        }
 }

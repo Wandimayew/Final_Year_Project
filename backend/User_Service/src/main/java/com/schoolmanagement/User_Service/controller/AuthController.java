@@ -6,21 +6,20 @@ import com.schoolmanagement.User_Service.dto.LoginRequest;
 import com.schoolmanagement.User_Service.dto.SignupRequest;
 import com.schoolmanagement.User_Service.dto.SignupResponse;
 import com.schoolmanagement.User_Service.dto.UserLoginActivityDTO;
-import com.schoolmanagement.User_Service.model.User;
 import com.schoolmanagement.User_Service.service.AuthService;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/auth/api")
@@ -41,10 +40,11 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest,
+            HttpServletRequest request) {
         log.info("Authenticating user: {}", loginRequest.getUsername());
         try {
-            JwtResponse jwtResponse = authService.authenticateUser(loginRequest);
+            JwtResponse jwtResponse = authService.authenticateUser(loginRequest, request);
             return ResponseEntity.ok(jwtResponse);
         } catch (AuthenticationException e) {
             log.warn("Authentication failed for user: {} - {}", loginRequest.getUsername(), e.getMessage());
@@ -52,12 +52,38 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        try {
+            authService.logout(request);
+            return ResponseEntity.ok("Logout successful");
+        } catch (IllegalArgumentException e) {
+            log.warn("Logout failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Logout failed: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error during logout", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Logout failed: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtResponse> refreshToken(@RequestParam String refreshToken, HttpServletRequest request) {
+        try {
+            JwtResponse jwtResponse = authService.refreshToken(refreshToken, request);
+            return ResponseEntity.ok(jwtResponse);
+        } catch (IllegalArgumentException e) {
+            log.warn("Token refresh failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(JwtResponse.builder().message(e.getMessage()).build());
+        } catch (Exception e) {
+            log.error("Unexpected error during token refresh", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(JwtResponse.builder().message("Token refresh failed: " + e.getMessage()).build());
+        }
+    }
+
     @GetMapping("/{schoolId}/activity")
     public ResponseEntity<List<UserLoginActivityDTO>> getAllLoginActivity(@PathVariable String schoolId) {
         validateSchoolId(schoolId);
-        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
-        String userId = principal.getUserId();
         List<UserLoginActivityDTO> activityList = authService.getAllLoginActivity(schoolId);
         return ResponseEntity.ok(activityList);
     }
@@ -67,7 +93,7 @@ public class AuthController {
             @PathVariable String schoolId) {
         log.info("Registering user with username: {} for schoolId: {}", signupRequest.getUsername(), schoolId);
         CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
-        .getAuthentication().getPrincipal();
+                .getAuthentication().getPrincipal();
         String userId = principal.getUserId();
         signupRequest.setSchoolId(schoolId);
 

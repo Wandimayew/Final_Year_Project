@@ -153,6 +153,7 @@
 import { useStudent } from "@/lib/api/studentService/students";
 import { use } from "react";
 import StudentProfile from '@/components/students/StudentDetails';
+export const dynamic = "force-dynamic";
 
 const StudentDetailPage = ({params}) => {
   const { studentId } = use(params);

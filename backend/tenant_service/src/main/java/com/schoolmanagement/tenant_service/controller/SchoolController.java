@@ -3,6 +3,7 @@ package com.schoolmanagement.tenant_service.controller;
 import com.schoolmanagement.tenant_service.config.CustomUserPrincipal;
 import com.schoolmanagement.tenant_service.dto.SchoolRequest;
 import com.schoolmanagement.tenant_service.dto.SchoolResponse;
+import com.schoolmanagement.tenant_service.dto.SchoolStatsDTO; 
 import com.schoolmanagement.tenant_service.service.SchoolService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,45 +39,32 @@ public class SchoolController {
     }
 
     @PostMapping(value = "/addNewSchool", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<SchoolResponse> addNewSchool(@ModelAttribute SchoolRequest schoolRequest,
-            @RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<SchoolResponse> addNewSchool(@ModelAttribute SchoolRequest schoolRequest) {
         log.info("Received request to add new school with name: {}", schoolRequest.getSchool_name());
-        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
-        String userId = principal.getUserId();
-        String user=getUserIdFromSecurityContext();
-        log.info("user ID from userId : {}",userId);
-        log.info("user ID from user : {}",user);
+        String userId = getUserIdFromSecurityContext();
+        log.info("User ID from request: {}", userId);
         return schoolService.addNewSchool(schoolRequest);
     }
 
     @PutMapping(value = "/editSchoolById/{school_id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<SchoolResponse> editSchoolById(@PathVariable("school_id") String schoolId,
+    public ResponseEntity<SchoolResponse> editSchoolById(
+            @PathVariable("school_id") String schoolId,
             @ModelAttribute SchoolRequest schoolRequest) {
         log.info("Editing school with ID: {}", schoolId);
         validateSchoolId(schoolId);
-        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
-        String userId = principal.getUserId();
         return schoolService.editSchoolById(schoolRequest, schoolId);
     }
 
     @GetMapping("/getAllSchools")
     public ResponseEntity<List<SchoolResponse>> getAllSchools() {
         log.info("Fetching all schools");
-        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
-        String userId = principal.getUserId();
         return schoolService.getAllSchools();
     }
 
-    @GetMapping("/getSchoolById/{school_id}")
-    public ResponseEntity<SchoolResponse> getSchoolById(@PathVariable("school_id") String schoolId) {
+    @GetMapping("/getSchoolById/{schoolId}")
+    public ResponseEntity<SchoolResponse> getSchoolById(@PathVariable String schoolId) {
         log.info("Fetching school with ID: {}", schoolId);
-        validateSchoolId(schoolId);
-        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
-        String userId = principal.getUserId();
+        // validateSchoolId(schoolId);
         return schoolService.getSchoolById(schoolId);
     }
 
@@ -84,10 +72,24 @@ public class SchoolController {
     public ResponseEntity<String> deleteSchoolById(@PathVariable("school_id") String schoolId) {
         log.info("Deleting school with ID: {}", schoolId);
         validateSchoolId(schoolId);
-        CustomUserPrincipal principal = (CustomUserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
-        String userId = principal.getUserId();
         return schoolService.deleteSchoolById(schoolId);
     }
 
+    // New endpoint for school stats
+    // @GetMapping("/getSchoolStats/{school_id}")
+    // public ResponseEntity<SchoolStatsDTO> getSchoolStats(@PathVariable("school_id") String schoolId) {
+    //     log.info("Fetching stats for school with ID: {}", schoolId);
+    //     validateSchoolId(schoolId);
+    //     return schoolService.getSchoolStats(schoolId);
+    // }
+
+    @GetMapping("/getSchoolCount")
+    public ResponseEntity<SchoolStatsDTO> getSchoolCount() {
+        return schoolService.getSchoolCount();
+    }
+
+    @GetMapping("/getSchoolName")
+    public ResponseEntity<List<String>> getSchoolName(@RequestBody List<String> schoolIds) {
+        return schoolService.getSchoolName(schoolIds);
+    }
 }

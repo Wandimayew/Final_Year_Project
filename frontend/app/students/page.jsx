@@ -14,6 +14,7 @@ import { useDeleteStudent, useStudents } from "@/lib/api/studentService/students
 import { FaTimes } from "react-icons/fa";
 import Link from "next/link";
 import InputField from "@/components/InputField";
+export const dynamic = "force-dynamic";
 
 const StudentList = () => {
   const [classId, setClassId] = useState(null);

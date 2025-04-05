@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { BrowserQRCodeReader } from "@zxing/browser";
 import { useValidateQRCodeAndMarkAttendance } from "@/lib/api/studentService/attendances";
 
+export const dynamic = 'force-dynamic';
+
 const QRCodeScannerPage = () => {
   const videoRef = useRef(null);
   const [scanResult, setScanResult] = useState(null);

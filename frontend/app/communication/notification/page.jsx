@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from "react";
 import NotificationBell from "@/components/notification/NotificationBell";
 import { useAuth } from "@/hooks/useAuth";
+export const dynamic = "force-dynamic";
 
 const NotificationPage = () => {
   const { auth, loading: authLoading } = useAuth();
@@ -25,7 +26,7 @@ const NotificationPage = () => {
 
     const { schoolId, userId } = auth.user || {};
     if (!schoolId || !userId) {
-      console.log("Missing schoolId or userId in auth.user:", auth.user);
+      console.log("Missing schoolId or userId in auth.user:", auth?.user);
       setError("Incomplete user data.");
       setLoading(false);
       return;

@@ -5,17 +5,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 const fetchStreams = async (schoolId) => {
   if (!schoolId) return []; // Avoid fetch if no schoolId
   const response = await axios.get(
-    `http://10.194.61.74:8080/academic/api/new/getAllStreamBySchool`
+    `http://localhost:8086/academic/api/new/getAllStreamBySchool`
   );
   return response.data;
 };
 
 const addClass = async (classData) => {
   const response = await axios.post(
-    `http://10.194.61.74:8080/academic/api/new/add-class`, // Adjust endpoint as needed
+    `http://localhost:8086/academic/api/new/add-class`, // Adjust endpoint as needed
     classData
   );
   return response.data;

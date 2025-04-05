@@ -1,60 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Box,
-  Typography,
-  Card,
-  TextField,
-  Switch,
-  FormControlLabel,
-  CircularProgress,
-  IconButton,
-  Tooltip,
-  Collapse,
-} from "@mui/material";
-import { styled } from "@mui/system";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import {
-  Error as ErrorIcon,
-  ExpandMore as ExpandMoreIcon,
-} from "@mui/icons-material";
 import {
   usePermissions,
   useUserPermissions,
 } from "@/lib/api/userManagementService/permission";
 import { useAssignPermissionsToUserForRole } from "@/lib/api/userManagementService/role";
-import { useQueryClient } from "@tanstack/react-query"; // Assuming React Query is used
+import { useQueryClient } from "@tanstack/react-query";
+import { TrashIcon } from "lucide-react";
 
-// Styled card for permissions
-const PermissionCard = styled(Card)(({ theme, assigned }) => ({
-  transition: "all 0.3s ease",
-  borderRadius: "12px",
-  padding: "12px 16px",
-  marginBottom: "8px",
-  backgroundColor: assigned ? "#e3f2fd" : "#ffffff",
-  boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-  "&:hover": {
-    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-    transform: "translateY(-2px)",
-  },
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-}));
-
-const ExpandIcon = styled(ExpandMoreIcon)(({ theme, open }) => ({
-  transition: "transform 0.3s ease",
-  transform: open ? "rotate(180deg)" : "rotate(0deg)",
-}));
-
-const PermissionAssignment = ({ userId, schoolId, roleId }) => {
+const PermissionAssignment = ({
+  userId,
+  schoolId,
+  roleId,
+  onRemovePermission,
+  isRemovingPermission,
+}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [expanded, setExpanded] = useState(true);
+  const queryClient = useQueryClient();
 
-  const queryClient = useQueryClient(); // For invalidating/refetching queries
-
-  // Fetch all permissions and user permissions
   const {
     data: allPermissions = [],
     isLoading: permissionsLoading,
@@ -65,29 +31,24 @@ const PermissionAssignment = ({ userId, schoolId, roleId }) => {
     isLoading: userPermissionsLoading,
     error: userPermissionsError,
   } = useUserPermissions(schoolId, userId);
-
-  // Mutation hook for assigning permissions
   const {
     mutate: assignPermissions,
     isPending: assignPending,
     error: assignError,
   } = useAssignPermissionsToUserForRole();
 
-  // Filter permissions based on search query
-  const filteredPermissions = allPermissions.filter((perm) =>
-    perm.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPermissions = useMemo(
+    () =>
+      allPermissions.filter((perm) =>
+        perm.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [allPermissions, searchQuery]
   );
 
-  // Check if a permission is assigned to the user
   const isPermissionAssigned = (permName) => userPermissions.includes(permName);
 
-  // Handle permission toggle
   const handleTogglePermission = (permName) => {
-    if (!roleId) {
-      console.error("No role ID provided to assign permissions");
-      return;
-    }
-
+    if (!roleId) return;
     const assigned = isPermissionAssigned(permName);
     const permission = allPermissions.find((p) => p.name === permName);
     if (!permission) return;
@@ -111,141 +72,169 @@ const PermissionAssignment = ({ userId, schoolId, roleId }) => {
       {
         onSuccess: () => {
           console.log(`${assigned ? "Unassigned" : "Assigned"} ${permName}`);
-          // Invalidate or refetch user permissions to update UI in real-time
-          queryClient.invalidateQueries(["userPermissions", schoolId, userId]);
+          queryClient.invalidateQueries({
+            queryKey: ["userPermissions", schoolId, userId],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["users", schoolId, userId],
+          });
         },
         onError: (err) =>
           console.error(
             `Failed to ${assigned ? "unassign" : "assign"} ${permName}:`,
-            err
+            err.message
           ),
       }
     );
   };
 
-  // Loading state
+  const handleRemove = (permName) => {
+    const permission = allPermissions.find((p) => p.name === permName);
+    if (permission) onRemovePermission(permission.permissionId);
+  };
+
   if (permissionsLoading || userPermissionsLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center p-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+      </div>
     );
   }
 
-  // Error state
   if (permissionsError || userPermissionsError) {
     return (
-      <Typography variant="body1" color="error" align="center" sx={{ p: 4 }}>
+      <p className="p-4 text-center text-red-600">
         Failed to load permissions:{" "}
         {permissionsError?.message || userPermissionsError?.message}
-      </Typography>
+      </p>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: "600px", mx: "auto", p: 2 }}>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 2,
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: 600, color: "#333" }}>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="max-w-lg mx-auto p-2"
+    >
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-800">
           Manage Permissions
-        </Typography>
-        <IconButton onClick={() => setExpanded(!expanded)}>
-          <ExpandIcon open={expanded} />
-        </IconButton>
-      </Box>
+        </h2>
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          <svg
+            className={`h-6 w-6 transition-transform ${
+              expanded ? "rotate-180" : ""
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+      </div>
 
-      <Collapse in={expanded}>
-        <TextField
-          label="Search Permissions"
-          variant="outlined"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          fullWidth
-          sx={{ mb: 2, bgcolor: "#f5f7fa", borderRadius: "8px" }}
-        />
+      {expanded && (
+        <div className="space-y-4">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search Permissions"
+            className="w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none"
+          />
 
-        <Box sx={{ maxHeight: "400px", overflowY: "auto", pr: 1 }}>
-          {filteredPermissions.length > 0 ? (
-            filteredPermissions.map((perm) => {
-              const assigned = isPermissionAssigned(perm.name);
-              return (
-                <motion.div
-                  key={perm.permissionId}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <PermissionCard assigned={assigned}>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontWeight: 500,
-                          color: assigned ? "#1976d2" : "#333",
-                        }}
+          <div className="max-h-96 overflow-y-auto pr-1">
+            {filteredPermissions.length > 0 ? (
+              filteredPermissions.map((perm) => {
+                const assigned = isPermissionAssigned(perm.name);
+                return (
+                  <motion.div
+                    key={perm.permissionId}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className={`mb-2 flex items-center justify-between rounded-lg p-3 transition-all ${
+                      assigned ? "bg-blue-50" : "bg-white"
+                    } shadow-sm hover:shadow-md`}
+                  >
+                    <div className="flex items-center">
+                      <span
+                        className={`font-medium ${
+                          assigned ? "text-blue-600" : "text-gray-800"
+                        }`}
                       >
                         {perm.name}
-                      </Typography>
+                      </span>
                       {perm.description && (
-                        <Tooltip title={perm.description}>
-                          <Typography
-                            variant="body2"
-                            sx={{ ml: 1, color: "#666" }}
-                          >
-                            (?)
-                          </Typography>
-                        </Tooltip>
+                        <span
+                          className="ml-2 text-sm text-gray-500"
+                          title={perm.description}
+                        >
+                          (?)
+                        </span>
                       )}
-                    </Box>
-                    <FormControlLabel
-                      control={
-                        <Switch
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
                           checked={assigned}
                           onChange={() => handleTogglePermission(perm.name)}
-                          disabled={assignPending}
-                          color="primary"
+                          disabled={assignPending || isRemovingPermission}
+                          className="h-5 w-5 text-blue-600"
                         />
-                      }
-                      label={assigned ? "Assigned" : "Not Assigned"}
-                      sx={{ m: 0 }}
-                    />
-                  </PermissionCard>
-                </motion.div>
-              );
-            })
-          ) : (
-            <Typography
-              variant="body2"
-              color="textSecondary"
-              align="center"
-              sx={{ py: 2 }}
-            >
-              No permissions match your search.
-            </Typography>
-          )}
-        </Box>
+                        <span className="ml-2 text-sm text-gray-600">
+                          {assigned ? "Assigned" : "Not Assigned"}
+                        </span>
+                      </label>
+                      {assigned && (
+                        <button
+                          onClick={() => handleRemove(perm.name)}
+                          disabled={isRemovingPermission}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })
+            ) : (
+              <p className="py-2 text-center text-gray-500">
+                No permissions match your search.
+              </p>
+            )}
+          </div>
 
-        {assignError && (
-          <Box
-            sx={{
-              mt: 2,
-              display: "flex",
-              alignItems: "center",
-              color: "#d32f2f",
-            }}
-          >
-            <ErrorIcon sx={{ mr: 1 }} />
-            <Typography variant="body2">{assignError.message}</Typography>
-          </Box>
-        )}
-      </Collapse>
-    </Box>
+          {assignError && (
+            <p className="mt-2 flex items-center text-red-600">
+              <svg
+                className="mr-1 h-5 w-5"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              {assignError.message}
+            </p>
+          )}
+        </div>
+      )}
+    </motion.div>
   );
 };
 
