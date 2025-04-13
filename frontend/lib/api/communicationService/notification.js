@@ -30,7 +30,7 @@ const notificationApi = {
   },
   getUnreadNotifications: async (schoolId) => {
     const { data } = await communicationService.get(`/${schoolId}/notifications/unread`);
-    return data;
+    return data.data;
   },
   markNotificationAsRead: async (schoolId, notificationId) => {
     const { data } = await communicationService.post(`/${schoolId}/mark-read/notifications/${notificationId}`);
@@ -96,23 +96,24 @@ export function useDeleteNotification(schoolId) {
   });
 }
 
-export function useUnreadNotifications(schoolId) {
+export function useUnreadNotifications(schoolId, userId) {
   return useQuery({
-    queryKey: ["notifications", schoolId, "unread"],
+    queryKey: ["notifications", schoolId, userId, "unread"], // Added userId to queryKey
     queryFn: () => notificationApi.getUnreadNotifications(schoolId),
-    enabled: !!schoolId,
+    enabled: !!schoolId && !!userId,
     staleTime: 5 * 60 * 1000,
     retry: 2,
-    onError: (error) => console.error(`Failed to fetch unread notifications for school ${schoolId}:`, error.message),
+    onError: (error) => console.error(`Failed to fetch unread notifications for school ${schoolId}, user ${userId}:`, error.message),
   });
 }
 
-export function useMarkNotificationAsRead(schoolId) {
+export function useMarkNotificationAsRead(schoolId, userId) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (notificationId) => notificationApi.markNotificationAsRead(schoolId, notificationId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications", schoolId] });
+      // Avoid broad invalidation to prevent cache clearing
+      // Rely on NotificationBell to update cache directly
     },
     onError: (error) => console.error("Marking notification as read failed:", error.message),
   });

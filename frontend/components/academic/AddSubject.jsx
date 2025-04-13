@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import axios from "axios";
-
-
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
+import { useState, useEffect, useMemo } from "react";
+import { useAuthStore } from "@/lib/auth";
+import { toast } from "react-toastify";
+import { useCreateSubject } from "@/lib/api/academicService/subject";
 
 const AddSubject = ({ setSubjectListClicked, setAssign }) => {
   const [formData, setFormData] = useState({
@@ -13,87 +11,102 @@ const AddSubject = ({ setSubjectListClicked, setAssign }) => {
     creditHours: 0,
     subjectCode: "",
   });
+  const authState = useMemo(
+    () =>
+      useAuthStore.getState()
+        ? {
+            user: useAuthStore.getState().user,
+            isAuthenticated: useAuthStore.getState().isAuthenticated(),
+          }
+        : { user: null, isAuthenticated: false },
+    []
+  );
+  const { user } = authState;
 
-//   const [classes, setClasses] = useState([]);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
+  const schoolId = user.schoolId;
 
-  const [schoolId, setSchoolId] = useState([]);
+  const createSubjectMutation = useCreateSubject();
 
-  // Fetch class options
-//   useEffect(() => {
-//     const fetchClasses = async () => {
-//       try {
-//         const response = await axios.get(
-//           `http://localhost:8084/academic/api/new/getAllClassesBySchool`
-//         );
-//         console.log("Class data: {", response.data, "}.");
-//         setClasses(response.data);
-//       } catch (error) {
-//         console.error("Failed to fetch classes:", error);
-//       }
-//     };
-
-//     fetchClasses();
-//   }, [schoolId]);
-
-  useEffect(() => {
-    const userData = localStorage.getItem("auth-store");
-    if (userData) {
-      try {
-        const parsedData = JSON.parse(userData);
-        setSchoolId(parsedData.user.schoolId);
-        console.log("parsed :", parsedData);
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-      }
-    }
-  }, []);
-
-  // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `http://localhost:8086/academic/api/new/addNewSubject`,
-        formData
-      );
-      console.log("Response data: {", response, "}.");
-
-      if (response.status === 200) {
-        setSuccessMessage("Subject added successfully!");
-        setFormData({
-          subjectName: "",
-          creditHours: 0,
-          subjectCode: "",
-        });
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+      await createSubjectMutation.mutateAsync({
+        schoolId,
+        subjectRequest: formData,
+      });
+      toast.success("Subject added successfully!");
+      setFormData({
+        subjectName: "",
+        creditHours: 0,
+        subjectCode: "",
+      });
+      setTimeout(() => {
         setSubjectListClicked(true);
         setAssign(false);
-      }
+      }, 3000);
     } catch (error) {
       console.error("Error adding subject:", error);
-      setError("Failed to add subject. Please try again.");
+      toast.error("Failed to add subject.");
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md relative top-20">
-      <h2 className="text-2xl font-bold mb-4">Add Subject</h2>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-      {successMessage && (
-        <p className="text-green-500 mb-4">{successMessage}</p>
+    <div
+      className={`
+        max-w-2xl mx-auto p-6 rounded-lg shadow-md relative top-20
+        bg-[var(--surface)]
+        dark:bg-[var(--surface)]
+        night:bg-[var(--surface)]
+      `}
+    >
+      <h2
+        className={`
+          text-2xl font-bold mb-4
+          text-[var(--text)]
+          dark:text-[var(--text)]
+          night:text-[var(--text)]
+        `}
+      >
+        Add Subject
+      </h2>
+      {createSubjectMutation.isError && (
+        <p
+          className={`
+            mb-4
+            text-red-500
+            dark:text-red-400
+            night:text-red-300
+          `}
+        >
+          {createSubjectMutation.error.message}
+        </p>
+      )}
+      {createSubjectMutation.isSuccess && (
+        <p
+          className={`
+            mb-4
+            text-green-500
+            dark:text-green-400
+            night:text-green-300
+          `}
+        >
+          Subject added successfully!
+        </p>
       )}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label
-            className="block text-gray-700 font-medium mb-2"
+            className={`
+              block font-medium mb-2
+              text-[var(--text)]
+              dark:text-[var(--text)]
+              night:text-[var(--text)]
+            `}
             htmlFor="subjectName"
           >
             Subject Name
@@ -104,13 +117,24 @@ const AddSubject = ({ setSubjectListClicked, setAssign }) => {
             name="subjectName"
             value={formData.subjectName}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+            className={`
+              w-full px-3 py-2 border rounded-md
+              border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+              focus:outline-none focus:ring focus:ring-[var(--primary)]
+              dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+              night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+            `}
             required
           />
         </div>
         <div className="mb-4">
           <label
-            className="block text-gray-700 font-medium mb-2"
+            className={`
+              block font-medium mb-2
+              text-[var(--text)]
+              dark:text-[var(--text)]
+              night:text-[var(--text)]
+            `}
             htmlFor="creditHours"
           >
             Credit Hours
@@ -121,13 +145,24 @@ const AddSubject = ({ setSubjectListClicked, setAssign }) => {
             name="creditHours"
             value={formData.creditHours}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+            className={`
+              w-full px-3 py-2 border rounded-md
+              border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+              focus:outline-none focus:ring focus:ring-[var(--primary)]
+              dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+              night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+            `}
             required
           />
         </div>
         <div className="mb-4">
           <label
-            className="block text-gray-700 font-medium mb-2"
+            className={`
+              block font-medium mb-2
+              text-[var(--text)]
+              dark:text-[var(--text)]
+              night:text-[var(--text)]
+            `}
             htmlFor="subjectCode"
           >
             Subject Code
@@ -138,46 +173,46 @@ const AddSubject = ({ setSubjectListClicked, setAssign }) => {
             name="subjectCode"
             value={formData.subjectCode}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+            className={`
+              w-full px-3 py-2 border rounded-md
+              border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+              focus:outline-none focus:ring focus:ring-[var(--primary)]
+              dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+              night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+            `}
             required
           />
         </div>
-        {/* <div className="mb-4">
-          <label
-            className="block text-gray-700 font-medium mb-2"
-            htmlFor="classId"
-          >
-            Class
-          </label>
-          <select
-            id="classId"
-            name="classId"
-            value={formData.classId}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
-            required
-          >
-            <option value="">Select a Class</option>
-            {classes.map((cls) => (
-              <option key={cls.classId} value={cls.classId}>
-                {cls.className}
-              </option>
-            ))}
-          </select>
-        </div> */}
-        <div className="flex w-full justify-between ">
+        <div className="flex w-full justify-between">
           <button
             type="button"
-            onClick={() => setSubjectList(true)}
-            className=" bg-gray-300 text-black py-2 px-4 rounded-md hover:bg-gray-500 focus:outline-none focus:ring focus:ring-gray-300"
+            onClick={() => {
+              setSubjectListClicked(true);
+              setAssign(false);
+            }}
+            className={`
+              py-2 px-4 rounded-md hover:bg-opacity-80
+              bg-[var(--secondary)] text-[var(--text)]
+              focus:outline-none focus:ring focus:ring-[var(--secondary)]
+              dark:bg-[var(--secondary)] dark:text-[var(--text)]
+              night:bg-[var(--secondary)] night:text-[var(--text)]
+            `}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className=" bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
+            disabled={createSubjectMutation.isPending}
+            className={`
+              py-2 px-4 rounded-md hover:bg-opacity-80
+              bg-[var(--primary)] text-white
+              focus:outline-none focus:ring focus:ring-[var(--primary)]
+              disabled:opacity-50
+              dark:bg-[var(--primary)] dark:text-white
+              night:bg-[var(--primary)] night:text-white
+            `}
           >
-            Add Subject
+            {createSubjectMutation.isPending ? "Adding..." : "Add Subject"}
           </button>
         </div>
       </form>

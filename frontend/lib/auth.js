@@ -9,6 +9,7 @@ export const useAuthStore = create(
         user: null,
         token: null,
         refreshToken: null,
+        loading: true,
         setAuth: (userData, token, refreshToken) => {
           set({
             user: userData
@@ -22,12 +23,13 @@ export const useAuthStore = create(
               : get().user,
             token: token || get().token,
             refreshToken: refreshToken || get().refreshToken,
+            loading: false,
           });
           if (token) localStorage.setItem("token", token);
           if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
         },
         clearAuth: () => {
-          set({ user: null, token: null, refreshToken: null });
+          set({ user: null, token: null, refreshToken: null, loading: false });
           localStorage.removeItem("token");
           localStorage.removeItem("refreshToken");
         },
@@ -45,6 +47,7 @@ export const useAuthStore = create(
           user: state.user,
           token: state.token,
           refreshToken: state.refreshToken,
+          loading: state.loading, // Persist loading
         }),
       }
     )

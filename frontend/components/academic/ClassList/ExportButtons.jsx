@@ -19,7 +19,6 @@ const ExportStyled = ({ classes, onExportDone }) => {
       pdf.save("styled-class-list.pdf");
     });
 
-    // Pass the function as a reference, not calling it immediately
     setTimeout(onExportDone, 2000);
   };
 
@@ -55,18 +54,46 @@ const ExportStyled = ({ classes, onExportDone }) => {
 
     saveAs(file, "styled-class-list.xlsx");
 
-    // Pass the function as a reference, not calling it immediately
     setTimeout(onExportDone, 2000);
   };
 
   return (
     <div>
-      {/* Hidden content to capture styling for export */}
-      <div ref={contentRef} className="p-4 bg-gray-100 border border-gray-300">
-        <h1 className="text-xl font-bold text-blue-600">Class List</h1>
-        <table className="w-full border-collapse border border-gray-300">
+      <div
+        ref={contentRef}
+        className={`
+          p-4 border
+          bg-[var(--background)] border-[var(--secondary)]
+          dark:bg-[var(--background)] dark:border-[var(--secondary)]
+          night:bg-[var(--background)] night:border-[var(--secondary)]
+        `}
+      >
+        <h1
+          className={`
+            text-xl font-bold
+            text-[var(--primary)]
+            dark:text-[var(--primary)]
+            night:text-[var(--primary)]
+          `}
+        >
+          Class List
+        </h1>
+        <table
+          className={`
+            w-full border-collapse
+            border-[var(--secondary)]
+            dark:border-[var(--secondary)]
+            night:border-[var(--secondary)]
+          `}
+        >
           <thead>
-            <tr className="bg-blue-500 text-white">
+            <tr
+              className={`
+                bg-[var(--primary)] text-white
+                dark:bg-[var(--primary)] dark:text-white
+                night:bg-[var(--primary)] night:text-white
+              `}
+            >
               <th className="p-2 border">ID</th>
               <th className="p-2 border">Name</th>
               <th className="p-2 border">Academic Year</th>
@@ -77,7 +104,15 @@ const ExportStyled = ({ classes, onExportDone }) => {
           </thead>
           <tbody>
             {classes.map((clas, index) => (
-              <tr key={index} className="border border-gray-300">
+              <tr
+                key={index}
+                className={`
+                  border
+                  border-[var(--secondary)]
+                  dark:border-[var(--secondary)]
+                  night:border-[var(--secondary)]
+                `}
+              >
                 <td className="p-2 border">{clas.classId}</td>
                 <td className="p-2 border">{clas.className}</td>
                 <td className="p-2 border">{clas.academicYear}</td>
@@ -96,24 +131,41 @@ const ExportStyled = ({ classes, onExportDone }) => {
         </table>
       </div>
 
-      {/* Export Buttons */}
       <div className="mt-4 flex gap-2">
         <button
           onClick={exportStyledPDF}
-          className="p-2 bg-blue-500 text-white rounded"
+          className={`
+            p-2 rounded
+            bg-[var(--primary)] text-white
+            hover:bg-opacity-80
+            dark:bg-[var(--primary)] dark:text-white
+            night:bg-[var(--primary)] night:text-white
+          `}
         >
           Export as Styled PDF
         </button>
         <button
           onClick={exportStyledExcel}
-          className="p-2 bg-green-500 text-white rounded"
+          className={`
+            p-2 rounded
+            bg-green-500 text-white
+            hover:bg-opacity-80
+            dark:bg-green-500 dark:text-white
+            night:bg-green-500 night:text-white
+          `}
         >
           Export as Styled Excel
         </button>
 
         <button
-          onClick={onExportDone} // Call the function directly, not immediately
-          className="p-2 bg-gray-400 text-white rounded"
+          onClick={onExportDone}
+          className={`
+            p-2 rounded
+            bg-[var(--secondary)] text-[var(--text)]
+            hover:bg-opacity-80
+            dark:bg-[var(--secondary)] dark:text-[var(--text)]
+            night:bg-[var(--secondary)] night:text-[var(--text)]
+          `}
         >
           Cancel Export
         </button>

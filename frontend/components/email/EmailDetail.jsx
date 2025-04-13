@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import {
   useEmailById,
   useMarkEmailAsRead,
@@ -43,6 +43,8 @@ const EmailDetailContent = ({ emailId }) => {
   const updateStatusMutation = useUpdateEmailStatus(user?.schoolId);
   const deleteEmailMutation = useDeleteEmail(user?.schoolId);
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace("/login");
@@ -51,15 +53,17 @@ const EmailDetailContent = ({ emailId }) => {
 
   useEffect(() => {
     if (
-      email &&
-      email.recipientId === user?.userId &&
-      !email.isRead &&
-      !markAsReadMutation.isLoading &&
-      !markAsReadMutation.isSuccess
+      email?.data &&
+      email.data.recipientId === user?.userId &&
+      !email.data.isRead &&
+      !markAsReadMutation.isLoading
     ) {
-      markAsReadMutation.mutate(emailId);
+      markAsReadMutation.mutate(emailId, {
+        onError: (err) => console.error("Failed to mark email as read:", err),
+        onSuccess: () => console.log("Email marked as read successfully"),
+      });
     }
-  }, [email, user, emailId, markAsReadMutation]);
+  }, [email, user?.userId, emailId, markAsReadMutation]);
 
   const handleDownloadAttachment = async (filePath, fileName) => {
     try {
@@ -100,17 +104,21 @@ const EmailDetailContent = ({ emailId }) => {
   };
 
   const handleDelete = () => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this email permanently? It may still exist for the other party."
-      )
-    ) {
-      return;
-    }
+    setIsDeleteModalOpen(true); // Show the modal instead of confirm
+  };
+
+  const confirmDelete = () => {
     deleteEmailMutation.mutate(emailId, {
       onError: () => alert("Failed to delete email."),
-      onSuccess: () => router.back(),
+      onSuccess: () => {
+        setIsDeleteModalOpen(false);
+        router.back();
+      },
     });
+  };
+
+  const cancelDelete = () => {
+    setIsDeleteModalOpen(false);
   };
 
   if (!isAuthenticated) return null;
@@ -145,7 +153,7 @@ const EmailDetailContent = ({ emailId }) => {
     );
   }
 
-  if (!email) {
+  if (!email || !email.data) {
     return (
       <div className="min-h-screen bg-gray-100 pl-60 flex items-center justify-center">
         <p className="text-gray-500 text-center">Email not found.</p>
@@ -155,9 +163,13 @@ const EmailDetailContent = ({ emailId }) => {
 
   const userId = user.userId;
   const currentStatus =
-    userId === email.senderId ? email.senderStatus : email.recipientStatus;
+    userId === email.data.senderId
+      ? email.data.senderStatus
+      : email.data.recipientStatus;
   const isDeleted =
-    userId === email.senderId ? email.senderDeleted : email.recipientDeleted;
+    userId === email.data.senderId
+      ? email.data.senderDeleted
+      : email.data.recipientDeleted;
 
   return (
     <div className="min-h-screen bg-gray-100 pl-60 pt-4">
@@ -286,8 +298,8 @@ const EmailDetailContent = ({ emailId }) => {
           </h2>
           <div className="bg-gray-50 p-4 rounded-lg mb-4">
             <p className="text-gray-700">
-              <strong>From:</strong> {email.data.senderId} | <strong>To:</strong>{" "}
-              {email.data.recipientId}
+              <strong>From:</strong> {email.data.senderId} |{" "}
+              <strong>To:</strong> {email.data.recipientId}
             </p>
             <p className="text-gray-500">
               {email.data.sentAt
@@ -381,6 +393,57 @@ const EmailDetailContent = ({ emailId }) => {
               </ul>
             </div>
           )}
+
+          {/* Delete Confirmation Modal */}
+          {isDeleteModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  Confirm Deletion
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete this email permanently? It may
+                  still exist for the other party.
+                </p>
+                <div className="flex justify-end gap-4">
+                  <button
+                    onClick={cancelDelete}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    disabled={deleteEmailMutation.isLoading}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 transition-colors"
+                  >
+                    {deleteEmailMutation.isLoading ? (
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                          opacity="0.25"
+                        />
+                        <path
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        />
+                      </svg>
+                    ) : (
+                      "Delete"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -396,7 +459,7 @@ const EmailDetail = ({ emailId }) => {
 
   if (!isMounted) {
     return (
-      <div className="min-h-screen bg-gray-100 pl-60 flex items-center justify-center">
+      <div className="h-screen bg-gray-100 pl-60 flex items-center justify-center">
         <svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24">
           <circle
             cx="12"
@@ -416,7 +479,7 @@ const EmailDetail = ({ emailId }) => {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gray-100 pl-60 flex items-center justify-center">
+        <div className="h-screen bg-gray-100 pl-60 flex items-center justify-center">
           <svg
             className="animate-spin h-8 w-8 text-blue-600"
             viewBox="0 0 24 24"

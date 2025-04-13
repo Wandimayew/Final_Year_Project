@@ -1,91 +1,199 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { useState, useMemo } from "react";
+import { useAuthStore } from "@/lib/auth";
 import Link from "next/link";
 import { toast } from "react-toastify";
+import { useClassDetails } from "@/lib/api/academicService/class";
 import AddSection from "./AddSection";
 import EditSection from "./EditSection";
-import Popup from "../constant/PopUp";
-
-
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
+import Popup from "../constant/Popup";
 
 const ViewClass = ({ id }) => {
   const [isAddSectionOpen, setAddSectionOpen] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
   const [actionType, setActionType] = useState(null);
-  const [classDetails, setClassDetails] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:8086/academic/api/new/getClassDetails/${id}`
-        );
-        setClassDetails(response.data);
-      } catch (error) {
-        console.error("Error fetching class details:", error);
-        toast.error(`Network error: ${error.message}`);
-      }
-    };
-    fetchData();
-  }, [id]);
+  const authState = useMemo(
+    () =>
+      useAuthStore.getState()
+        ? {
+            user: useAuthStore.getState().user,
+            isAuthenticated: useAuthStore.getState().isAuthenticated(),
+          }
+        : { user: null, isAuthenticated: false },
+    []
+  );
+  const { user } = authState;
+
+  const schoolId = user.schoolId;
+  const {
+    data: classDetails,
+    isLoading,
+    isError,
+    error,
+  } = useClassDetails(schoolId, id);
+
+  if (isLoading) {
+    return (
+      <div
+        className={`
+          relative top-20 p-6 min-h-screen
+          bg-[var(--background)] text-[var(--text)]
+          dark:bg-[var(--background)] dark:text-[var(--text)]
+          night:bg-[var(--background)] night:text-[var(--text)]
+        `}
+      >
+        Loading...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div
+        className={`
+          relative top-20 p-6 min-h-screen
+          bg-[var(--background)] text-[var(--text)]
+          dark:bg-[var(--background)] dark:text-[var(--text)]
+          night:bg-[var(--background)] night:text-[var(--text)]
+        `}
+      >
+        Error: {error.message}
+      </div>
+    );
+  }
 
   return (
-    <div className="relative top-20 p-6 bg-gray-100 min-h-screen flex flex-col gap-6">
-      {/* Back Button */}
+    <div
+      className={`
+        relative top-20 p-6 min-h-screen flex flex-col gap-6
+        bg-[var(--background)] text-[var(--text)]
+        dark:bg-[var(--background)] dark:text-[var(--text)]
+        night:bg-[var(--background)] night:text-[var(--text)]
+      `}
+    >
       <div>
         <Link
           href="/academic/class"
-          className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+          className={`
+            bg-[var(--secondary)] text-[var(--text)] px-4 py-2 rounded-md hover:bg-opacity-80
+            dark:bg-[var(--secondary)] dark:text-[var(--text)]
+            night:bg-[var(--secondary)] night:text-[var(--text)]
+          `}
         >
           Back to Class List
         </Link>
       </div>
 
-      {/* Class Info */}
-      <div className="bg-white shadow-lg p-6 rounded-lg">
-        <h1 className="text-2xl font-bold text-gray-800">Class Details</h1>
-        <p className="text-gray-600">
+      <div
+        className={`
+          shadow-lg [var(--surface)] p-6 rounded-lg
+          bg-[var(--surface)]
+          dark:bg-[var(--surface)]
+          night:bg-[var(--surface)]
+        `}
+      >
+        <h1
+          className={`
+            text-2xl font-bold
+            text-[var(--text)]
+            dark:text-[var(--text)]
+            night:text-[var(--text)]
+          `}
+        >
+          Class Details
+        </h1>
+        <p
+          className={`
+            text-[var(--text)]
+            dark:text-[var(--text)]
+            night:text-[var(--text)]
+          `}
+        >
           <strong>Class ID:</strong> {id}
         </p>
-        <p className="text-gray-600">
-          <strong>Class Name:</strong> {classDetails.className}
+        <p
+          className={`
+            text-[var(--text)]
+            dark:text-[var(--text)]
+            night:text-[var(--text)]
+          `}
+        >
+          <strong>Class Name:</strong> {classDetails?.className}
         </p>
-        <p className="text-gray-600">
-          <strong>Academic Year:</strong> {classDetails.academicYear}
+        <p
+          className={`
+            text-[var(--text)]
+            dark:text-[var(--text)]
+            night:text-[var(--text)]
+          `}
+        >
+          <strong>Academic Year:</strong> {classDetails?.academicYear}
         </p>
       </div>
 
-      {/* Sections & Subjects */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Sections */}
-        <div className="bg-white shadow-lg p-6 rounded-lg">
+        <div
+          className={`
+            shadow-lg p-6 rounded-lg
+            bg-[var(--surface)]
+            dark:bg-[var(--surface)]
+            night:bg-[var(--surface)]
+          `}
+        >
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Sections</h2>
+            <h2
+              className={`
+                text-xl font-semibold
+                text-[var(--text)]
+                dark:text-[var(--text)]
+                night:text-[var(--text)]
+              `}
+            >
+              Sections
+            </h2>
             <button
-              className="bg-cyan-500 text-white px-3 py-1 rounded-md hover:bg-cyan-600"
+              className={`
+                bg-[var(--primary)] text-white px-3 py-1 rounded-md hover:bg-opacity-80
+                dark:bg-[var(--primary)] dark:text-white
+                night:bg-[var(--primary)] night:text-white
+              `}
               onClick={() => setAddSectionOpen(true)}
             >
               Add Section
             </button>
           </div>
 
-          {classDetails.sections && classDetails.sections.length > 0 ? (
+          {classDetails?.sections && classDetails.sections.length > 0 ? (
             <ul className="space-y-4">
               {classDetails.sections.map((section) => (
                 <li
                   key={section.sectionId}
-                  className="p-4 border border-gray-300 rounded-lg flex justify-between items-center"
+                  className={`
+                    p-4 border rounded-lg flex justify-between items-center
+                    border-[var(--secondary)]
+                    dark:border-[var(--secondary)]
+                    night:border-[var(--secondary)]
+                  `}
                 >
-                  <span className="text-gray-700">
+                  <span
+                    className={`
+                      text-[var(--text)]
+                      dark:text-[var(--text)]
+                      night:text-[var(--text)]
+                    `}
+                  >
                     {section.sectionName} - {section.capacity} Students
                   </span>
                   <div className="flex gap-2">
                     <button
-                      className="text-orange-500 border border-orange-300 px-3 py-1 rounded-md hover:bg-orange-100"
+                      className={`
+                        text-orange-500 border px-3 py-1 rounded-md hover:bg-orange-100
+                        border-orange-300
+                        dark:text-orange-400 dark:border-orange-400 dark:hover:bg-orange-900
+                        night:text-orange-300 night:border-orange-300 night:hover:bg-orange-900
+                      `}
                       onClick={() => {
                         setEditingSection(section);
                         setActionType("edit");
@@ -94,7 +202,12 @@ const ViewClass = ({ id }) => {
                       Edit
                     </button>
                     <button
-                      className="text-red-500 border border-red-300 px-3 py-1 rounded-md hover:bg-red-100"
+                      className={`
+                        text-red-500 border px-3 py-1 rounded-md hover:bg-red-100
+                        border-red-300
+                        dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900
+                        night:text-red-300 night:border-red-300 night:hover:bg-red-900
+                      `}
                       onClick={() => {
                         setEditingSection(section);
                         setActionType("delete");
@@ -107,40 +220,75 @@ const ViewClass = ({ id }) => {
               ))}
             </ul>
           ) : (
-            <p className="text-gray-500">No sections available.</p>
+            <p
+              className={`
+                text-[var(--secondary)]
+                dark:text-[var(--secondary)]
+                night:text-[var(--secondary)]
+              `}
+            >
+              No sections available.
+            </p>
           )}
         </div>
 
-        {/* Subjects */}
-        <div className="bg-white shadow-lg p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Subjects</h2>
-          {classDetails.subjects && classDetails.subjects.length > 0 ? (
+        <div
+          className={`
+            shadow-lg p-6 rounded-lg
+            bg-[var(--surface)]
+            dark:bg-[var(--surface)]
+            night:bg-[var(--surface)]
+          `}
+        >
+          <h2
+            className={`
+              text-xl font-semibold mb-4
+              text-[var(--text)]
+              dark:text-[var(--text)]
+              night:text-[var(--text)]
+            `}
+          >
+            Subjects
+          </h2>
+          {classDetails?.subjects && classDetails.subjects.length > 0 ? (
             <ul className="space-y-2">
               {classDetails.subjects.map((subject) => (
-                <li key={subject.subjectId} className="text-gray-700">
+                <li
+                  key={subject.subjectId}
+                  className={`
+                    text-[var(--text)]
+                    dark:text-[var(--text)]
+                    night:text-[var(--text)]
+                  `}
+                >
                   <strong>{subject.subjectName}</strong> - {subject.teacherName}{" "}
                   (Duration: {subject.duration} min)
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-gray-500">No subjects available.</p>
+            <p
+              className={`
+                text-[var(--secondary)]
+                dark:text-[var(--secondary)]
+                night:text-[var(--secondary)]
+              `}
+            >
+              No subjects available.
+            </p>
           )}
         </div>
       </div>
 
-      {/* Edit Section Sidebar */}
       {editingSection && (
         <EditSection
           section={editingSection}
           classId={id}
           onClose={() => setEditingSection(null)}
           type={actionType}
-          setClassDetails={setClassDetails}
         />
       )}
 
-      {/* Add Section Popup */}
       <Popup
         title="Add Section"
         isOpen={isAddSectionOpen}

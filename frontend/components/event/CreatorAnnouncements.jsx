@@ -1,9 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import { useAuth } from "@/hooks/useAuth";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState, useCallback, useMemo } from "react";
+import { useAuthStore } from "@/lib/auth";
+import {
+  useMyDraftAnnouncements,
+  useRequestApproveAnnouncement,
+  useDeleteAnnouncement,
+} from "@/lib/api/communicationService/announcement";
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
 import {
   Calendar,
   Users,
@@ -17,8 +25,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
-
-const API_BASE_URL = "http://localhost:8084/communication/api";
+import { toast } from "react-toastify";
 
 const StatusTabs = ({ activeTab, setActiveTab }) => {
   const tabs = [
@@ -104,7 +111,6 @@ const AnnouncementCard = ({
       exit={{ opacity: 0, scale: 0.9 }}
       className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow"
     >
-      {/* Header with Status */}
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-semibold text-gray-800 line-clamp-2">
           {announcement.title || "Untitled Announcement"}
@@ -123,15 +129,10 @@ const AnnouncementCard = ({
             announcement.status.slice(1).toLowerCase()}
         </span>
       </div>
-
-      {/* Description */}
       <p className="text-gray-600 mb-4 line-clamp-3">
         {announcement.message || "No description provided"}
       </p>
-
-      {/* Meta Information */}
       <div className="space-y-3 mb-4">
-        {/* Author and Date */}
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center text-gray-600">
             <User size={16} className="mr-2" />
@@ -142,8 +143,6 @@ const AnnouncementCard = ({
             <span>{formatDate(announcement.createdAt)}</span>
           </div>
         </div>
-
-        {/* Audience and Type */}
         <div className="flex flex-wrap gap-2">
           <span
             className={`flex items-center px-3 py-1 rounded-full text-sm ${getAudienceBadgeColor(
@@ -162,8 +161,6 @@ const AnnouncementCard = ({
             {announcement.type}
           </span>
         </div>
-
-        {/* Date Range */}
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <Clock size={16} />
           <span>
@@ -171,8 +168,6 @@ const AnnouncementCard = ({
             {formatDate(announcement.endDate)}
           </span>
         </div>
-
-        {/* Cancellation Reason - Only show if status is CANCELLED */}
         {announcement.status === "CANCELLED" &&
           announcement.cancellationReason && (
             <div className="mt-3 p-3 bg-red-50 rounded-lg">
@@ -190,8 +185,6 @@ const AnnouncementCard = ({
             </div>
           )}
       </div>
-
-      {/* Action Buttons */}
       <div className="flex gap-3 mt-auto">
         {announcement.status === "DRAFT" && (
           <>
@@ -215,57 +208,80 @@ const AnnouncementCard = ({
     </motion.div>
   );
 };
+
 const CreatorAnnouncements = () => {
-  const { auth, loading: authLoading } = useAuth();
-  const [announcements, setAnnouncements] = useState([]);
+  const authState = useMemo(() => {
+    const state = useAuthStore.getState();
+    return {
+      user: state.user,
+      isAuthenticated: state.isAuthenticated(),
+      loading: state.loading,
+    };
+  }, []);
+
+  const { user, isAuthenticated, loading: authLoading } = authState;
   const [activeTab, setActiveTab] = useState("DRAFT");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const queryClient = useQueryClient();
 
-  const fetchAnnouncements = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await axios.get(
-        `${API_BASE_URL}/${auth.user.schoolId}/announcements/my-announcements/status-draft?page=0&size=10`,
-        { headers: { Authorization: `Bearer ${auth.token}` } }
-      );
-      setAnnouncements(response.data.data.content || []);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load announcements");
-    } finally {
-      setLoading(false);
+  const { data, isLoading, isError, error } = useMyDraftAnnouncements(
+    user?.schoolId,
+    {
+      page: 0,
+      size: 10,
+      sort: "createdAt,desc",
     }
-  }, [auth]); // Dependencies: auth
+  );
+  const announcements = data?.data?.content || []; // Fix: Access nested content
 
-  useEffect(() => {
-    if (!auth || authLoading) return;
-    fetchAnnouncements();
-  }, [auth, authLoading, fetchAnnouncements]);
+  const requestApprovalMutation = useRequestApproveAnnouncement(user?.schoolId);
+  const deleteMutation = useDeleteAnnouncement(user?.schoolId);
 
-  const requestApprovalMutation = useMutation({
-    mutationFn: (announcementId) =>
-      axios.put(
-        `${API_BASE_URL}/${auth.user.schoolId}/announcements/${announcementId}/request-approval`,
-        {},
-        { headers: { Authorization: `Bearer ${auth.token}` } }
-      ),
-    onSuccess: fetchAnnouncements,
-  });
+  const handleRequestApproval = useCallback(
+    (announcementId) => {
+      requestApprovalMutation.mutate(announcementId, {
+        onSuccess: () => {
+          toast.success("Approval requested successfully!", {
+            position: "top-right",
+          });
+        },
+        onError: (err) => {
+          toast.error("Failed to request approval: " + err.message, {
+            position: "top-right",
+          });
+        },
+      });
+    },
+    [requestApprovalMutation]
+  );
 
-  const deleteMutation = useMutation({
-    mutationFn: (announcementId) =>
-      axios.delete(
-        `${API_BASE_URL}/${auth.user.schoolId}/announcements/${announcementId}`,
-        { headers: { Authorization: `Bearer ${auth.token}` } }
-      ),
-    onSuccess: fetchAnnouncements,
-  });
+  const handleDelete = useCallback(
+    (announcementId) => {
+      deleteMutation.mutate(announcementId, {
+        onSuccess: () => {
+          toast.success("Announcement deleted successfully!", {
+            position: "top-right",
+          });
+        },
+        onError: (err) => {
+          toast.error("Failed to delete announcement: " + err.message, {
+            position: "top-right",
+          });
+        },
+      });
+    },
+    [deleteMutation]
+  );
 
+  // Debugging logs
+  console.log("authLoading:", authLoading);
+  console.log("isLoading:", isLoading);
+  console.log("isError:", isError, "error:", error);
+  console.log("Raw data:", data);
+  console.log("Announcements:", announcements);
+  console.log("Active tab:", activeTab);
   const filtered = announcements.filter((a) => a.status === activeTab);
+  console.log("Filtered:", filtered);
 
-  if (authLoading || loading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -273,13 +289,23 @@ const CreatorAnnouncements = () => {
     );
   }
 
-  if (error) {
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-red-500 p-6">Please log in.</div>
+      </div>
+    );
+  }
+
+  if (isError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8 bg-red-50 rounded-xl">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-red-700 mb-2">Error</h3>
-          <p className="text-red-600">{error}</p>
+          <p className="text-red-600">
+            {error?.message || "Failed to load announcements"}
+          </p>
         </div>
       </div>
     );
@@ -292,7 +318,6 @@ const CreatorAnnouncements = () => {
           My Announcements
         </h1>
         <StatusTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-
         {filtered.length === 0 ? (
           <EmptyState status={activeTab} />
         ) : (
@@ -302,11 +327,14 @@ const CreatorAnnouncements = () => {
                 <AnnouncementCard
                   key={announcement.announcementId}
                   announcement={announcement}
-                  onRequestApproval={requestApprovalMutation.mutate}
-                  onDelete={deleteMutation.mutate}
+                  onRequestApproval={handleRequestApproval}
+                  onDelete={handleDelete}
                   isProcessing={
-                    requestApprovalMutation.isLoading ||
-                    deleteMutation.isLoading
+                    (requestApprovalMutation.isLoading &&
+                      requestApprovalMutation.variables ===
+                        announcement.announcementId) ||
+                    (deleteMutation.isLoading &&
+                      deleteMutation.variables === announcement.announcementId)
                   }
                 />
               ))}
@@ -318,4 +346,31 @@ const CreatorAnnouncements = () => {
   );
 };
 
-export default CreatorAnnouncements;
+export default function CreatorAnnouncementsWithHydration() {
+  const queryClient = new QueryClient();
+  const authState = useAuthStore.getState();
+  const schoolId = authState.user?.schoolId;
+
+  if (schoolId) {
+    queryClient.prefetchQuery({
+      queryKey: [
+        "announcements",
+        schoolId,
+        "my-drafts",
+        { page: 0, size: 10, sort: "createdAt,desc" },
+      ],
+      queryFn: () =>
+        useMyDraftAnnouncements(schoolId, {
+          page: 0,
+          size: 10,
+          sort: "createdAt,desc",
+        }),
+    });
+  }
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <CreatorAnnouncements />
+    </HydrationBoundary>
+  );
+}

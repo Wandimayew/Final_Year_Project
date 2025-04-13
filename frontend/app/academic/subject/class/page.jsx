@@ -1,18 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useAuthStore } from "@/lib/auth";
+import axios from "axios"; // Kept for student API fetch (see notes)
+import { toast } from "react-toastify";
 import SubjectByClass from "@/components/academic/subject/SubjectByClass";
-import axios from "axios";
+import { useSubjectsByClass } from "@/lib/api/academicService/subject";
 
 // Force dynamic rendering to avoid prerendering at build time
 export const dynamic = "force-dynamic";
 
 const ClassSubjectPage = () => {
-  const [subjectData, setSubjectData] = useState([]);
-  const [classId, setClassId] = useState(null); // Use null initially
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [classId, setClassId] = useState(null);
+  // const [schoolId, setSchoolId] = useState("");
+  const [isClassIdLoading, setIsClassIdLoading] = useState(true);
+  const [classIdError, setClassIdError] = useState(null);
 
+    const authState = useMemo(
+        () =>
+          useAuthStore.getState()
+            ? {
+                user: useAuthStore.getState().user,
+                isAuthenticated: useAuthStore.getState().isAuthenticated(),
+              }
+            : { user: null, isAuthenticated: false },
+        []
+      );
+      const { user } = authState;
+  
+    const schoolId = user.schoolId;
+
+  // Fetch classId based on student ID
   useEffect(() => {
     const fetchClass = async () => {
       try {
@@ -24,42 +42,50 @@ const ClassSubjectPage = () => {
         setClassId(fetchedClassId || null);
       } catch (err) {
         console.error("Error fetching class:", err);
-        setError("Failed to load class data");
+        setClassIdError("Failed to load class data");
       } finally {
-        setIsLoading(false);
+        setIsClassIdLoading(false);
       }
     };
 
     fetchClass();
   }, []);
 
-  useEffect(() => {
-    if (classId) {
-      const fetchSubject = async () => {
-        try {
-          const response = await axios.get(
-            `http://10.194.61.74:8080/academic/api/new/getAllSubjectByClass/${classId}`
-          );
-          setSubjectData(response.data || []);
-        } catch (err) {
-          console.error("Error fetching subjects:", err);
-          setError("Failed to load subjects");
-        }
-      };
-      fetchSubject();
-    }
-  }, [classId]);
+  // Fetch subjects using React Query
+  const {
+    data: subjectData = [],
+    isLoading: subjectsLoading,
+    isError,
+    error,
+  } = useSubjectsByClass(
+    schoolId,
+    classId,
+    { enabled: !!schoolId && !!classId } // Only fetch when schoolId and classId are available
+  );
 
-  if (isLoading)
+  if (isClassIdLoading || subjectsLoading) {
     return (
       <div className="flex justify-center p-8">
         <div className="animate-spin h-10 w-10 border-4 border-blue-500 rounded-full border-t-transparent"></div>
       </div>
     );
-  if (error)
+  }
+
+  if (classIdError) {
     return (
-      <div className="p-4 bg-red-100 text-red-700 rounded-md">{error}</div>
+      <div className="p-4 bg-red-100 text-red-700 rounded-md">
+        {classIdError}
+      </div>
     );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-4 bg-red-100 text-red-700 rounded-md">
+        {error.message}
+      </div>
+    );
+  }
 
   return (
     <div>

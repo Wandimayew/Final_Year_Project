@@ -1,126 +1,164 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react"; // Added useCallback
-import axios from "axios";
-import { useAuth } from "@/hooks/useAuth";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import React, { useState, useCallback, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/lib/auth";
+import {
+  useAllPendingApprovals,
+  useApproveAnnouncement,
+  useCancelAnnouncement,
+} from "@/lib/api/communicationService/announcement";
+import { toast } from "react-toastify";
 import AnnouncementCard from "./AnnouncementCard";
 import ConfirmationModal from "../common/ConfirmationModal";
 import Loader from "../shared/Loader";
 
-const API_BASE_URL = "http://localhost:8084/communication/api";
-
-const approveAnnouncement = ({ schoolId, token, announcementId }) =>
-  axios.put(
-    `${API_BASE_URL}/${schoolId}/announcements/${announcementId}/approve`,
-    {},
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-
-const cancelAnnouncement = ({
-  schoolId,
-  token,
-  announcementId,
-  rejectionReason,
-}) =>
-  axios.put(
-    `${API_BASE_URL}/${schoolId}/announcements/${announcementId}/cancel`,
-    { status: "CANCELED", rejectionReason },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+const getAuthSnapshot = () => {
+  const state = useAuthStore.getState();
+  return {
+    user: state.user,
+    token: state.token,
+    isAuthenticated: state.isAuthenticated(),
+    loading: state.loading,
+  };
+};
 
 const PendingApprovalList = () => {
-  const { auth, loading: authLoading } = useAuth();
-  const [pendingAnnouncements, setPendingAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [confirmation, setConfirmation] = useState(null);
   const queryClient = useQueryClient();
-
-  const fetchPendingAnnouncements = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}/${auth.user.schoolId}/announcements/pending-approval`,
-        { headers: { Authorization: `Bearer ${auth.token}` } }
-      );
-      setPendingAnnouncements(response.data.data || []);
-    } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to load pending announcements"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [auth]); // Dependencies: auth
+  const [authState, setAuthState] = useState(getAuthSnapshot());
 
   useEffect(() => {
-    if (!authLoading && auth) fetchPendingAnnouncements();
-  }, [auth, authLoading, fetchPendingAnnouncements]);
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      setAuthState({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated(),
+        loading: state.loading,
+      });
+    });
+    return () => unsubscribe();
+  }, []);
 
-  const approveMutation = useMutation({
-    mutationFn: approveAnnouncement,
-    onSuccess: () => {
-      toast.success("Announcement approved!");
-      queryClient.invalidateQueries(["pendingAnnouncements"]);
-      fetchPendingAnnouncements();
-    },
-    onError: (err) =>
-      toast.error(err.response?.data?.message || "Failed to approve"),
-  });
+  const { user, token, isAuthenticated, loading: authLoading } = authState;
+  const [confirmation, setConfirmation] = useState(null);
 
-  const cancelMutation = useMutation({
-    mutationFn: cancelAnnouncement,
-    onSuccess: () => {
-      toast.success("Announcement canceled!");
-      queryClient.invalidateQueries(["pendingAnnouncements"]);
-      fetchPendingAnnouncements();
-    },
-    onError: (err) =>
-      toast.error(err.response?.data?.message || "Failed to cancel"),
-  });
+  const { data, isLoading, isFetching, isError, error } = useAllPendingApprovals(
+    user?.schoolId
+  );
+  const pendingAnnouncements = data?.data || [];
 
-  const handleApprove = (announcementId) =>
-    setConfirmation({ action: "approve", announcementId });
-  const handleCancel = (announcementId) =>
-    setConfirmation({ action: "cancel", announcementId, rejectionReason: "" });
+  const approveAnnouncement = useApproveAnnouncement(user?.schoolId);
+  const cancelAnnouncement = useCancelAnnouncement(user?.schoolId);
 
-  const confirmAction = () => {
+  const handleApprove = useCallback(
+    (announcementId) => setConfirmation({ action: "approve", announcementId }),
+    []
+  );
+
+  const handleCancel = useCallback(
+    (announcementId) =>
+      setConfirmation({
+        action: "cancel",
+        announcementId,
+        rejectionReason: "",
+      }),
+    []
+  );
+
+  console.log("Render state:", { authLoading, isLoading, isFetching, pendingAnnouncements });
+
+  const confirmAction = useCallback(() => {
     if (confirmation.action === "approve") {
-      approveMutation.mutate({
-        schoolId: auth.user.schoolId,
-        token: auth.token,
-        announcementId: confirmation.announcementId,
+      queryClient.setQueryData(
+        ["announcements", user?.schoolId, "pending-approval"],
+        (old = { data: [] }) => ({
+          ...old,
+          data: old.data.filter(
+            (ann) => ann.announcementId !== confirmation.announcementId
+          ),
+        })
+      );
+      approveAnnouncement.mutate(confirmation.announcementId, {
+        onSuccess: () => {
+          toast.success("Announcement approved successfully!", {
+            position: "top-right",
+          });
+        },
+        onError: (err) => {
+          toast.error(err.message || "Failed to approve announcement", {
+            position: "top-right",
+          });
+          queryClient.invalidateQueries([
+            "announcements",
+            user?.schoolId,
+            "pending-approval",
+          ]);
+        },
       });
     } else if (confirmation.action === "cancel") {
-      cancelMutation.mutate({
-        schoolId: auth.user.schoolId,
-        token: auth.token,
-        announcementId: confirmation.announcementId,
-        rejectionReason: confirmation.rejectionReason,
-      });
+      queryClient.setQueryData(
+        ["announcements", user?.schoolId, "pending-approval"],
+        (old = { data: [] }) => ({
+          ...old,
+          data: old.data.filter(
+            (ann) => ann.announcementId !== confirmation.announcementId
+          ),
+        })
+      );
+      cancelAnnouncement.mutate(
+        {
+          announcementId: confirmation.announcementId,
+          rejectionReason: confirmation.rejectionReason,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Announcement canceled successfully!", {
+              position: "top-right",
+            });
+          },
+          onError: (err) => {
+            toast.error(err.message || "Failed to cancel announcement", {
+              position: "top-right",
+            });
+            queryClient.invalidateQueries([
+              "announcements",
+              user?.schoolId,
+              "pending-approval",
+            ]);
+          },
+        }
+      );
     }
     setConfirmation(null);
-  };
+  }, [
+    confirmation,
+    approveAnnouncement,
+    cancelAnnouncement,
+    queryClient,
+    user?.schoolId,
+  ]);
 
-  if (authLoading || loading) return <Loader />;
-  if (!auth)
+  if (authLoading) return <Loader />;
+  console.log("Render state:", { authLoading, isLoading, isFetching, pendingAnnouncements });
+  
+  if (!isAuthenticated) {
     return <div className="text-center text-red-500 p-6">Please log in.</div>;
-  if (error) return <div className="text-center text-red-500 p-6">{error}</div>;
+  }
+  if (isError) {
+    return (
+      <div className="text-center text-red-500 p-6">
+        {error?.message || "Failed to load pending announcements"}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 py-12 px-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">
-          Pending Approvals
-        </h1>
-        {pendingAnnouncements.length === 0 ? (
+        <h1 className="text-4xl font-bold text-gray-800 mb-8">Pending Approvals</h1>
+        {isLoading && !data ? (
+          <Loader />
+        ) : pendingAnnouncements.length === 0 ? (
           <p className="text-center text-gray-500 text-lg">
             No pending announcements.
           </p>
@@ -133,17 +171,19 @@ const PendingApprovalList = () => {
                 onRequestApproval={handleApprove}
                 onCancel={handleCancel}
                 isProcessing={
-                  (approveMutation.isLoading &&
-                    approveMutation.variables?.announcementId ===
-                      a.announcementId) ||
-                  (cancelMutation.isLoading &&
-                    cancelMutation.variables?.announcementId ===
+                  (approveAnnouncement.isLoading &&
+                    approveAnnouncement.variables === a.announcementId) ||
+                  (cancelAnnouncement.isLoading &&
+                    cancelAnnouncement.variables?.announcementId ===
                       a.announcementId)
                 }
                 isAdmin
               />
             ))}
           </div>
+        )}
+        {isFetching && data && (
+          <p className="text-center text-gray-500">Updating...</p>
         )}
         {confirmation && (
           <ConfirmationModal

@@ -13,12 +13,7 @@ const EmailDetailPage = () => {
   console.log("email id in page object:", params);
   console.log("email id in page id:", emailId);
 
-  return (
-    <div className="relative top-20" style={{ display: "flex" }}>
-      <MailBoxFolder />
-      <EmailDetail  emailId= {emailId} />
-    </div>
-  );
+  return <EmailDetail emailId={emailId} />;
 };
 
 export default EmailDetailPage;

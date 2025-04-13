@@ -2,23 +2,23 @@
 
 import { useState } from "react";
 import { Menu, Transition } from "@headlessui/react";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { FiMoreVertical } from "react-icons/fi";
+import { useUpdateClassStatus, useDeleteClass } from "@/lib/api/academicService/class";
 
-const ClassTable = ({ classes, router, setClasses }) => {
-  const [loading, setLoading] = useState(null);
+const ClassTable = ({ classes, router, schoolId }) => {
   const [selectedStream, setSelectedStream] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
 
-  // Extract unique filter options
+  const updateStatusMutation = useUpdateClassStatus();
+  const deleteClassMutation = useDeleteClass();
+
   const uniqueStreams = [
     ...new Set(classes.flatMap((c) => c.stream.map((s) => s.streamName))),
   ];
   const uniqueYears = [...new Set(classes.map((c) => c.academicYear))];
 
-  // Filter logic
   const filteredClasses = classes.filter((clas) => {
     const matchesStream =
       !selectedStream ||
@@ -30,50 +30,47 @@ const ClassTable = ({ classes, router, setClasses }) => {
     return matchesStream && matchesYear && matchesStatus;
   });
 
-  // Toggle class status
   const toggleStatus = async (classId, status) => {
-    setLoading(classId);
     try {
-      await axios.put(
-        `http://localhost:8086/academic/api/new/editStatus/${classId}`
-      );
+      await updateStatusMutation.mutateAsync({ schoolId, classId });
       toast.success(`Class ${status ? "disabled" : "enabled"} successfully!`);
-      setClasses((prev) =>
-        prev.map((c) => (c.classId === classId ? { ...c, status: !status } : c))
-      );
     } catch (error) {
       console.error("Error updating class status:", error);
       toast.error("Failed to update status.");
     }
-    setLoading(null);
   };
 
-  // Delete class
   const deleteClass = async (classId) => {
     if (!window.confirm("Are you sure you want to delete this class?")) return;
 
-    setLoading(classId);
     try {
-      await axios.delete(
-        `http://localhost:8086/academic/api/new/deleteClassById/${classId}`
-      );
+      await deleteClassMutation.mutateAsync({ schoolId, classId });
       toast.success("Class deleted successfully!");
-      setClasses((prev) => prev.filter((c) => c.classId !== classId));
     } catch (error) {
       console.error("Error deleting class:", error);
       toast.error("Failed to delete class.");
     }
-    setLoading(null);
   };
 
   return (
-    <div className="bg-white p-6 shadow-lg rounded-lg">
-      {/* Filter Section */}
+    <div
+      className={`
+        p-6 shadow-lg rounded-lg
+        bg-[var(--surface)]
+        dark:bg-[var(--surface)] night:bg-[var(--surface)]
+      `}
+    >
       <div className="flex flex-wrap gap-4 mb-6">
         <select
           value={selectedStream}
           onChange={(e) => setSelectedStream(e.target.value)}
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring focus:ring-blue-300"
+          className={`
+            border rounded-md px-3 py-2 text-sm
+            border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+            focus:ring focus:ring-[var(--primary)]
+            dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+            night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+          `}
         >
           <option value="">All Streams</option>
           {uniqueStreams.map((stream) => (
@@ -86,7 +83,13 @@ const ClassTable = ({ classes, router, setClasses }) => {
         <select
           value={selectedYear}
           onChange={(e) => setSelectedYear(e.target.value)}
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring focus:ring-blue-300"
+          className={`
+            border rounded-md px-3 py-2 text-sm
+            border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+            focus:ring focus:ring-[var(--primary)]
+            dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+            night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+          `}
         >
           <option value="">All Years</option>
           {uniqueYears.map((year) => (
@@ -99,7 +102,13 @@ const ClassTable = ({ classes, router, setClasses }) => {
         <select
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring focus:ring-blue-300"
+          className={`
+            border rounded-md px-3 py-2 text-sm
+            border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+            focus:ring focus:ring-[var(--primary)]
+            dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+            night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+          `}
         >
           <option value="">All Status</option>
           <option value="Active">Active</option>
@@ -107,11 +116,22 @@ const ClassTable = ({ classes, router, setClasses }) => {
         </select>
       </div>
 
-      {/* Table Section */}
       <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse">
+        <table
+          className={`
+            min-w-full border-collapse
+            border-[var(--secondary)]
+            dark:border-[var(--secondary)] night:border-[var(--secondary)]
+          `}
+        >
           <thead>
-            <tr className="bg-blue-500 text-white text-left">
+            <tr
+              className={`
+                bg-[var(--primary)] text-white text-left
+                dark:bg-[var(--primary)] dark:text-white
+                night:bg-[var(--primary)] night:text-white
+              `}
+            >
               <th className="py-3 px-4">#</th>
               <th className="py-3 px-4">Name</th>
               <th className="py-3 px-4">Academic Year</th>
@@ -124,11 +144,19 @@ const ClassTable = ({ classes, router, setClasses }) => {
             {filteredClasses.map((clas, index) => (
               <tr
                 key={clas.classId}
-                className="border-b hover:bg-gray-50 transition duration-200"
+                className={`
+                  border-b hover:bg-[var(--background)]
+                  dark:border-[var(--secondary)] dark:hover:bg-[var(--background)]
+                  night:border-[var(--secondary)] night:hover:bg-[var(--background)]
+                `}
               >
                 <td className="py-3 px-4 cursor-pointer">{index + 1}</td>
                 <td
-                  className="py-3 px-4 cursor-pointer hover:text-blue-600"
+                  className={`
+                    py-3 px-4 cursor-pointer hover:text-[var(--primary)]
+                    dark:hover:text-[var(--primary)]
+                    night:hover:text-[var(--primary)]
+                  `}
                   onClick={() =>
                     router.push(`/academic/class/class-details/${clas.classId}`)
                   }
@@ -140,7 +168,11 @@ const ClassTable = ({ classes, router, setClasses }) => {
                   {clas.stream.map((stream) => (
                     <span
                       key={stream.streamId}
-                      className="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs mr-1"
+                      className={`
+                        bg-[var(--surface)] text-[var(--text)] px-2 py-1 rounded text-xs mr-1
+                        dark:bg-[var(--surface)] dark:text-[var(--text)]
+                        night:bg-[var(--surface)] night:text-[var(--text)]
+                      `}
                     >
                       {stream.streamName}
                     </span>
@@ -148,18 +180,28 @@ const ClassTable = ({ classes, router, setClasses }) => {
                 </td>
                 <td className="py-3 px-4">
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                      clas.status
+                    className={`
+                      px-3 py-1 rounded-full text-sm font-semibold
+                      ${clas.status
                         ? "bg-green-100 text-green-600"
-                        : "bg-red-100 text-red-600"
-                    }`}
+                        : "bg-red-100 text-red-600"}
+                      dark:bg-opacity-20 dark:text-green-400
+                      night:bg-opacity-20 night:text-green-300
+                    `}
                   >
                     {clas.status ? "Active" : "Inactive"}
                   </span>
                 </td>
                 <td className="py-3 px-4">
                   <Menu as="div" className="relative inline-block text-left">
-                    <Menu.Button className="flex items-center px-3 py-2 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none">
+                    <Menu.Button
+                      className={`
+                        flex items-center px-3 py-2 rounded-md
+                        bg-[var(--surface)] hover:bg-[var(--background)]
+                        dark:bg-[var(--surface)] dark:hover:bg-[var(--background)]
+                        night:bg-[var(--surface)] night:hover:bg-[var(--background)]
+                      `}
+                    >
                       <FiMoreVertical size={18} />
                     </Menu.Button>
 
@@ -171,16 +213,29 @@ const ClassTable = ({ classes, router, setClasses }) => {
                       leaveFrom="transform scale-100 opacity-100"
                       leaveTo="transform scale-95 opacity-0"
                     >
-                      <Menu.Items className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                      <Menu.Items
+                        className={`
+                          absolute right-0 mt-2 w-40 rounded-md shadow-lg z-10
+                          bg-[var(--surface)] border-[var(--secondary)]
+                          dark:bg-[var(--surface)] dark:border-[var(--secondary)]
+                          night:bg-[var(--surface)] night:border-[var(--secondary)]
+                        `}
+                      >
                         <Menu.Item>
                           {({ active }) => (
                             <button
                               onClick={() =>
                                 toggleStatus(clas.classId, clas.status)
                               }
-                              className={`block w-full text-left px-4 py-2 text-sm ${
-                                active ? "bg-gray-100" : "bg-white"
-                              }`}
+                              disabled={updateStatusMutation.isPending}
+                              className={`
+                                block w-full text-left px-4 py-2 text-sm
+                                text-[var(--text)]
+                                ${active ? "bg-[var(--background)]" : ""}
+                                ${updateStatusMutation.isPending ? "opacity-50" : ""}
+                                dark:text-[var(--text)] dark:bg-[var(--background)]
+                                night:text-[var(--text)] night:bg-[var(--background)]
+                              `}
                             >
                               {clas.status ? "Disable" : "Enable"}
                             </button>
@@ -191,7 +246,15 @@ const ClassTable = ({ classes, router, setClasses }) => {
                           {({ active }) => (
                             <button
                               onClick={() => deleteClass(clas.classId)}
-                              className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100"
+                              disabled={deleteClassMutation.isPending}
+                              className={`
+                                block w-full text-left px-4 py-2 text-sm
+                                text-red-600
+                                ${active ? "bg-red-100" : ""}
+                                ${deleteClassMutation.isPending ? "opacity-50" : ""}
+                                dark:text-red-400 dark:bg-red-900
+                                night:text-red-300 night:bg-red-900
+                              `}
                             >
                               Delete
                             </button>

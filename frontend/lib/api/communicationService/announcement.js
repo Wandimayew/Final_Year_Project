@@ -174,7 +174,7 @@ export function useApproveAnnouncement(schoolId) {
     mutationFn: (announcementId) =>
       announcementApi.approveAnnouncement(schoolId, announcementId),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["announcements", schoolId] });
+      // No invalidation; rely on component's optimistic update
       queryClient.setQueryData(
         ["announcements", schoolId, data.data?.id],
         data.data
@@ -182,6 +182,27 @@ export function useApproveAnnouncement(schoolId) {
     },
     onError: (error) =>
       console.error("Announcement approval failed:", error.message),
+  });
+}
+
+export function useCancelAnnouncement(schoolId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ announcementId, rejectionReason }) =>
+      announcementApi.cancelAnnouncement(
+        schoolId,
+        announcementId,
+        rejectionReason
+      ),
+    onSuccess: (data) => {
+      // No invalidation; rely on component's optimistic update
+      queryClient.setQueryData(
+        ["announcements", schoolId, data.data?.id],
+        data.data
+      );
+    },
+    onError: (error) =>
+      console.error("Announcement cancellation failed:", error.message),
   });
 }
 
@@ -269,26 +290,26 @@ export function useMyDraftAnnouncements(
   });
 }
 
-export function useCancelAnnouncement(schoolId) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ announcementId, rejectionReason }) =>
-      announcementApi.cancelAnnouncement(
-        schoolId,
-        announcementId,
-        rejectionReason
-      ),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["announcements", schoolId] });
-      queryClient.setQueryData(
-        ["announcements", schoolId, data.data?.id],
-        data.data
-      );
-    },
-    onError: (error) =>
-      console.error("Announcement cancellation failed:", error.message),
-  });
-}
+// export function useCancelAnnouncement(schoolId) {
+//   const queryClient = useQueryClient();
+//   return useMutation({
+//     mutationFn: ({ announcementId, rejectionReason }) =>
+//       announcementApi.cancelAnnouncement(
+//         schoolId,
+//         announcementId,
+//         rejectionReason
+//       ),
+//     onSuccess: (data) => {
+//       queryClient.invalidateQueries({ queryKey: ["announcements", schoolId] });
+//       queryClient.setQueryData(
+//         ["announcements", schoolId, data.data?.id],
+//         data.data
+//       );
+//     },
+//     onError: (error) =>
+//       console.error("Announcement cancellation failed:", error.message),
+//   });
+// }
 
 export function useUpdateAnnouncementStatus(schoolId) {
   const queryClient = useQueryClient();

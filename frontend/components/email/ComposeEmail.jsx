@@ -59,6 +59,7 @@ const ComposeEmailContent = () => {
   } = useUsersByRoles(schoolId, selectedRoleId ? [selectedRoleId] : []);
 
   console.log(" USERS USING ROLES : ", usersData);
+  console.log(" REFECH USING ROLES : ", refetchUsers);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -138,8 +139,8 @@ const ComposeEmailContent = () => {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100 pl-60">
-      <div className="h-full p-4 md:p-8">
+    <div className="h-screen bg-gray-100 pl-60">
+      <div className="h-full max-w-7xl mx-auto p-4 md:p-8">
         <div className="bg-white rounded-xl shadow-lg p-6 h-full flex flex-col transition-all hover:shadow-xl">
           {/* Header */}
           <div className="flex items-center justify-between mb-6 flex-col md:flex-row gap-4">
@@ -250,7 +251,7 @@ const ComposeEmailContent = () => {
                   value={recipientId}
                   onChange={(e) => setRecipientId(e.target.value)}
                   required
-                  disabled={!selectedRoleId || usersData.length === 0}
+                  disabled={!selectedRoleId || usersData?.length === 0}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 disabled:bg-gray-200"
                 >
                   <option value="">-- Select a Recipient --</option>

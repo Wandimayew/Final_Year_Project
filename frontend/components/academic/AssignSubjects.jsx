@@ -1,138 +1,122 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import axios from "axios";
-
-
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
+import { useState, useMemo } from "react";
+import { useAuthStore } from "@/lib/auth";
+import { toast } from "react-toastify";
+import { useStreams } from "@/lib/api/academicService/stream";
+import {
+  useClassesByStream,
+  useAssignSubjectsToClass,
+} from "@/lib/api/academicService/class";
+import { useSubjectsBySchool } from "@/lib/api/academicService/subject";
 
 const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
-  const [streams, setStreams] = useState([]);
-  const [classes, setClasses] = useState([]);
-  const [subjects, setSubjects] = useState([]);
   const [selectedStream, setSelectedStream] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState([]);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
 
-  // Fetch all streams
-  useEffect(() => {
-    const fetchStreams = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:8086/academic/api/new/getAllStreamBySchool`
-        );
-        console.log("assigning the the selected stream {: ", response);
+  const authState = useMemo(
+    () =>
+      useAuthStore.getState()
+        ? {
+            user: useAuthStore.getState().user,
+            isAuthenticated: useAuthStore.getState().isAuthenticated(),
+          }
+        : { user: null, isAuthenticated: false },
+    []
+  );
+  const { user } = authState;
 
-        setStreams(response.data);
-      } catch (error) {
-        console.error("Failed to fetch streams:", error);
-        setErrorMessage("Failed to load streams. Please try again.");
-      }
-    };
+  const schoolId = user.schoolId;
 
-    fetchStreams();
-  }, []);
-  // Fetch all streams
-  useEffect(() => {
-    console.log("streamsssssssss", streams);
-  }, [streams]);
+  const { data: streams = [], isLoading: streamsLoading } =
+    useStreams(schoolId);
+  const { data: classes = [], isLoading: classesLoading } = useClassesByStream(
+    schoolId,
+    selectedStream
+  );
+  const { data: subjects = [], isLoading: subjectsLoading } =
+    useSubjectsBySchool(schoolId);
+  const assignSubjectsMutation = useAssignSubjectsToClass();
 
-  // Fetch classes based on the selected stream
-  useEffect(() => {
-    if (selectedStream) {
-      const fetchClasses = async () => {
-        console.log("stream selected  ;", selectedStream);
-
-        try {
-          const response = await axios.get(
-            `http://localhost:8086/academic/api/new/getAllClassByStream/${selectedStream}`
-          );
-          console.log("stream response {", response, "}.");
-
-          setClasses(response.data);
-        } catch (error) {
-          console.error("Failed to fetch classes:", error);
-          setErrorMessage("Failed to load classes. Please try again.");
-        }
-      };
-
-      fetchClasses();
-    } else {
-      setClasses([]);
-    }
-  }, [selectedStream]);
-
-  // Fetch all available subjects
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:8086/academic/api/new/getAllSubjectBySchool`
-        );
-        console.log("subject data: {", response.data, "}.");
-        setSubjects(response.data);
-      } catch (error) {
-        console.error("Error fetching subjects:", error);
-        setErrorMessage("Failed to load subjects. Please try again.");
-      }
-    };
-
-    fetchSubjects();
-  }, []);
-
-  // Handle subject selection
-  const handleSubjectSelection = (e, subjectId) => {
-    
-    setSelectedSubjects((prevSelected) => {
-      if (prevSelected.includes(subjectId)) {
-        // If the subject is already selected, remove it
-        return prevSelected.filter((id) => id !== subjectId);
-      } else {
-        // Otherwise, add it to the selection
-        return [...prevSelected, subjectId];
-      }
-    });
+  const handleSubjectSelection = (subjectId) => {
+    setSelectedSubjects((prevSelected) =>
+      prevSelected.includes(subjectId)
+        ? prevSelected.filter((id) => id !== subjectId)
+        : [...prevSelected, subjectId]
+    );
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      console.log("selected subjects : ", selectedSubjects);
-
-      const response = await axios.post(
-        `http://localhost:8086/academic/api/new/assign-subjects/${selectedClass}`,
-        selectedSubjects
-      );
-
-      if (response.status === 200) {
-        setSuccessMessage("Subjects assigned successfully!");
-        setErrorMessage("");
-        setSelectedSubjects([]);
-      }
+      await assignSubjectsMutation.mutateAsync({
+        schoolId,
+        classId: selectedClass,
+        subjectIds: selectedSubjects,
+      });
+      toast.success("Subjects assigned successfully!");
+      setSelectedSubjects([]);
+      setSelectedClass("");
+      setSelectedStream("");
     } catch (error) {
       console.error("Error assigning subjects:", error);
-      setErrorMessage("Failed to assign subjects. Please try again.");
+      toast.error("Failed to assign subjects.");
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md mt-10">
-      <h2 className="text-2xl font-bold mb-4">Assign Subjects to Class</h2>
-      {errorMessage && <p className="text-red-500 mb-4">{errorMessage}</p>}
-      {successMessage && (
-        <p className="text-green-500 mb-4">{successMessage}</p>
+    <div
+      className={`
+        max-w-2xl mx-auto p-6 rounded-lg shadow-md mt-10
+        bg-[var(--surface)]
+        dark:bg-[var(--surface)] night:bg-[var(--surface)]
+      `}
+    >
+      <h2
+        className={`
+          text-2xl font-bold mb-4
+          text-[var(--text)]
+          dark:text-[var(--text)]
+          night:text-[var(--text)]
+        `}
+      >
+        Assign Subjects to Class
+      </h2>
+      {assignSubjectsMutation.isError && (
+        <p
+          className={`
+            mb-4
+            text-red-500
+            dark:text-red-400
+            night:text-red-300
+          `}
+        >
+          {assignSubjectsMutation.error.message}
+        </p>
+      )}
+      {assignSubjectsMutation.isSuccess && (
+        <p
+          className={`
+            mb-4
+            text-green-500
+            dark:text-green-400
+            night:text-green-300
+          `}
+        >
+          Subjects assigned successfully!
+        </p>
       )}
       <form onSubmit={handleSubmit}>
-        {/* Stream Selection */}
         <div className="mb-4">
           <label
             htmlFor="stream"
-            className="block text-gray-700 font-medium mb-2"
+            className={`
+              block font-medium mb-2
+              text-[var(--text)]
+              dark:text-[var(--text)]
+              night:text-[var(--text)]
+            `}
           >
             Select Stream
           </label>
@@ -140,8 +124,15 @@ const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
             id="stream"
             value={selectedStream}
             onChange={(e) => setSelectedStream(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+            className={`
+              w-full px-3 py-2 border rounded-md focus:outline-none
+              border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+              focus:ring focus:ring-[var(--primary)]
+              dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+              night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+            `}
             required
+            disabled={streamsLoading}
           >
             <option value="">-- Select a Stream --</option>
             {streams.length > 0 ? (
@@ -156,12 +147,16 @@ const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
           </select>
         </div>
 
-        {/* Class Selection */}
         {classes.length > 0 && (
           <div className="mb-4">
             <label
               htmlFor="class"
-              className="block text-gray-700 font-medium mb-2"
+              className={`
+                block font-medium mb-2
+                text-[var(--text)]
+                dark:text-[var(--text)]
+                night:text-[var(--text)]
+              `}
             >
               Select Class
             </label>
@@ -169,8 +164,15 @@ const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
               id="class"
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+              className={`
+                w-full px-3 py-2 border rounded-md focus:outline-none
+                border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+                focus:ring focus:ring-[var(--primary)]
+                dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+                night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+              `}
               required
+              disabled={classesLoading}
             >
               <option value="">-- Select a Class --</option>
               {classes.map((classItem) => (
@@ -182,36 +184,69 @@ const AssignSubjects = ({ setSubjectListClicked, setAssign }) => {
           </div>
         )}
 
-        {/* Subject Selection */}
         <div className="mb-4">
-          <h3 className="text-gray-700 font-medium mb-2">Available Subjects</h3>
-          <div className="grid grid-cols-2 gap-4">
-            {subjects.map((subject) => (
-              <div key={subject.subjectId} className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={`subject-${subject.subjectId}`}
-                  value={subject.subjectId}
-                  checked={selectedSubjects.includes(subject.subjectId)}
-                  onChange={(e) => handleSubjectSelection(e, subject.subjectId)}
-                  className="mr-2"
-                />
-                <label
-                  htmlFor={`subject-${subject.subjectId}`}
-                  className="text-gray-700"
-                >
-                  {subject.subjectName}
-                </label>
-              </div>
-            ))}
-          </div>
+          <h3
+            className={`
+              font-medium mb-2
+              text-[var(--text)]
+              dark:text-[var(--text)]
+              night:text-[var(--text)]
+            `}
+          >
+            Available Subjects
+          </h3>
+          {subjectsLoading ? (
+            <p
+              className={`
+                text-[var(--text)]
+                dark:text-[var(--text)]
+                night:text-[var(--text)]
+              `}
+            >
+              Loading subjects...
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              {subjects.map((subject) => (
+                <div key={subject.subjectId} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`subject-${subject.subjectId}`}
+                    value={subject.subjectId}
+                    checked={selectedSubjects.includes(subject.subjectId)}
+                    onChange={() => handleSubjectSelection(subject.subjectId)}
+                    className="mr-2"
+                  />
+                  <label
+                    htmlFor={`subject-${subject.subjectId}`}
+                    className={`
+                      text-[var(--text)]
+                      dark:text-[var(--text)]
+                      night:text-[var(--text)]
+                    `}
+                  >
+                    {subject.subjectName}
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <button
           type="submit"
-          className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+          disabled={assignSubjectsMutation.isPending}
+          className={`
+            py-2 px-4 rounded-md hover:bg-opacity-80
+            bg-[var(--primary)] text-white
+            disabled:opacity-50
+            dark:bg-[var(--primary)] dark:text-white
+            night:bg-[var(--primary)] night:text-white
+          `}
         >
-          Assign Subjects
+          {assignSubjectsMutation.isPending
+            ? "Assigning..."
+            : "Assign Subjects"}
         </button>
       </form>
     </div>

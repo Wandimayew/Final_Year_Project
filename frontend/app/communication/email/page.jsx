@@ -3,12 +3,7 @@ import EmailList from "@/components/email/EmailList";
 export const dynamic = "force-dynamic";
 
 const InboxPage = () => {
-  return (
-    <div className="relative top-20" style={{ display: 'flex' }}>
-      <MailBoxFolder />
-      <EmailList folder="inbox" />
-    </div>
-  );
+  return <EmailList folder="inbox" />;
 };
 
 export default InboxPage;

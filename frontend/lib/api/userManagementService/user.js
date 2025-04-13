@@ -123,6 +123,8 @@ const userApi = {
     const { data } = await userService.get(
       `/${schoolId}/users/roles?${params.toString()}`
     );
+    console.log(" USERS BY ROLES INSIDE USEQUERY : ", data);
+    
     return data; // Assuming this returns an array of UserResponseDTO
   },
 };
@@ -408,20 +410,15 @@ export function useRemovePermissionFromUser() {
 }
 
 export function useUsersByRoles(schoolId, roleIds) {
-  const { setUsersByRoles, setLoading, setError } = useUserStore(); // Use Zustand setters
 
   return useQuery({
     queryKey: ["usersByRoles", schoolId, roleIds],
     queryFn: () => userApi.getUsersByRoles(schoolId, roleIds),
     enabled: !!schoolId && roleIds.length > 0,
-    onSuccess: (data) => {
-      setUsersByRoles(data);
-      setLoading(false);
-    },
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
     onError: (error) => {
-      setError(error.message || "Failed to fetch users by roles");
-      setLoading(false);
+      console.error("Failed to fetch users by roles:", error.message);
     },
-    onSettled: () => setLoading(false),
   });
 }

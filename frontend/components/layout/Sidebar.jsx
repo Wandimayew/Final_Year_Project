@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -45,11 +46,17 @@ const Sidebar = memo(({ isMenuOpen }) => {
     return (
       <div key={item.id}>
         <div
-          className={`flex items-center justify-between py-1 cursor-pointer font-bold ${
-            isItemActive
-              ? "bg-indigo-100 text-indigo-600"
-              : "text-[#555] hover:text-indigo-600"
-          } rounded-lg transition-colors duration-150 px-2`}
+          className={`
+            flex items-center justify-between py-1 cursor-pointer font-bold rounded-lg
+            transition-colors duration-150 px-2
+            ${
+              isItemActive
+                ? "bg-[var(--primary)] bg-opacity-20 text-[var(--primary)]"
+                : "text-[var(--text)] hover:text-[var(--primary)]"
+            }
+            dark:bg-opacity-30 dark:text-[var(--text)] dark:hover:text-[var(--primary)]
+            night:bg-opacity-30 night:text-[var(--text)] night:hover:text-[var(--primary)]
+          `}
           onClick={() => (hasSubItems ? toggleExpand(item.id) : null)}
         >
           <Link
@@ -57,17 +64,49 @@ const Sidebar = memo(({ isMenuOpen }) => {
             className="flex items-center flex-1 gap-3"
             onClick={(e) => hasSubItems && e.preventDefault()}
           >
-            <span className="glassmorphism p-2 rounded-md text-indigo-600">
+            <span
+              className={`
+                glassmorphism p-2 rounded-md
+                text-[var(--primary)]
+                dark:text-[var(--primary)]
+                night:text-[var(--primary)]
+              `}
+            >
               <item.icon size={25} />
             </span>
-            {isMenuOpen && <span className="text-sm">{item.label}</span>}
+            {isMenuOpen && (
+              <span
+                className={`
+                  text-sm
+                  text-[var(--text)]
+                  dark:text-[var(--text)]
+                  night:text-[var(--text)]
+                `}
+              >
+                {item.label}
+              </span>
+            )}
           </Link>
           {isMenuOpen &&
             hasSubItems &&
             (isExpanded ? (
-              <FaChevronDown className="w-3 h-3" />
+              <FaChevronDown
+                className={`
+                  w-3 h-3
+                  text-[var(--text)]
+                  dark:text-[var(--text)]
+                  night:text-[var(--text)]
+                `}
+              />
             ) : (
-              <FaChevronRight className="w-3 h-3" />
+              <FaChevronRight
+                className={`
+                  w-3 h-3
+                  text-[var(--text)]
+                  dark:text-[var(--text)]
+                  night:text-[var(--text)]
+                `}
+              />
             ))}
         </div>
         {isMenuOpen && hasSubItems && isExpanded && (
@@ -76,18 +115,37 @@ const Sidebar = memo(({ isMenuOpen }) => {
               <Link
                 key={subItem.id}
                 href={subItem.href}
-                className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-bold ${
-                  isActive(subItem.href)
-                    ? "bg-indigo-100 text-indigo-600"
-                    : "text-[#555] hover:text-indigo-600"
-                }`}
+                className={`
+                  flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-bold
+                  ${
+                    isActive(subItem.href)
+                      ? "bg-[var(--primary)] bg-opacity-20 text-[var(--primary)]"
+                      : "text-[var(--text)] hover:text-[var(--primary)]"
+                  }
+                  dark:bg-opacity-30 dark:text-[var(--text)] dark:hover:text-[var(--primary)]
+                  night:bg-opacity-30 night:text-[var(--text)] night:hover:text-[var(--primary)]
+                `}
               >
                 {subItem.icon && (
-                  <span className="text-indigo-600">
+                  <span
+                    className={`
+                      text-[var(--primary)]
+                      dark:text-[var(--primary)]
+                      night:text-[var(--primary)]
+                    `}
+                  >
                     <subItem.icon size={18} />
                   </span>
                 )}
-                <span>{subItem.label}</span>
+                <span
+                  className={`
+                    text-[var(--text)]
+                    dark:text-[var(--text)]
+                    night:text-[var(--text)]
+                  `}
+                >
+                  {subItem.label}
+                </span>
               </Link>
             ))}
           </div>
@@ -98,9 +156,14 @@ const Sidebar = memo(({ isMenuOpen }) => {
 
   return (
     <aside
-      className={`fixed left-0 top-20 bottom-0 transition-all duration-300 bg-white text-[#555] shadow-md z-10 ${
-        isMenuOpen ? "w-64" : "w-16"
-      }`}
+      className={`
+        fixed left-0 top-20 bottom-0 transition-all duration-300
+        shadow-md z-10
+        bg-[var(--surface)] text-[var(--text)]
+        dark:bg-[var(--surface)] dark:text-[var(--text)]
+        night:bg-[var(--surface)] night:text-[var(--text)]
+        ${isMenuOpen ? "w-64" : "w-16"}
+      `}
     >
       <nav className="h-full p-2 overflow-y-auto scroll-smooth">
         {menuItems.map((menu) => renderMenuItem(menu))}

@@ -1,34 +1,18 @@
+// components/event/EditEventModal.jsx
 "use client";
+
 import React, { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useUpdateAnnouncement } from "@/lib/api/communicationService/announcement";
+import { useAuthStore } from "@/lib/auth";
 import Modal from "./Modal";
 import { CircularProgress } from "@mui/material";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = "http://localhost:8084/communication/api";
-
-const editAnnouncement = async ({ schoolId, token, announcementId, data }) => {
-  const response = await fetch(
-    `${API_BASE_URL}/${schoolId}/announcements/${announcementId}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    }
-  );
-  if (!response.ok) throw new Error("Failed to update event");
-  return response.json();
-};
-
 const EditEventModal = React.memo(({ announcement }) => {
-  const { auth } = useAuth();
+  const { getSchoolId } = useAuthStore();
+  const schoolId = getSchoolId();
   const [isOpen, setIsOpen] = useState(false);
-  const queryClient = useQueryClient();
 
   const {
     register,
@@ -48,50 +32,7 @@ const EditEventModal = React.memo(({ announcement }) => {
     },
   });
 
-  const editMutation = useMutation({
-    mutationFn: ({ data }) =>
-      editAnnouncement({
-        schoolId: auth.user.schoolId,
-        token: auth.token,
-        announcementId: announcement.announcementId,
-        data,
-      }),
-    onMutate: async ({ data }) => {
-      await queryClient.cancelQueries(["announcements", auth.user.schoolId]);
-      const previousAnnouncements = queryClient.getQueryData([
-        "announcements",
-        auth.user.schoolId,
-      ]);
-      queryClient.setQueryData(["announcements", auth.user.schoolId], (old) => {
-        if (!old?.data) return old;
-        return {
-          ...old,
-          data: old.data.map((item) =>
-            item.announcementId === announcement.announcementId
-              ? { ...item, ...data }
-              : item
-          ),
-        };
-      });
-      return { previousAnnouncements };
-    },
-    onSuccess: () => {
-      setIsOpen(false);
-      toast.success("Event updated successfully!", { position: "top-right" });
-    },
-    onError: (err, variables, context) => {
-      queryClient.setQueryData(
-        ["announcements", auth.user.schoolId],
-        context.previousAnnouncements
-      );
-      toast.error("Failed to update event: " + err.message, {
-        position: "top-right",
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries(["announcements", auth.user.schoolId]);
-    },
-  });
+  const updateAnnouncement = useUpdateAnnouncement(schoolId);
 
   const onSubmit = useCallback(
     (data) => {
@@ -101,9 +42,27 @@ const EditEventModal = React.memo(({ announcement }) => {
         startDate: new Date(data.startDate).toISOString(),
         endDate: new Date(data.endDate).toISOString(),
       };
-      editMutation.mutate({ data: updatedData });
+      updateAnnouncement.mutate(
+        {
+          announcementId: announcement.announcementId,
+          announcementRequest: updatedData,
+        },
+        {
+          onSuccess: () => {
+            setIsOpen(false);
+            toast.success("Event updated successfully!", {
+              position: "top-right",
+            });
+          },
+          onError: (err) => {
+            toast.error("Failed to update event: " + err.message, {
+              position: "top-right",
+            });
+          },
+        }
+      );
     },
-    [editMutation, announcement]
+    [updateAnnouncement, announcement]
   );
 
   const openModal = useCallback(() => {
@@ -138,7 +97,7 @@ const EditEventModal = React.memo(({ announcement }) => {
               {...register("title", { required: "Title is required" })}
               className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-400 focus:border-transparent"
               placeholder="Title"
-              disabled={editMutation.isLoading}
+              disabled={updateAnnouncement.isLoading}
             />
             {errors.title && (
               <p className="text-sm text-red-500">{errors.title.message}</p>
@@ -150,7 +109,7 @@ const EditEventModal = React.memo(({ announcement }) => {
               rows="3"
               placeholder="Message"
               className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-              disabled={editMutation.isLoading}
+              disabled={updateAnnouncement.isLoading}
             />
           </div>
           <div>
@@ -158,7 +117,7 @@ const EditEventModal = React.memo(({ announcement }) => {
               type="datetime-local"
               {...register("startDate", { required: "Start Date is required" })}
               className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-              disabled={editMutation.isLoading}
+              disabled={updateAnnouncement.isLoading}
             />
             {errors.startDate && (
               <p className="text-sm text-red-500">{errors.startDate.message}</p>
@@ -169,7 +128,7 @@ const EditEventModal = React.memo(({ announcement }) => {
               type="datetime-local"
               {...register("endDate", { required: "End Date is required" })}
               className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-              disabled={editMutation.isLoading}
+              disabled={updateAnnouncement.isLoading}
             />
             {errors.endDate && (
               <p className="text-sm text-red-500">{errors.endDate.message}</p>
@@ -178,18 +137,18 @@ const EditEventModal = React.memo(({ announcement }) => {
           <div className="flex space-x-2">
             <button
               type="submit"
-              disabled={editMutation.isLoading}
+              disabled={updateAnnouncement.isLoading}
               className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors duration-200 flex items-center justify-center"
             >
-              {editMutation.isLoading ? (
+              {updateAnnouncement.isLoading ? (
                 <CircularProgress size={20} color="inherit" className="mr-2" />
               ) : null}
-              {editMutation.isLoading ? "Saving..." : "Save"}
+              {updateAnnouncement.isLoading ? "Saving..." : "Save"}
             </button>
             <button
               type="button"
               onClick={closeModal}
-              disabled={editMutation.isLoading}
+              disabled={updateAnnouncement.isLoading}
               className="flex-1 bg-gray-300 text-gray-800 py-2 rounded-md hover:bg-gray-400 transition-colors duration-200"
             >
               Cancel
@@ -201,6 +160,6 @@ const EditEventModal = React.memo(({ announcement }) => {
   );
 });
 
-EditEventModal.displayName = "EditEventModal"; // Added displayName
+EditEventModal.displayName = "EditEventModal";
 
 export default EditEventModal;

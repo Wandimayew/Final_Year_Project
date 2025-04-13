@@ -1,73 +1,83 @@
-"use client"
+// components/communication/EventListDisplay.jsx
+"use client";
 
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { useAuth } from "@/hooks/useAuth";
-import EventCard from "./EventCard";
+import React, { useState, useMemo } from "react";
+import { useAuthStore } from "@/lib/auth";
+import {
+  useMyAnnouncements,
+  useAllAnnouncements,
+} from "@/lib/api/communicationService/announcement";
+import EventCard from "./EventCard"; // Your existing EventCard
 import ActionButton from "../common/ActionButton";
 import Loader from "../shared/Loader";
 
-const API_BASE_URL =
-    `http://localhost:8084/communication/api`
-const fetchAnnouncements = async (schoolId,token, isMyEvents, userId) => {
-  
-  console.log("school id", schoolId);
-  
-  const url = isMyEvents ? `${API_BASE_URL}/${schoolId}/announcements/my-announcements` : `${API_BASE_URL}/${schoolId}/announcements`;
-
-  try {
-    const response = await axios.get(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    // Handle different response structures
-    const announcements = response.data.data;
-    const extractedAnnouncements = Array.isArray(announcements)
-      ? announcements
-      : announcements?.content || [];
-
-    if (isMyEvents) {
-      return extractedAnnouncements;
-    } else {
-      return extractedAnnouncements.filter(
-        (a) => a.authorId !== userId && a.status === "PUBLISHED"
-      );
-    }
-  } catch (err) {
-    console.error("Failed to fetch announcements:", err);
-    return [];
-  }
-};
-
 const EventListDisplay = () => {
-  const { auth, loading: authLoading } = useAuth();
+  const authState = useMemo(() => {
+    const state = useAuthStore.getState();
+    return {
+      user: state.user,
+      isAuthenticated: state.isAuthenticated(),
+    };
+  }, []);
+
+  const { user, isAuthenticated } = authState;
   const [expandedId, setExpandedId] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
 
-  const {
-    data: announcements = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["announcements", activeTab,auth?.user?.schoolId, auth?.user?.userId],
-    queryFn: () =>
-      fetchAnnouncements(
-        auth.user.schoolId,
-        auth.token,
-        activeTab === "myEvents",
-        auth.user.userId
-      ),
-    enabled: !!auth && !authLoading,
+  const myAnnouncementsQuery = useMyAnnouncements(user?.schoolId, {
+    page: 0,
+    size: 10,
+    sort: "createdAt,desc",
   });
+
+  const allAnnouncementsQuery = useAllAnnouncements(user?.schoolId);
+
+  const activeQuery = activeTab === "myEvents" ? myAnnouncementsQuery : allAnnouncementsQuery;
+
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = activeQuery;
+
+  // Handle the data structure safely
+  const announcements = useMemo(() => {
+    if (!data?.data) return [];
+    // If it's a paginated response (myAnnouncements)
+    if (data.data.content) {
+      return data.data.content;
+    }
+    // If it's a list response (allAnnouncements)
+    return data.data;
+  }, [data]);
+
+  const filteredAnnouncements = useMemo(() => {
+    if (!Array.isArray(announcements)) return [];
+
+    return activeTab === "all"
+      ? announcements.filter(
+          (a) => a.status === "PUBLISHED" // Show only published for "All Events"
+        )
+      : announcements; // Show all statuses for "My Events"
+  }, [announcements, activeTab]);
 
   const toggleExpand = (id) => setExpandedId(expandedId === id ? null : id);
 
-  if (authLoading || isLoading) return <Loader />;
-  if (!auth) {
+  if (!isAuthenticated) {
     return (
       <div className="text-center text-gray-500 p-6">
         Please log in to view events.
+      </div>
+    );
+  }
+
+  if (isLoading) return <Loader />;
+
+  if (isError) {
+    return (
+      <div className="text-center text-red-500 p-6">
+        Failed to load events: {error?.message || "Unknown error occurred"}
       </div>
     );
   }
@@ -92,7 +102,7 @@ const EventListDisplay = () => {
             className="px-5 py-2"
           />
         </div>
-        {announcements.length === 0 ? (
+        {filteredAnnouncements.length === 0 ? (
           <p className="text-center text-gray-500 text-lg">
             {activeTab === "myEvents"
               ? "You haven't created any events yet."
@@ -100,13 +110,13 @@ const EventListDisplay = () => {
           </p>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {announcements.map((announcement) => (
+            {filteredAnnouncements.map((announcement) => (
               <EventCard
                 key={announcement.announcementId}
                 announcement={announcement}
                 expandedId={expandedId}
                 toggleExpand={toggleExpand}
-                isCreator={announcement.authorId === auth.user.userId}
+                isCreator={announcement.authorId === user?.userId}
                 showCreatorActions={activeTab === "myEvents"}
               />
             ))}

@@ -1,107 +1,192 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import { useState, useEffect, useMemo } from "react";
+import { useAuthStore } from "@/lib/auth";
 import { useRouter } from "next/navigation";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useStreams } from "@/lib/api/academicService/stream";
+import { useCreateClass } from "@/lib/api/academicService/class";
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
-const fetchStreams = async (schoolId) => {
-  if (!schoolId) return []; // Avoid fetch if no schoolId
-  const response = await axios.get(
-    `http://localhost:8086/academic/api/new/getAllStreamBySchool`
-  );
-  return response.data;
-};
-
-const addClass = async (classData) => {
-  const response = await axios.post(
-    `http://localhost:8086/academic/api/new/add-class`, // Adjust endpoint as needed
-    classData
-  );
-  return response.data;
-};
+export const dynamic = "force-dynamic";
 
 const AddClass = ({ setClassList, classListClicked }) => {
+  const authState = useMemo(
+    () =>
+      useAuthStore.getState()
+        ? {
+            user: useAuthStore.getState().user,
+            isAuthenticated: useAuthStore.getState().isAuthenticated(),
+          }
+        : { user: null, isAuthenticated: false },
+    []
+  );
+  const { user } = authState;
   const router = useRouter();
-  const queryClient = useQueryClient();
-
   const [formData, setFormData] = useState({
     className: "",
     academicYear: "",
     streamId: "",
   });
-  const [successMessage, setSuccessMessage] = useState("");
-  const [schoolId, setSchoolId] = useState("");
+  const [errors, setErrors] = useState({});
 
-  // Fetch schoolId from localStorage
-  useEffect(() => {
-    const userData = localStorage.getItem("auth-store");
-    if (userData) {
-      try {
-        const parsedData = JSON.parse(userData);
-        setSchoolId(parsedData.user?.schoolId || "");
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-      }
-    }
-  }, []);
+  const schoolId = user.schoolId;
 
-  // Fetch streams using useQuery
   const {
     data: streams = [],
     isLoading: streamsLoading,
-    error: streamsError,
-  } = useQuery({
-    queryKey: ["streams", schoolId],
-    queryFn: () => fetchStreams(schoolId),
-    enabled: !!schoolId, // Only fetch when schoolId is available
-  });
+    isError: streamsError,
+    error: streamErrorDetails,
+  } = useStreams(user.schoolId);
 
-  // Mutation for adding a class
-  const mutation = useMutation({
-    mutationFn: addClass,
-    onSuccess: (data) => {
-      setSuccessMessage("Class added successfully!");
-      setFormData({ className: "", academicYear: "", streamId: "" });
-      queryClient.invalidateQueries(["classes"]); // Invalidate class list if you fetch it elsewhere
-      setTimeout(() => setClassList(true), 2000);
-    },
-    onError: (error) => {
-      console.error("Error adding class:", error);
-    },
-  });
+  console.log("user.schoolId:", user.schoolId);
+  console.log("streams:", streams);
+  console.log("streamsLoading:", streamsLoading);
+  console.log("streamsError:", streamsError);
+  console.log("streamErrorDetails:", streamErrorDetails);
+
+  const createClass = useCreateClass();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.className.trim()) {
+      newErrors.className = "Class Name is required";
+    }
+    if (!formData.academicYear.trim()) {
+      newErrors.academicYear = "Academic Year is required";
+    }
+    if (!formData.streamId) {
+      newErrors.streamId = "Stream is required";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setSuccessMessage("");
-    mutation.mutate(formData);
+    if (!user.schoolId) {
+      toast.error("Cannot add class: School ID is missing");
+      return;
+    }
+    if (!validateForm()) return;
+
+    const payload = {
+      className: formData.className.trim(),
+      academicYear: formData.academicYear.trim(),
+      streamId: Number(formData.streamId),
+    };
+
+    createClass.mutate(
+      { schoolId, classRequest: payload },
+      {
+        onSuccess: () => {
+          setFormData({ className: "", academicYear: "", streamId: "" });
+          toast.success("Class added successfully!", {
+            position: "top-right",
+            autoClose: 3000,
+          });
+          setTimeout(() => setClassList(true), 2000);
+        },
+        onError: (error) => {
+          toast.error(`Failed to add class: ${error.message}`, {
+            position: "top-right",
+            autoClose: 3000,
+          });
+        },
+      }
+    );
   };
 
+  useEffect(() => {
+    if (streamsError) {
+      toast.error(`Failed to load streams: ${streamErrorDetails.message}`, {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    }
+  }, [streamsError, streamErrorDetails]);
+
+  if (!user.schoolId || streamsLoading) {
+    return (
+      <div
+        className={`
+          max-w-2xl mx-auto p-6 rounded-lg shadow-md relative top-20
+          bg-[var(--surface)]
+          dark:bg-[var(--surface)] night:bg-[var(--surface)]
+        `}
+      >
+        <div className="flex justify-center">
+          <div
+            className={`
+              animate-spin h-10 w-10 border-4 rounded-full border-t-transparent
+              border-[var(--primary)]
+              dark:border-[var(--primary)]
+              night:border-[var(--primary)]
+            `}
+          ></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (streamsError) {
+    return (
+      <div
+        className={`
+          max-w-2xl mx-auto p-6 rounded-lg shadow-md relative top-20
+          bg-[var(--surface)]
+          dark:bg-[var(--surface)] night:bg-[var(--surface)]
+        `}
+      >
+        <p
+          className={`
+            text-red-500
+            dark:text-red-400
+            night:text-red-300
+          `}
+        >
+          Failed to load streams. Please try again later.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md relative top-20">
-      <h2 className="text-2xl font-bold mb-4">Add Class</h2>
-      {streamsError && (
-        <p className="text-red-500 mb-4">Failed to load streams</p>
-      )}
-      {mutation.isError && (
-        <p className="text-red-500 mb-4">Error adding class</p>
-      )}
-      {successMessage && (
-        <p className="text-green-500 mb-4">{successMessage}</p>
-      )}
+    <div
+      className={`
+        max-w-2xl mx-auto p-6 rounded-lg shadow-md relative top-20
+        bg-[var(--surface)]
+        dark:bg-[var(--surface)] night:bg-[var(--surface)]
+      `}
+    >
+      <h2
+        className={`
+          text-2xl font-bold mb-4
+          text-[var(--text)]
+          dark:text-[var(--text)]
+          night:text-[var(--text)]
+        `}
+      >
+        Add Class
+      </h2>
 
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label
-            className="block text-gray-700 font-medium mb-2"
+            className={`
+              block font-medium mb-2
+              text-[var(--text)]
+              dark:text-[var(--text)]
+              night:text-[var(--text)]
+            `}
             htmlFor="className"
           >
             Class Name
@@ -112,14 +197,38 @@ const AddClass = ({ setClassList, classListClicked }) => {
             name="className"
             value={formData.className}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
-            required
+            className={`
+              w-full px-3 py-2 border rounded-md focus:outline-none
+              border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+              focus:ring focus:ring-[var(--primary)]
+              ${errors.className ? "border-red-500" : ""}
+              dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+              night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+            `}
+            placeholder="e.g., Grade 10"
+            disabled={createClass.isPending}
           />
+          {errors.className && (
+            <p
+              className={`
+                text-red-500 text-sm mt-1
+                dark:text-red-400
+                night:text-red-300
+              `}
+            >
+              {errors.className}
+            </p>
+          )}
         </div>
 
         <div className="mb-4">
           <label
-            className="block text-gray-700 font-medium mb-2"
+            className={`
+              block font-medium mb-2
+              text-[var(--text)]
+              dark:text-[var(--text)]
+              night:text-[var(--text)]
+            `}
             htmlFor="academicYear"
           >
             Academic Year
@@ -130,14 +239,38 @@ const AddClass = ({ setClassList, classListClicked }) => {
             name="academicYear"
             value={formData.academicYear}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
-            required
+            className={`
+              w-full px-3 py-2 border rounded-md focus:outline-none
+              border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+              focus:ring focus:ring-[var(--primary)]
+              ${errors.academicYear ? "border-red-500" : ""}
+              dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+              night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+            `}
+            placeholder="e.g., 2024-2025"
+            disabled={createClass.isPending}
           />
+          {errors.academicYear && (
+            <p
+              className={`
+                text-red-500 text-sm mt-1
+                dark:text-red-400
+                night:text-red-300
+              `}
+            >
+              {errors.academicYear}
+            </p>
+          )}
         </div>
 
         <div className="mb-4">
           <label
-            className="block text-gray-700 font-medium mb-2"
+            className={`
+              block font-medium mb-2
+              text-[var(--text)]
+              dark:text-[var(--text)]
+              night:text-[var(--text)]
+            `}
             htmlFor="streamId"
           >
             Stream
@@ -147,9 +280,15 @@ const AddClass = ({ setClassList, classListClicked }) => {
             name="streamId"
             value={formData.streamId}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
-            required
-            disabled={streamsLoading}
+            className={`
+              w-full px-3 py-2 border rounded-md focus:outline-none
+              border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+              focus:ring focus:ring-[var(--primary)]
+              ${errors.streamId ? "border-red-500" : ""}
+              dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+              night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+            `}
+            disabled={createClass.isPending || streams.length === 0}
           >
             <option value="">Select a Stream</option>
             {streams.map((stream) => (
@@ -158,25 +297,63 @@ const AddClass = ({ setClassList, classListClicked }) => {
               </option>
             ))}
           </select>
+          {errors.streamId && (
+            <p
+              className={`
+                text-red-500 text-sm mt-1
+                dark:text-red-400
+                night:text-red-300
+              `}
+            >
+              {errors.streamId}
+            </p>
+          )}
+          {streams.length === 0 && !streamsLoading && (
+            <p
+              className={`
+                text-yellow-500 text-sm mt-1
+                dark:text-yellow-400
+                night:text-yellow-300
+              `}
+            >
+              No streams available
+            </p>
+          )}
         </div>
 
         <div className="flex w-full justify-between">
           <button
             onClick={() => setClassList(true)}
-            type="button" // Prevent form submission
-            className="bg-gray-300 text-black py-2 px-4 rounded-md hover:bg-gray-500 focus:outline-none focus:ring focus:ring-gray-300"
+            type="button"
+            className={`
+              py-2 px-4 rounded-md hover:bg-opacity-80
+              bg-[var(--secondary)] text-[var(--text)]
+              focus:outline-none focus:ring focus:ring-[var(--secondary)]
+              dark:bg-[var(--secondary)] dark:text-[var(--text)]
+              night:bg-[var(--secondary)] night:text-[var(--text)]
+            `}
+            disabled={createClass.isPending}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
-            disabled={mutation.isPending || streamsLoading}
+            className={`
+              py-2 px-4 rounded-md hover:bg-opacity-80
+              bg-[var(--primary)] text-white
+              focus:outline-none focus:ring focus:ring-[var(--primary)]
+              ${createClass.isPending ? "opacity-50 cursor-not-allowed" : ""}
+              dark:bg-[var(--primary)] dark:text-white
+              night:bg-[var(--primary)] night:text-white
+            `}
+            disabled={createClass.isPending}
           >
-            {mutation.isPending ? "Adding..." : "Add Class"}
+            {createClass.isPending ? "Adding..." : "Add Class"}
           </button>
         </div>
       </form>
+
+      <ToastContainer />
     </div>
   );
 };

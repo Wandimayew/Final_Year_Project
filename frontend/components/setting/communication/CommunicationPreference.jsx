@@ -1,104 +1,131 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useAuth } from "@/hooks/useAuth";
+import React, { useCallback, useEffect, useState } from "react";
+import { useAuthStore } from "@/lib/auth";
+import {
+  useCommunicationPreferenceByUser,
+  useUpdateCommunicationPreference,
+} from "@/lib/api/communicationService/communicationpreference";
+import { toast } from "react-toastify";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CommunicationPreference = () => {
-  const [preference, setPreference] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const { auth, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    // Wait for auth to resolve
-    if (authLoading) {
-      console.log("Auth is still loading...");
-      return;
-    }
-
-    // Check if authenticated
-    if (!auth || !auth.token) {
-      console.log("No auth or token found.");
-      setError("Authentication required to view preferences.");
-      setLoading(false); // Ensure loading stops
-      return;
-    }
-
-    const { token } = auth;
-    const { schoolId, userId } = auth.user || {}; // Safely destructure with fallback
-
-    if (!schoolId || !userId) {
-      console.log("Missing schoolId or userId in auth.user:", auth.user);
-      setError("Incomplete user data.");
-      setLoading(false);
-      return;
-    }
-
-    const fetchPreferences = async () => {
-      try {
-        console.log(
-          "Fetching preferences for schoolId:",
-          schoolId,
-          "userId:",
-          userId
-        );
-        const response = await axios.get(
-          `http://10.194.61.74:8080/communication/api/${schoolId}/getCommunicationPreferenceByUserId`, // Dynamic endpoint
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            withCredentials: true,
-          }
-        );
-        console.log("Preference response:", response.data);
-        setPreference(response.data.data); // Assuming response.data.data contains the preference
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching communication preferences:", err);
-        setError(
-          err.response?.data?.message ||
-            "Failed to load communication preferences."
-        );
-        setLoading(false);
-      }
+  // Local state to hold auth data, updated via subscription
+  const [authState, setAuthState] = useState(() => {
+    const state = useAuthStore.getState();
+    return {
+      user: state.user,
+      token: state.token,
+      isAuthenticated: state.isAuthenticated(),
+      loading: state.loading,
     };
+  });
 
-    fetchPreferences();
-  }, [authLoading, auth]); // Depend on authLoading and auth
+  // Subscribe to auth store changes explicitly
+  useEffect(() => {
+    const unsubscribe = useAuthStore.subscribe(
+      (state) => ({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated(),
+        loading: state.loading,
+      }),
+      (newState) => {
+        setAuthState(newState);
+      }
+    );
+    return () => unsubscribe(); // Cleanup subscription on unmount
+  }, []);
 
-  const handleToggle = async (field) => {
-    if (!preference || !auth || !auth.token) return;
+  const { user, token, isAuthenticated, loading: authLoading } = authState;
 
-    const previousPreference = { ...preference };
-    const newValue = !preference[field];
-    const updatedPreference = { ...preference, [field]: newValue };
+  const schoolId = user?.schoolId;
+  const userId = user?.userId;
 
-    setPreference(updatedPreference); // Optimistic update
+  const {
+    data: preferenceData,
+    isLoading: queryLoading,
+    isError,
+    error,
+  } = useCommunicationPreferenceByUser(schoolId, {
+    enabled: !!schoolId && isAuthenticated && !authLoading,
+  });
 
-    const { token } = auth;
-    const { schoolId, userId } = auth.user;
+  const preference = preferenceData?.data;
 
-    try {
-      console.log(`Updating ${field} for userId: ${userId}`);
-      await axios.put(
-        `http://10.194.61.74:8080/communication/api/${schoolId}/updateCommunicationPreference/${userId}`,
-        updatedPreference,
+  const updatePreferenceMutation = useUpdateCommunicationPreference(schoolId);
+
+  const handleToggle = useCallback(
+    async (field) => {
+      if (!preference || !token || !schoolId || !userId) return;
+
+      const previousPreference = { ...preference };
+      const newValue = !preference[field];
+      const updatedPreference = { ...preference, [field]: newValue };
+
+      updatePreferenceMutation.mutate(
+        { userId, communicationPreferenceRequest: updatedPreference },
         {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+          onMutate: async () => {
+            await queryClient.cancelQueries([
+              "communicationPreferences",
+              schoolId,
+              "user",
+            ]);
+            const previousData = queryClient.getQueryData([
+              "communicationPreferences",
+              schoolId,
+              "user",
+            ]);
+            queryClient.setQueryData(
+              ["communicationPreferences", schoolId, "user"],
+              (old = { data: {} }) => ({
+                ...old,
+                data: updatedPreference,
+              })
+            );
+            return { previousData };
           },
-          withCredentials: true,
+          onSuccess: () => {
+            console.log(`${field} updated successfully`);
+            toast.success(`${field} preference updated!`, {
+              position: "top-right",
+            });
+          },
+          onError: (err, variables, context) => {
+            console.error(`Error updating ${field}:`, err);
+            toast.error("Failed to save changes. Reverting...", {
+              position: "top-right",
+            });
+            queryClient.setQueryData(
+              ["communicationPreferences", schoolId, "user"],
+              context.previousData
+            );
+            setTimeout(() => toast.dismiss(), 3000);
+          },
+          onSettled: () => {
+            queryClient.invalidateQueries([
+              "communicationPreferences",
+              schoolId,
+              "user",
+            ]);
+          },
         }
       );
-      console.log(`${field} updated successfully`);
-    } catch (err) {
-      console.error(`Error updating ${field}:`, err);
-      setError("Failed to save changes. Reverting...");
-      setPreference(previousPreference);
-      setTimeout(() => setError(null), 3000);
-    }
-  };
+    },
+    [
+      preference,
+      token,
+      schoolId,
+      userId,
+      updatePreferenceMutation,
+      queryClient,
+    ]
+  );
+
+  const loading = authLoading || queryLoading;
 
   if (loading) {
     return (
@@ -110,10 +137,24 @@ const CommunicationPreference = () => {
     );
   }
 
-  if (error) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-200">
-        <div className="text-red-600 font-medium text-lg">{error}</div>
+        <div className="text-red-600 font-medium text-lg">
+          Authentication required to view preferences.
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-200">
+        <div className="text-red-600 font-medium text-lg">
+          {error?.response?.data?.message ||
+            error?.message ||
+            "Failed to load communication preferences."}
+        </div>
       </div>
     );
   }

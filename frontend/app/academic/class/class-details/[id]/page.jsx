@@ -1,20 +1,16 @@
-"use client"
+"use client";
 
-import { useParams } from "next/navigation"
-import ViewClass from "@/components/academic/ViewClass"
+import { useParams } from "next/navigation";
+import ViewClass from "@/components/academic/ViewClass";
 export const dynamic = "force-dynamic";
 
 const ClassDetailsPage = () => {
-  const params=useParams();
-  const id=params.id;
+  const params = useParams();
+  const id = params.id;
 
-  console.log("id for detaisl",id);
-  
-  return (
+  console.log("id for detaisl", id);
 
-        <ViewClass  id={id}/>
+  return <ViewClass id={id} />;
+};
 
-  )
-}
-
-export default ClassDetailsPage
+export default ClassDetailsPage;

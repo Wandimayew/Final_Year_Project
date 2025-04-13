@@ -37,7 +37,7 @@ const MailBoxFolder = () => {
   ];
 
   return (
-    <div className="w-60 bg-gradient-to-b from-blue-50 to-gray-100 border-r border-gray-200 h-screen fixed overflow-y-auto shadow-md">
+    <div className="w-60 bg-gradient-to-b mt-3 from-blue-50 to-gray-100 border-r border-gray-200 h-screen fixed shadow-md">
       {/* Compose Button */}
       <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-400 flex justify-end items-center">
         <button

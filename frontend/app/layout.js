@@ -6,7 +6,8 @@ import "./globals.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Toaster } from "react-hot-toast";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+// import {  createTheme } from "@mui/material/styles";
+import { ThemeProvider } from "@/lib/theme/ThemeContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -23,14 +24,13 @@ const geistMono = localFont({
 export const dynamic = 'force-dynamic';
 
 export default function RootLayout({ children }) {
-  const theme = createTheme(); // Default theme includes grey palette
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ReactQueryProvider>
-          <ThemeProvider theme={theme}>
+          <ThemeProvider >
             {children}
             <ToastContainer position="top-right" autoClose={3000} />
             <Toaster position="top-right" toastOptions={{ duration: 5000 }} />

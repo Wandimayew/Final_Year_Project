@@ -1,101 +1,152 @@
 "use client";
 
-import React, { useState } from "react";
-import axios from "axios";
+import { useState, useMemo } from "react";
+import { useAuthStore } from "@/lib/auth";
 import { toast } from "react-toastify";
+import {
+  useUpdateSection,
+  useDeleteSection,
+} from "@/lib/api/academicService/section";
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
-const EditSection = ({ section, classId, onClose, type, setClassDetails }) => {
+const EditSection = ({ section, classId, onClose, type }) => {
   const [sectionName, setSectionName] = useState(section?.sectionName || "");
   const [capacity, setCapacity] = useState(section?.capacity || 0);
-  const [loading, setLoading] = useState(false);
+
+  const updateSectionMutation = useUpdateSection();
+  const deleteSectionMutation = useDeleteSection();
+
+  const authState = useMemo(
+    () =>
+      useAuthStore.getState()
+        ? {
+            user: useAuthStore.getState().user,
+            isAuthenticated: useAuthStore.getState().isAuthenticated(),
+          }
+        : { user: null, isAuthenticated: false },
+    []
+  );
+  const { user } = authState;
+
+  const schoolId = user?.schoolId;
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    if (!schoolId) {
+      toast.error("School ID is missing");
+      return;
+    }
     try {
-      await axios.put(
-        `http://localhost:8086/academic/api/new/editSectionById/${section.sectionId}`,
-        {
+      await updateSectionMutation.mutateAsync({
+        schoolId,
+        sectionId: section.sectionId,
+        sectionRequest: {
           sectionName,
           capacity: parseInt(capacity, 10),
           classId,
-        }
-      );
+        },
+      });
       toast.success("Section updated successfully!");
-
-      // Update the class details in parent component
-      setClassDetails((prev) => ({
-        ...prev,
-        sections: prev.sections.map((sec) =>
-          sec.sectionId === section.sectionId
-            ? { ...sec, sectionName, capacity }
-            : sec
-        ),
-      }));
+      onClose();
     } catch (error) {
       console.error("Error editing section:", error);
       toast.error("Failed to update section.");
     }
-    setLoading(false);
-    onClose();
   };
 
   const handleDelete = async () => {
-    setLoading(true);
+    if (!schoolId) {
+      toast.error("School ID is missing");
+      return;
+    }
     try {
-      await axios.delete(
-        `http://localhost:8086/academic/api/new/deleteSectionById/${section.sectionId}`
-      );
+      await deleteSectionMutation.mutateAsync({
+        schoolId,
+        sectionId: section.sectionId,
+        classId,
+      });
       toast.success("Section deleted successfully!");
-
-      // Update the class details in parent component
-      setClassDetails((prev) => ({
-        ...prev,
-        sections: prev.sections.filter(
-          (sec) => sec.sectionId !== section.sectionId
-        ),
-      }));
+      onClose();
     } catch (error) {
       console.error("Error deleting section:", error);
       toast.error("Failed to delete section.");
     }
-    setLoading(false);
-    onClose();
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
-        {/* Header */}
-        <h2 className="text-xl font-bold mb-4 text-gray-800">
+    <div
+      className={`
+        fixed inset-0 flex items-center justify-center
+        bg-black bg-opacity-50
+        dark:bg-opacity-70
+        night:bg-opacity-80
+      `}
+    >
+      <div
+        className={`
+          rounded-lg shadow-lg p-6 max-w-md w-full
+          bg-[var(--surface)]
+          dark:bg-[var(--surface)]
+          night:bg-[var(--surface)]
+        `}
+      >
+        <h2
+          className={`
+            text-xl font-bold mb-4
+            text-[var(--text)]
+            dark:text-[var(--text)]
+            night:text-[var(--text)]
+          `}
+        >
           {type === "edit" ? "Edit Section" : "Delete Section"}
         </h2>
 
-        {/* Edit Form */}
         {type === "edit" && (
           <form onSubmit={handleSave}>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">
+              <label
+                className={`
+                  block text-sm font-medium
+                  text-[var(--text)]
+                  dark:text-[var(--text)]
+                  night:text-[var(--text)]
+                `}
+              >
                 Section Name
               </label>
               <input
                 type="text"
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className={`
+                  mt-1 block w-full p-2 border rounded-md
+                  border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+                  focus:ring-[var(--primary)] focus:border-[var(--primary)]
+                  dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+                  night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+                `}
                 value={sectionName}
                 onChange={(e) => setSectionName(e.target.value)}
                 required
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">
+              <label
+                className={`
+                  block text-sm font-medium
+                  text-[var(--text)]
+                  dark:text-[var(--text)]
+                  night:text-[var(--text)]
+                `}
+              >
                 Capacity
               </label>
               <input
                 type="number"
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className={`
+                  mt-1 block w-full p-2 border rounded-md
+                  border-[var(--secondary)] bg-[var(--background)] text-[var(--text)]
+                  focus:ring-[var(--primary)] focus:border-[var(--primary)]
+                  dark:border-[var(--secondary)] dark:bg-[var(--background)] dark:text-[var(--text)]
+                  night:border-[var(--secondary)] night:bg-[var(--background)] night:text-[var(--text)]
+                `}
                 value={capacity}
                 onChange={(e) => setCapacity(e.target.value)}
                 required
@@ -103,48 +154,73 @@ const EditSection = ({ section, classId, onClose, type, setClassDetails }) => {
               />
             </div>
 
-            {/* Buttons */}
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                className={`
+                  px-4 py-2 rounded-md hover:bg-opacity-80
+                  bg-[var(--secondary)] text-[var(--text)]
+                  dark:bg-[var(--secondary)] dark:text-[var(--text)]
+                  night:bg-[var(--secondary)] night:text-[var(--text)]
+                `}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={loading}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50"
+                disabled={updateSectionMutation.isPending}
+                className={`
+                  px-4 py-2 rounded-md hover:bg-opacity-80
+                  bg-[var(--primary)] text-white
+                  disabled:opacity-50
+                  dark:bg-[var(--primary)] dark:text-white
+                  night:bg-[var(--primary)] night:text-white
+                `}
               >
-                {loading ? "Saving..." : "Save"}
+                {updateSectionMutation.isPending ? "Saving..." : "Save"}
               </button>
             </div>
           </form>
         )}
 
-        {/* Delete Confirmation */}
         {type === "delete" && (
           <>
-            <p className="text-gray-600">
+            <p
+              className={`
+                text-[var(--text)]
+                dark:text-[var(--text)]
+                night:text-[var(--text)]
+              `}
+            >
               Are you sure you want to delete the section{" "}
               <strong>{section.sectionName}</strong>?
             </p>
 
-            {/* Buttons */}
             <div className="flex justify-end gap-2 mt-4">
               <button
                 onClick={onClose}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                className={`
+                  px-4 py-2 rounded-md hover:bg-opacity-80
+                  bg-[var(--secondary)] text-[var(--text)]
+                  dark:bg-[var(--secondary)] dark:text-[var(--text)]
+                  night:bg-[var(--secondary)] night:text-[var(--text)]
+                `}
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                disabled={loading}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:opacity-50"
+                disabled={deleteSectionMutation.isPending}
+                className={`
+                  px-4 py-2 rounded-md hover:bg-opacity-80
+                  bg-red-500 text-white
+                  disabled:opacity-50
+                  dark:bg-red-500 dark:text-white
+                  night:bg-red-500 night:text-white
+                `}
               >
-                {loading ? "Deleting..." : "Delete"}
+                {deleteSectionMutation.isPending ? "Deleting..." : "Delete"}
               </button>
             </div>
           </>

@@ -1,68 +1,86 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "react-toastify";
 import Breadcrumb from "../../constant/Breadcrumb";
+import { useAuthStore } from "@/lib/auth";
 import SearchBar from "../../constant/SearchBar";
 import ExportStyled from "./ExportButtons";
 import ClassTable from "./ClassTable";
 import { useRouter } from "next/navigation";
+import { useClassesBySchool } from "@/lib/api/academicService/class";
 
 const ClassList = ({ classListClicked, setClassListClicked }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [classes, setClasses] = useState([]);
-  const [school, setSchool] = useState("");
   const [exportFormat, setExportFormat] = useState("csv");
-  const [showExportOptions, setShowExportOptions] = useState(false); // state to control visibility of ExportStyled
+  const [showExportOptions, setShowExportOptions] = useState(false);
 
   const router = useRouter();
 
-  useEffect(() => {
-    if (school) {
-      const getClassList = async () => {
-        try {
-          const response = await axios.get(
-            `http://localhost:8086/academic/api/new/getAllClassBySchool`
-          );
-          setClasses(response.data);
-        } catch (error) {
-          console.error("Error during fetching classes:", error);
-          toast.error(`Network error: ${error.message}`);
-        }
-      };
-      getClassList();
-    }
-  }, [school]); // Only run when `school` is set
+  const authState = useMemo(
+    () =>
+      useAuthStore.getState()
+        ? {
+            user: useAuthStore.getState().user,
+            isAuthenticated: useAuthStore.getState().isAuthenticated(),
+          }
+        : { user: null, isAuthenticated: false },
+    []
+  );
+  const { user } = authState;
 
-  useEffect(() => {
-    const userData = localStorage.getItem("auth-store");
-    if (userData) {
-      try {
-        const parsedData = JSON.parse(userData);
-        setSchool(parsedData.user.schoolId);
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-      }
-    }
-  }, []);
+  const schoolId = user.schoolId;
+  const { data: classes = [], isLoading, error } = useClassesBySchool(schoolId);
 
-  // Filtering classes based on searchQuery
   const filteredClasses = classes.filter((clas) =>
     clas.className.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Callback to hide export options after export is done
   const handleExportDone = () => {
-    setShowExportOptions(false); // Hide ExportStyled
+    setShowExportOptions(false);
   };
 
+  if (isLoading) {
+    return (
+      <div
+        className={`
+          relative top-20 p-6 flex flex-col min-h-screen
+          bg-[var(--background)] text-[var(--text)]
+          dark:bg-[var(--background)] dark:text-[var(--text)]
+          night:bg-[var(--background)] night:text-[var(--text)]
+        `}
+      >
+        Loading...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className={`
+          relative top-20 p-6 flex flex-col min-h-screen
+          bg-[var(--background)] text-[var(--text)]
+          dark:bg-[var(--background)] dark:text-[var(--text)]
+          night:bg-[var(--background)] night:text-[var(--text)]
+        `}
+      >
+        Error: {error.message}
+      </div>
+    );
+  }
+
   return (
-    <div className="relative top-20 p-6 bg-gray-100 flex flex-col min-h-screen">
-      {/* Breadcrumb Navigation */}
+    <div
+      className={`
+        relative top-20 p-6 flex flex-col min-h-screen
+        bg-[var(--background)] text-[var(--text)]
+        dark:bg-[var(--background)] dark:text-[var(--text)]
+        night:bg-[var(--background)] night:text-[var(--text)]
+      `}
+    >
       <Breadcrumb />
 
-      {/* Header Section: Search Bar, Add Class, and Export Options */}
       <div className="flex justify-between items-center mb-4">
         <SearchBar
           searchQuery={searchQuery}
@@ -71,19 +89,27 @@ const ClassList = ({ classListClicked, setClassListClicked }) => {
         />
 
         <div className="flex gap-4">
-          {/* Button to toggle add class form */}
           <button
             onClick={() => setClassListClicked(false)}
-            className="bg-green-500 text-white p-2 rounded"
+            className={`
+              bg-[var(--primary)] text-white p-2 rounded
+              hover:bg-opacity-80
+              dark:bg-[var(--primary)] dark:text-white
+              night:bg-[var(--primary)] night:text-white
+            `}
           >
             + Add Class
           </button>
 
-          {/* Export Button to Toggle Export Options */}
           {!showExportOptions && (
             <button
               onClick={() => setShowExportOptions((prev) => !prev)}
-              className="bg-blue-500 text-white p-2 rounded"
+              className={`
+                bg-[var(--primary)] text-white p-2 rounded
+                hover:bg-opacity-80
+                dark:bg-[var(--primary)] dark:text-white
+                night:bg-[var(--primary)] night:text-white
+              `}
             >
               Export
             </button>
@@ -91,7 +117,6 @@ const ClassList = ({ classListClicked, setClassListClicked }) => {
         </div>
       </div>
 
-      {/* Conditionally render ExportStyled based on showExportOptions */}
       {showExportOptions ? (
         <div className="mb-4">
           <ExportStyled
@@ -104,7 +129,7 @@ const ClassList = ({ classListClicked, setClassListClicked }) => {
           <ClassTable
             classes={filteredClasses}
             router={router}
-            setClasses={setClasses}
+            schoolId={schoolId}
           />
         </div>
       )}
