@@ -12,9 +12,11 @@ public class RabbitMQConfig {
 
     public static final String NOTIFICATION_QUEUE = "notification-queue";
     public static final String EMAIL_QUEUE = "email-queue";
-    public static final String NOTIFICATION_EXCHANGE = "notification-exchange";
+    public static final String NOTIFICATION_EXCHANGE = "amq.topic"; // Use STOMP default exchange
+    public static final String NOTIFICATION_ROUTING_KEY = "notifications.*"; // Matches /topic/notifications/*
     public static final String EMAIL_EXCHANGE = "email-exchange"; // Corrected name consistency
-    public static final String NOTIFICATION_ROUTING_KEY = "notification.*"; // Wildcard to match recipientId
+    // public static final String NOTIFICATION_ROUTING_KEY = "notification.*"; //
+    // Wildcard to match recipientId
     public static final String EMAIL_ROUTING_KEY = "email.*"; // Wildcard to match recipientId
     public static final String DEAD_LETTER_QUEUE = "dead-letter-queue";
     public static final String DEAD_LETTER_EXCHANGE = "dead-letter-exchange";
@@ -39,9 +41,10 @@ public class RabbitMQConfig {
     @Bean
     public Queue deadLetterQueue() {
         return QueueBuilder.durable(DEAD_LETTER_QUEUE)
-            .withArgument("x-message-ttl", 10000) // 10 seconds TTL
-            // Remove x-dead-letter-exchange and x-dead-letter-routing-key to keep messages in DLQ
-            .build();
+                .withArgument("x-message-ttl", 10000) // 10 seconds TTL
+                // Remove x-dead-letter-exchange and x-dead-letter-routing-key to keep messages
+                // in DLQ
+                .build();
     }
 
     @Bean
@@ -59,9 +62,15 @@ public class RabbitMQConfig {
         return new TopicExchange(DEAD_LETTER_EXCHANGE);
     }
 
+    // @Bean
+    // public Binding notificationBinding(Queue notificationQueue, TopicExchange
+    // notificationExchange) {
+    // return
+    // BindingBuilder.bind(notificationQueue).to(notificationExchange).with(NOTIFICATION_ROUTING_KEY);
+    // }
     @Bean
     public Binding notificationBinding(Queue notificationQueue, TopicExchange notificationExchange) {
-        return BindingBuilder.bind(notificationQueue).to(notificationExchange).with(NOTIFICATION_ROUTING_KEY);
+        return BindingBuilder.bind(notificationQueue).to(notificationExchange).with("notifications.*");
     }
 
     @Bean

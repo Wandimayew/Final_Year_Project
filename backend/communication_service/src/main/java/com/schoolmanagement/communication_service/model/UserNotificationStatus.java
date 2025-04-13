@@ -37,4 +37,8 @@ public class UserNotificationStatus {
 
     @Column(name = "updated_by")
     private String updatedBy;
+
+    
+    @Version
+    private Long version; // For optimistic locking
 }

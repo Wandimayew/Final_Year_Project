@@ -19,10 +19,11 @@ public interface UserManagementClient {
     @GetMapping("/auth/api/{schoolId}/{userId}/email")
     String getUserEmail(@PathVariable String schoolId, @PathVariable String userId);
 
-    @GetMapping("/auth/api/{schoolId}/role")
+    @GetMapping("/auth/api/{schoolId}/users/role")
     List<String> getUserIdsByRole(
             @PathVariable String schoolId,
-            @RequestParam String role);
+            @RequestParam String role,
+            @RequestHeader("Authorization") String authorization); // Only user token passed explicitly
 
     @PostMapping("/auth/api/internal/check-permission")
     PermissionCheckResponse checkUserPermission(

@@ -154,8 +154,7 @@ public class EmailService {
         Page<EmailMessage> emailPage;
 
         if (status == EmailMessage.Status.SENT) {
-            emailPage = emailMessageRepository.findBySenderIdAndStatus(userId, EmailMessage.Status.SENT, schoolId,
-                    pageRequest);
+            emailPage = emailMessageRepository.findSentEmailsBySenderId(userId, schoolId, pageRequest);
             log.info("for sent response {}", emailPage);
         } else if (status == EmailMessage.Status.DRAFT) {
             emailPage = emailMessageRepository.findDraftsBySenderId(userId, EmailMessage.Status.DRAFT, schoolId,
@@ -165,12 +164,10 @@ public class EmailService {
             emailPage = emailMessageRepository.findInboxByRecipientId(userId, schoolId, pageRequest);
             log.info("for inbox response {}", emailPage);
         } else if (status == EmailMessage.Status.IMPORTANT) {
-            emailPage = emailMessageRepository.findByRecipientIdAndStatus(userId, EmailMessage.Status.IMPORTANT,
-                    schoolId, pageRequest);
+            emailPage = emailMessageRepository.findImportantEmailsByUserId(userId, schoolId, pageRequest);
             log.info("for important response {}", emailPage);
         } else if (status == EmailMessage.Status.TRASH) {
-            emailPage = emailMessageRepository.findByRecipientIdAndStatus(userId, EmailMessage.Status.TRASH, schoolId,
-                    pageRequest);
+            emailPage = emailMessageRepository.findTrashEmailsByUserId(userId, schoolId, pageRequest);
             log.info("for trash response {}", emailPage);
         } else {
             emailPage = emailMessageRepository.findByRecipientIdAndStatus(userId, status, schoolId, pageRequest);
@@ -192,6 +189,8 @@ public class EmailService {
                 .map(ResponsesBuilder::buildEmailResponse)
                 .collect(Collectors.toList());
 
+        log.info("Emails fetched successfully for schoolId: {}, userId: {} in folder of {} with data {}", schoolId,
+                userId, folder, responseList);
         ApiResponse<List<EmailResponse>> response = ApiResponse.success("Emails fetched successfully", responseList);
         response.setPage(emailPage.getNumber());
         response.setTotalPages(emailPage.getTotalPages());

@@ -47,9 +47,9 @@ public class AnnouncementRequest {
     @Enumerated(EnumType.STRING)
     private AnnouncementStatus status;
 
-    @NotBlank(message = "Author ID cannot be blank")
+    // @NotBlank(message = "Author ID cannot be blank")
     private String authorId;
 
-    @NotNull(message = "Notification Template Id cannot be null")
+    // @NotNull(message = "Notification Template Id cannot be null")
     private Long templateId;
 }

@@ -42,6 +42,7 @@ public class PermissionCheckFilter extends OncePerRequestFilter {
 
         // Authenticate and extract user principal
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("Authentication: {}", authentication);
         if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserPrincipal)) {
             log.warn("No valid CustomUserPrincipal found for {} {}", httpMethod, requestPath);
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
@@ -51,7 +52,7 @@ public class PermissionCheckFilter extends OncePerRequestFilter {
         CustomUserPrincipal principal = (CustomUserPrincipal) authentication.getPrincipal();
         Set<String> userPermissions = principal.getPermissions();
 
-        log.info("User {} permissions: {}", principal.getUserId(), userPermissions);
+        // log.info("User {} permissions: {}", principal.getUserId(), userPermissions);
 
         // Match permission and validate
         PermissionTemplate matchingTemplate = permissionMatcher.findMatchingTemplate(requestPath, httpMethod);

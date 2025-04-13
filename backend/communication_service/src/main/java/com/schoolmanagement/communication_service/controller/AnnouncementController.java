@@ -14,9 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 
@@ -118,22 +120,26 @@ public class AnnouncementController {
         return announcementService.updateAnnouncement(schoolId, announcementId, announcementRequest);
     }
 
-    /**
+/**
      * Approves an announcement, setting its status to PUBLISHED.
      * Only admins can call this endpoint (role check assumed in service or filter).
      *
      * @param schoolId       the ID of the school
      * @param announcementId the ID of the announcement to approve
+     * @param authentication the Authentication object from the security context, providing user details and credentials
      * @return a ResponseEntity containing the approved announcement response
      */
     @PutMapping("/{schoolId}/approveAnnouncement/{announcementId}/approve")
     public ResponseEntity<ApiResponse<AnnouncementResponse>> approveAnnouncement(
             @PathVariable String schoolId,
-            @PathVariable Long announcementId) {
+            @PathVariable Long announcementId,
+            HttpServletRequest request) {
         validateSchoolId(schoolId);
         String userId = getUserIdFromSecurityContext();
+        // String authorizationHeader = request.getHeader("Authorization");
+
         log.info("Approving announcement ID: {} for schoolId: {} by userId: {}", announcementId, schoolId, userId);
-        return announcementService.approveAnnouncement(schoolId, announcementId, userId);
+        return announcementService.approveAnnouncement(schoolId, announcementId, userId,request);
     }
 
     /**

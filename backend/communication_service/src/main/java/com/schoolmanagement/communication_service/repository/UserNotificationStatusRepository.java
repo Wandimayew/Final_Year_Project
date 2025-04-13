@@ -2,7 +2,11 @@ package com.schoolmanagement.communication_service.repository;
 
 import com.schoolmanagement.communication_service.enums.NotificationStatus;
 import com.schoolmanagement.communication_service.model.UserNotificationStatus;
+
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -25,4 +29,11 @@ public interface UserNotificationStatusRepository extends JpaRepository<UserNoti
     // Fetch all statuses for a notification (useful for multi-recipient notifications)
     @Query("SELECT uns FROM UserNotificationStatus uns WHERE uns.notification.notificationId = :notificationId")
     List<UserNotificationStatus> findByNotificationNotificationId(@Param("notificationId") Long notificationId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT uns FROM UserNotificationStatus uns WHERE uns.notification.notificationId = :notificationId")
+    List<UserNotificationStatus> findByNotificationNotificationIdWithLock(@Param("notificationId") Long notificationId);
+
+    @Query("SELECT uns FROM UserNotificationStatus uns WHERE uns.userId = :userId")
+    List<UserNotificationStatus> findByUserId(String userId);
 }

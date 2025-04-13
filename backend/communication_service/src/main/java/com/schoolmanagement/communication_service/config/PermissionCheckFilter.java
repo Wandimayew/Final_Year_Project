@@ -83,7 +83,7 @@ public class PermissionCheckFilter extends OncePerRequestFilter {
     }
 
     private boolean isPublicEndpoint(String path) {
-        String[] publicPaths = { "/swagger-ui/**", "/v3/api-docs/**" };
+        String[] publicPaths = { "/swagger-ui/**", "/v3/api-docs/**","/notifications/**" };
         log.info("Path to be accessed is {}", path);
         for (String publicPath : publicPaths) {
             if (pathMatcher.match(publicPath, path)) {

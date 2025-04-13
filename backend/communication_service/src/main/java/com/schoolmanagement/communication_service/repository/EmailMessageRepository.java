@@ -38,12 +38,39 @@ public interface EmailMessageRepository extends JpaRepository<EmailMessage, Stri
                      @Param("schoolId") String schoolId,
                      Pageable pageable);
 
+       @Query("SELECT e FROM EmailMessage e " +
+                     "WHERE e.senderId = :userId AND e.schoolId = :schoolId AND e.isActive = true AND e.senderDeleted = false "
+                     +
+                     "AND e.senderStatus IN ('SENT', 'IMPORTANT')")
+       Page<EmailMessage> findSentEmailsBySenderId(
+                     @Param("userId") String userId,
+                     @Param("schoolId") String schoolId,
+                     Pageable pageable);
+
+       @Query("SELECT e FROM EmailMessage e " +
+                     "WHERE e.schoolId = :schoolId AND e.isActive = true " +
+                     "AND ((e.senderId = :userId AND e.senderStatus = 'TRASH' AND e.senderDeleted = false) " +
+                     "OR (e.recipientId = :userId AND e.recipientStatus = 'TRASH' AND e.recipientDeleted = false))")
+       Page<EmailMessage> findTrashEmailsByUserId(
+                     @Param("userId") String userId,
+                     @Param("schoolId") String schoolId,
+                     Pageable pageable);
+
        // Paginated query for DRAFT emails (no FETCH)
        @Query("SELECT e FROM EmailMessage e " +
                      "WHERE e.senderId = :userId AND e.senderStatus = :status AND e.schoolId = :schoolId AND e.isActive = true AND e.isDraft = true AND e.senderDeleted = false")
        Page<EmailMessage> findDraftsBySenderId(
                      @Param("userId") String userId,
                      @Param("status") EmailMessage.Status status,
+                     @Param("schoolId") String schoolId,
+                     Pageable pageable);
+
+       @Query("SELECT e FROM EmailMessage e " +
+                     "WHERE e.schoolId = :schoolId AND e.isActive = true " +
+                     "AND ((e.senderId = :userId AND e.senderStatus = 'IMPORTANT' AND e.senderDeleted = false) " +
+                     "OR (e.recipientId = :userId AND e.recipientStatus = 'IMPORTANT' AND e.recipientDeleted = false))")
+       Page<EmailMessage> findImportantEmailsByUserId(
+                     @Param("userId") String userId,
                      @Param("schoolId") String schoolId,
                      Pageable pageable);
 

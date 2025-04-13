@@ -13,6 +13,9 @@ public class TimeTableRequest {
     @NotBlank(message = "School Name must not be null or empty")
     private String schoolName;
 
+    @NotBlank(message = "Stream must not be null or empty")
+    private String stream;
+
     @NotBlank(message = "School ID must not be null or empty")
     private String schoolId;
 

@@ -13,7 +13,7 @@ spring:
     url: jdbc:mysql://localhost:3306/Tenant_Service?createDatabaseIfNotExist=true
     # username: ${MYSQL_USER}
     username: root
-    password: root
+    password: password
     # password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:

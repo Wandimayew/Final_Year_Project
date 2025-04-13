@@ -2,17 +2,24 @@ package com.schoolmanagement.communication_service.service;
 
 import com.schoolmanagement.communication_service.client.UserManagementClient;
 import com.schoolmanagement.communication_service.dto.request.AnnouncementRequest;
+import com.schoolmanagement.communication_service.dto.request.EmailRequest;
 import com.schoolmanagement.communication_service.dto.request.NotificationRequest;
 import com.schoolmanagement.communication_service.dto.response.AnnouncementResponse;
 import com.schoolmanagement.communication_service.dto.response.ApiResponse;
+import com.schoolmanagement.communication_service.dto.response.EmailResponse;
 import com.schoolmanagement.communication_service.dto.response.NotificationResponse;
 import com.schoolmanagement.communication_service.enums.AnnouncementStatus;
 import com.schoolmanagement.communication_service.enums.NotificationType;
 import com.schoolmanagement.communication_service.model.Announcement;
+import com.schoolmanagement.communication_service.model.CommunicationPreference;
 import com.schoolmanagement.communication_service.model.NotificationTemplate;
 import com.schoolmanagement.communication_service.repository.AnnouncementRepository;
+import com.schoolmanagement.communication_service.repository.CommunicationPreferenceRepository;
 import com.schoolmanagement.communication_service.repository.NotificationTemplateRepository;
+import com.schoolmanagement.communication_service.utils.JwtUtil;
 import com.schoolmanagement.communication_service.utils.ResponsesBuilder;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,10 +29,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -48,7 +59,10 @@ public class AnnouncementService {
         private final AnnouncementRepository announcementRepository;
         private final NotificationTemplateRepository notificationTemplateRepository;
         private final UserManagementClient userManagementClient;
+        private final CommunicationPreferenceRepository communicationPreferenceRepository;
+        private final EmailService emailService; // Inject EmailService
         private final NotificationService notificationService;
+        private final JwtUtil jwtUtil;
 
         private static final Pattern ID_PATTERN = Pattern.compile("ID: ([^,]+)");
 
@@ -82,7 +96,7 @@ public class AnnouncementService {
         @Transactional
         public ResponseEntity<ApiResponse<AnnouncementResponse>> approveAnnouncement(String schoolId,
                         Long announcementId,
-                        String userId) {
+                        String userId, HttpServletRequest request) {
                 log.info("Approving announcement ID: {} for schoolId: {} by userId: {}", announcementId, schoolId,
                                 userId);
 
@@ -100,10 +114,19 @@ public class AnnouncementService {
                 announcement.setUpdatedBy(userId);
                 Announcement approvedAnnouncement = announcementRepository.save(announcement);
 
-                // Notify the target audience asynchronously (multi-recipient)
-                notifyAudienceAsync(approvedAnnouncement);
+                // Extract token from Authentication
+                // log.info("THis is the token: {}", authentication.getCredentials());
+                // log.info("THis is the authentication: {}", authentication);
+                // String token = authentication.getCredentials() != null ?
+                // authentication.getCredentials().toString() : null;
+                if (request == null) {
+                        log.warn("No HttpServletRequest available for approving announcement ID: {}", announcementId);
+                } else {
+                        // Notify audience (both in-app and email)
+                        notifyAudienceAsync(approvedAnnouncement, request);
+                }
 
-                // Notify the creator of approval (single-recipient)
+                // Notify the creator of approval (both in-app and email)
                 notifyCreatorOfApproval(approvedAnnouncement);
 
                 AnnouncementResponse response = ResponsesBuilder.buildAnnouncementResponse(approvedAnnouncement);
@@ -144,21 +167,45 @@ public class AnnouncementService {
          * email.
          */
         @Async
-        public CompletableFuture<Void> notifyAudienceAsync(Announcement announcement) {
+        public CompletableFuture<Void> notifyAudienceAsync(Announcement announcement, HttpServletRequest request) {
+                String authorizationHeader = request.getHeader("Authorization");
                 log.info("Notifying audience for announcement ID: {}", announcement.getAnnouncementId());
 
-                List<String> userIds = fetchUserIds(announcement.getSchoolId(), announcement.getTargetAudience());
-                if (userIds.isEmpty()) {
+                List<String> recipientIds;
+
+                try {
+                        // Fetch user IDs from userManagementClient
+                        List<String> userIdsResponse = userManagementClient.getUserIdsByRole(
+                                        announcement.getSchoolId(),
+                                        announcement.getTargetAudience(),
+                                        authorizationHeader);
+                        log.info("Fetched users {}", userIdsResponse);
+
+                        // Extract userIds from the response string
+                        recipientIds = extractUserIds(userIdsResponse);
+
+                        log.info("Recipient ids that are being returned : {} .", recipientIds);
+                        if (recipientIds.isEmpty()) {
+                                log.warn("No valid user IDs extracted from response for target audience: {} in school: {}",
+                                                announcement.getTargetAudience(), announcement.getSchoolId());
+                                return CompletableFuture.completedFuture(null);
+                        }
+                } catch (Exception e) {
+                        log.error("Failed to fetch user IDs for role: {} in school: {}, error: {}",
+                                        announcement.getTargetAudience(), announcement.getSchoolId(), e.getMessage());
+                        recipientIds = Collections.emptyList();
+                }
+
+                if (recipientIds.isEmpty()) {
                         log.warn("No users found for target audience: {} in school: {}",
                                         announcement.getTargetAudience(), announcement.getSchoolId());
                         return CompletableFuture.completedFuture(null);
                 }
 
-                NotificationRequest request = NotificationRequest.builder()
-                                .recipientIds(userIds) // Multi-recipient
+                NotificationRequest requests = NotificationRequest.builder()
+                                .recipientIds(recipientIds)
                                 .message(String.format("New announcement: %s", announcement.getTitle()))
-                                .type(NotificationType.IN_APP) // Preferred type; NotificationService adjusts based on
-                                                               // preference
+                                .type(NotificationType.IN_APP)
                                 .templateId(announcement.getTemplate() != null
                                                 ? announcement.getTemplate().getNotificationTemplateId()
                                                 : null)
@@ -166,8 +213,7 @@ public class AnnouncementService {
 
                 try {
                         ResponseEntity<ApiResponse<NotificationResponse>> response = notificationService
-                                        .createNotification(
-                                                        announcement.getSchoolId(), request);
+                                        .createNotification(announcement.getSchoolId(), requests);
                         if (response.getStatusCode() == HttpStatus.OK) {
                                 log.info("Audience notified for announcement ID: {}", announcement.getAnnouncementId());
                         } else {
@@ -176,10 +222,76 @@ public class AnnouncementService {
                         }
                 } catch (Exception e) {
                         log.error("Error notifying audience for announcement ID: {}, error: {}",
-                                        announcement.getAnnouncementId(), e.getMessage());
+                                        announcement.getAnnouncementId(), e.getMessage(), e);
+                }
+
+                // 2. Send email to audience
+                for (String recipientId : recipientIds) {
+                        log.info("Recipient Id is : {} :  ::::::: ", recipientId);
+
+                        CommunicationPreference preference = communicationPreferenceRepository
+                                        .findBySchoolAndUserId(announcement.getSchoolId(), recipientId);
+                        if (preference == null || !preference.isEmailEnabled()) {
+                                log.info("Preference is null or in app is disabled for recipient id: {}", recipientId);
+                                continue;
+                        }
+                        EmailRequest emailRequest = EmailRequest.builder()
+                                        .recipientId(recipientId)
+                                        .subject("New Announcement: " + announcement.getTitle())
+                                        .body(announcement.getMessage() + announcement.getTargetAudience())
+                                        .templateId(announcement.getTemplate() != null
+                                                        ? announcement.getTemplate().getNotificationTemplateId()
+                                                        : null)
+                                        .build();
+
+                        try {
+                                ResponseEntity<ApiResponse<EmailResponse>> emailResponse = emailService.composeEmail(
+                                                announcement.getSchoolId(),
+                                                emailRequest,
+                                                null, // No attachments for now
+                                                true, // Send immediately
+                                                announcement.getUpdatedBy() // Use the approver as the sender
+                                );
+                                if (emailResponse.getStatusCode() == HttpStatus.OK) {
+                                        log.info("Email sent to recipient {} for announcement ID: {}", recipientId,
+                                                        announcement.getAnnouncementId());
+                                } else {
+                                        log.warn("Failed to send email to recipient {} for announcement ID: {}, status: {}",
+                                                        recipientId, announcement.getAnnouncementId(),
+                                                        emailResponse.getStatusCode());
+                                }
+                        } catch (Exception e) {
+                                log.error("Error sending email to recipient {} for announcement ID: {}, error: {}",
+                                                recipientId, announcement.getAnnouncementId(), e.getMessage(), e);
+                        }
                 }
 
                 return CompletableFuture.completedFuture(null);
+        }
+
+        private List<String> extractUserIds(List<String> inputs) {
+                // Handle null or empty input
+                if (inputs == null || inputs.isEmpty()) {
+                        return Collections.emptyList();
+                }
+
+                // Pattern to match "ID: <userId>"
+                Pattern pattern = Pattern.compile("ID: ([A-Za-z0-9]+)");
+                List<String> userIds = new ArrayList<>();
+                log.info("User ids that are being extracted : {} .", userIds);
+                // Iterate over each string in the list
+                for (String input : inputs) {
+                        log.info("input String in the loop : {} : .", input);
+                        if (input != null && input.contains("ID: ")) {
+                                Matcher matcher = pattern.matcher(input);
+                                while (matcher.find()) {
+                                        userIds.add(matcher.group(1)); // Group 1 is the userId after "ID: "
+                                }
+                        }
+                }
+
+                log.info("User Ids that are being returned : {} .", userIds);
+                return userIds;
         }
 
         /**
@@ -191,12 +303,12 @@ public class AnnouncementService {
                 log.info("Notifying creator userId: {} of approval for announcement ID: {}",
                                 announcement.getAuthorId(), announcement.getAnnouncementId());
 
-                NotificationRequest request = NotificationRequest.builder()
+                // 1. Send in-app notification
+                NotificationRequest notificationRequest = NotificationRequest.builder()
                                 .recipientId(announcement.getAuthorId()) // Single-recipient
                                 .message(String.format("Your announcement '%s' has been approved.",
                                                 announcement.getTitle()))
-                                .type(NotificationType.IN_APP) // Preferred type; NotificationService adjusts based on
-                                                               // preference
+                                .type(NotificationType.IN_APP)
                                 .templateId(announcement.getTemplate() != null
                                                 ? announcement.getTemplate().getNotificationTemplateId()
                                                 : null)
@@ -204,18 +316,57 @@ public class AnnouncementService {
 
                 try {
                         ResponseEntity<ApiResponse<NotificationResponse>> response = notificationService
-                                        .createNotification(
-                                                        announcement.getSchoolId(), request);
+                                        .createNotification(announcement.getSchoolId(), notificationRequest);
                         if (response.getStatusCode() == HttpStatus.OK) {
-                                log.info("Approval notification sent to creator userId: {}",
+                                log.info("Approval notification sent (in-app) to creator userId: {}",
                                                 announcement.getAuthorId());
                         } else {
-                                log.warn("Failed to send approval notification to creator, status: {}",
+                                log.warn("Failed to send approval notification (in-app) to creator, status: {}",
                                                 response.getStatusCode());
                         }
                 } catch (Exception e) {
-                        log.error("Error sending approval notification to creator userId: {}, error: {}",
+                        log.error("Error sending approval notification (in-app) to creator userId: {}, error: {}",
                                         announcement.getAuthorId(), e.getMessage());
+                }
+
+                // 2. Send email to creator
+
+                CommunicationPreference preference = communicationPreferenceRepository
+                                .findBySchoolAndUserId(announcement.getSchoolId(), announcement.getAuthorId());
+                if (preference != null && preference.isEmailEnabled()) {
+                        log.info("Sending approval email to creator userId: {}",
+                                        announcement.getAuthorId());
+
+                        EmailRequest emailRequest = EmailRequest.builder()
+                                        .recipientId(announcement.getAuthorId())
+                                        .subject("Your Announcement '" + announcement.getTitle()
+                                                        + "' Has Been Approved")
+                                        .body("Your announcement has been approved and is now published.\n\nDetails:\n"
+                                                        + announcement.getMessage())
+                                        .templateId(announcement.getTemplate() != null
+                                                        ? announcement.getTemplate().getNotificationTemplateId()
+                                                        : null)
+                                        .build();
+
+                        try {
+                                ResponseEntity<ApiResponse<EmailResponse>> emailResponse = emailService.composeEmail(
+                                                announcement.getSchoolId(),
+                                                emailRequest,
+                                                null, // No attachments for now
+                                                true, // Send immediately
+                                                announcement.getUpdatedBy() // Use the approver as the sender
+                                );
+                                if (emailResponse.getStatusCode() == HttpStatus.OK) {
+                                        log.info("Approval email sent to creator userId: {}",
+                                                        announcement.getAuthorId());
+                                } else {
+                                        log.warn("Failed to send approval email to creator, status: {}",
+                                                        emailResponse.getStatusCode());
+                                }
+                        } catch (Exception e) {
+                                log.error("Error sending approval email to creator userId: {}, error: {}",
+                                                announcement.getAuthorId(), e.getMessage(), e);
+                        }
                 }
         }
 
@@ -444,9 +595,20 @@ public class AnnouncementService {
 
         // --- Helper Methods ---
 
-        private List<String> fetchUserIds(String schoolId, String targetAudience) {
+        private List<String> fetchUserIds(String schoolId, String targetAudience, HttpServletRequest request) {
+                String authorizationHeader = request.getHeader("Authorization");
                 try {
-                        return userManagementClient.getUserIdsByRole(schoolId, targetAudience).stream()
+                        log.info("Fetching user IDs for role: {} in school: {} with roles fetch : {}", targetAudience,
+                                        schoolId,
+                                        userManagementClient
+                                                        .getUserIdsByRole(schoolId, targetAudience, authorizationHeader)
+                                                        .stream()
+                                                        .map(this::extractUserId)
+                                                        .filter(id -> !id.isEmpty())
+                                                        .collect(Collectors.toList()));
+
+                        return userManagementClient.getUserIdsByRole(schoolId, targetAudience, authorizationHeader)
+                                        .stream()
                                         .map(this::extractUserId)
                                         .filter(id -> !id.isEmpty())
                                         .collect(Collectors.toList());
@@ -516,11 +678,12 @@ public class AnnouncementService {
                                 .filter(Announcement::getIsActive);
         }
 
-    private String escapeHtml(String input) {
-        if (input == null) return "";
-        return input.replace("&", "&").replace("<", "<").replace(">", ">")
-                .replace("\"", "\"").replace("'", "'");
-    }
+        private String escapeHtml(String input) {
+                if (input == null)
+                        return "";
+                return input.replace("&", "&").replace("<", "<").replace(">", ">")
+                                .replace("\"", "\"").replace("'", "'");
+        }
 
         // --- Inner Classes ---
 

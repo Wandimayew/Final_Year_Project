@@ -14,7 +14,7 @@ spring:
     # username: ${MYSQL_USER}  
     username: root
     # password: ${MYSQL_PASSWORD}
-    password: root
+    password: password
     driver-class-name: com.mysql.cj.jdbc.Driver  
     hikari:
       minimum-idle: 5

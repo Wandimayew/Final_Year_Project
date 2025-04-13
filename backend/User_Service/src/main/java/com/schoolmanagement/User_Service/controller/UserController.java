@@ -102,7 +102,7 @@ public class UserController {
     public ResponseEntity<List<String>> getUserIdsByRole(
             @PathVariable String schoolId,
             @RequestParam String role) {
-        log.info("Fetching user IDs with role: {} in schoolId: {}", role, schoolId);
+        log.warn("Fetching user IDs with role: {} in schoolId: {}", role, schoolId);
         validateSchoolId(schoolId);
         List<String> userIds = userService.getUserIdsByRole(role, schoolId);
         return ResponseEntity.ok(userIds);

@@ -22,46 +22,43 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-        private final JwtUtil jwtUtil;
-        private final PermissionService permissionService;
-        private final PermissionCheckFilter permissionCheckFilter;
+    private final JwtUtil jwtUtil;
+    private final PermissionService permissionService;
+    private final PermissionCheckFilter permissionCheckFilter;
 
-        @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-                http
-                                .csrf(csrf -> csrf.disable())
-                                .sessionManagement(session -> session
-                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
-                                .authorizeHttpRequests(authz -> authz
-                                                .requestMatchers(
-                                                                "/swagger-ui/**",
-                                                                "/v3/api-docs/**",
-                                                                "/v3/api-docs.yaml",
-                                                                "/swagger-ui.html",
-                                                                "/swagger-ui/index.html",
-                                                                "/swagger-resources/**",
-                                                                "/favicon.ico",
-                                                                "/error")
-                                                .permitAll()
-                                                .requestMatchers("/auth/api/login", "/auth/api/refresh",
-                                                                "/auth/api/forgot-password",
-                                                                "/auth/api/reset-password")
-                                                .permitAll() // Allow
-                                                // login
-                                                // and
-                                                // refresh
-                                                .requestMatchers("/actuator/health").permitAll()
-                                                .anyRequest().authenticated())
-                                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, permissionService),
-                                                UsernamePasswordAuthenticationFilter.class)
-                                .addFilterAfter(permissionCheckFilter, JwtAuthenticationFilter.class);
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.disable()) // Disable CORS, let Gateway handle it
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
+            .authorizeHttpRequests(authz -> authz
+                .requestMatchers(
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/v3/api-docs.yaml",
+                    "/swagger-ui.html",
+                    "/swagger-ui/index.html",
+                    "/swagger-resources/**",
+                    "/favicon.ico",
+                    "/error")
+                .permitAll()
+                .requestMatchers("/auth/api/login", "/auth/api/refresh",
+                    "/auth/api/forgot-password", "/auth/api/reset-password")
+                .permitAll() // Allow login and refresh
+                .requestMatchers("/actuator/health").permitAll()
+                .anyRequest().authenticated())
+            .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, permissionService),
+                UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(permissionCheckFilter, JwtAuthenticationFilter.class);
 
-                return http.build();
-        }
+        return http.build();
+    }
 
-        @Bean
-        public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
-                        throws Exception {
-                return authenticationConfiguration.getAuthenticationManager();
-        }
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
 }

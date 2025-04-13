@@ -90,20 +90,20 @@ public class NotificationController {
 
     @GetMapping("/{schoolId}/notifications/unread")
     public ResponseEntity<ApiResponse<List<NotificationResponse>>> getUnreadNotifications(
-            @PathVariable String schoolId,
-            @JwtToken String token) {
+            @PathVariable String schoolId) {
         validateSchoolId(schoolId);
-        String userId = jwtUtil.extractUserId(token);
+        String userId = getUserIdFromSecurityContext();
+        log.info("User id to fetched for notificaiton is {} with un read notification.",userId);
+        // String userId = jwtUtil.extractUserId(token);
         log.info("Fetching unread notifications for userId: {} in schoolId: {}", userId, schoolId);
         return notificationService.getUnreadNotifications(schoolId, userId);
     }
 
     @PostMapping("/{schoolId}/mark-read/notifications/{notificationId}")
     public ResponseEntity<ApiResponse<String>> markNotificationAsRead(@PathVariable String schoolId,
-            @PathVariable Long notificationId,
-            @JwtToken String token) {
+            @PathVariable Long notificationId) {
         validateSchoolId(schoolId);
-        String userId = jwtUtil.extractUserId(token);
+        String userId = getUserIdFromSecurityContext();
         log.info("Marking notification as read with ID: {}", notificationId);
         return notificationService.markNotificationAsRead(notificationId, userId);
     }

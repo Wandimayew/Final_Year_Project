@@ -23,4 +23,7 @@ public interface CommunicationPreferenceRepository extends JpaRepository<Communi
         Optional<CommunicationPreference> findBySchoolIdAndUserId(@Param("schoolId") String schoolId,
                         @Param("userId") String userId);
 
+        @Query("SELECT cp FROM CommunicationPreference cp WHERE cp.schoolId = :schoolId AND cp.userId = :recipientId AND cp.isActive = true")
+        CommunicationPreference findBySchoolAndUserId(String schoolId, String recipientId);
+
 }

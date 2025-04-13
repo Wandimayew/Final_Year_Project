@@ -4,6 +4,8 @@ import com.schoolmanagement.communication_service.enums.NotificationStatus;
 import com.schoolmanagement.communication_service.enums.NotificationType;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
