@@ -23,6 +23,8 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
 
     @Query("SELECT s FROM Staff s WHERE s.isActive = true")
     List<Staff> findAllStaffThatIsActive();
+    @Query("SELECT s FROM Staff s WHERE s.isActive = false")
+    List<Staff> findAllByIsActiveFalse();
     boolean existsByPhoneNumber(String phoneNumber);
      
 }

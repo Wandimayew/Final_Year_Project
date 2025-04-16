@@ -44,10 +44,9 @@ public class StaffController {
     }
 
     @GetMapping("/by-user/{userId}")
-public ResponseEntity<StaffResponseDTO> getStaffByUserId(@PathVariable String userId) {
-    return staffService.getStaffByUserId(userId);
-}
-
+    public ResponseEntity<StaffResponseDTO> getStaffByUserId(@PathVariable String userId) {
+        return staffService.getStaffByUserId(userId);
+    }
 
     @DeleteMapping("/{staffId}")
     public ResponseEntity<String> deleteStaff(@PathVariable Long staffId) {
@@ -57,6 +56,11 @@ public ResponseEntity<StaffResponseDTO> getStaffByUserId(@PathVariable String us
     @GetMapping
     public ResponseEntity<List<StaffResponseDTO>> getAllActiveStaff() {
         return staffService.getAllActiveStaff();
+    }
+
+    @GetMapping("/inactive")
+    public ResponseEntity<List<StaffResponseDTO>> getAllInactiveStaff() {
+        return staffService.getAllInactiveStaff();
     }
 
     @GetMapping("/{staffId}")

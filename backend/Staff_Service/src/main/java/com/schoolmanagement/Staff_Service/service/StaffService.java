@@ -1,9 +1,15 @@
 package com.schoolmanagement.Staff_Service.service;
 
+import com.schoolmanagement.Audit_common.dto.ChangeLogRequestDTO;
+import com.schoolmanagement.Audit_common.dto.SystemLogRequestDTO;
+import com.schoolmanagement.Audit_common.dto.UserActivityRequestDTO;
+import com.schoolmanagement.Audit_common.enums.ActionType;
+import com.schoolmanagement.Audit_common.enums.LogLevel;
 import com.schoolmanagement.Staff_Service.dto.StaffRequestDTO;
 import com.schoolmanagement.Staff_Service.dto.StaffResponseDTO;
 import com.schoolmanagement.Staff_Service.dto.StaffUpdateDTO;
 import com.schoolmanagement.Staff_Service.dto.TeacherResponseDTO;
+import com.schoolmanagement.Staff_Service.enums.EmploymentStatus;
 import com.schoolmanagement.Staff_Service.exception.BadRequestException;
 import com.schoolmanagement.Staff_Service.file.FileStorageService;
 import com.schoolmanagement.Staff_Service.file.FileUtils;
@@ -16,12 +22,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +43,7 @@ public class StaffService {
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
     private final TeacherService teacherService;
+    // private final KafkaTemplate<String, Object> kafkaTemplate;
 
     // Method to create a new staff
     public ResponseEntity<StaffResponseDTO> createStaff(StaffRequestDTO staffRequest) {
@@ -66,6 +75,32 @@ public class StaffService {
         if (staffRequest.getPhoto() != null) {
             uploadStaffPhoto(staffRequest.getPhoto(), staff.getStaffId());
         }
+
+        // UserActivityRequestDTO activity = UserActivityRequestDTO.builder()
+        //     .schoolId(staff.getSchoolId())
+        //     .userId(staff.getUserId())
+        //     .action(ActionType.CREATE.name())
+        //     .resource("Staff")
+        //     .resourceId(savedStaff.getStaffId().toString())
+        //     .details("New staff created: " + savedStaff.getEmail())
+        //     .ipAddress(getClientIp())
+        //     .createdBy(staff.getUserId())
+        //     .createdAt(LocalDateTime.now())
+        //     .build();
+        // kafkaTemplate.send("user-activities", activity);
+
+        // // Log system event
+        // SystemLogRequestDTO systemLog = SystemLogRequestDTO.builder()
+        //     .schoolId(staff.getSchoolId())
+        //     .level(LogLevel.INFO.name())
+        //     .source("StaffService")
+        //     .message("Staff created successfully: " + savedStaff.getEmail())
+        //     .createdBy(staff.getUserId())
+        //     .createdAt(LocalDateTime.now())
+        //     .build();
+        // kafkaTemplate.send("system-logs", systemLog);
+
+        // log.info("Staff created: {}", savedStaff.getEmail());
         return ResponseEntity.ok(convertToStaffResponse(savedStaff));
     }
 
@@ -76,6 +111,7 @@ public class StaffService {
         if (!existingStaff.getIsActive()) {
             throw new BadRequestException("Account is inactive");
         }
+        // String beforeChange = existingStaff.toString();
 
         existingStaff.setFirstName(
                 staffUpdateRequest.getFirstName() != null ? staffUpdateRequest.getFirstName()
@@ -115,6 +151,45 @@ public class StaffService {
         if (staffUpdateRequest.getPhoto() != null) {
             uploadStaffPhoto(staffUpdateRequest.getPhoto(), existingStaff.getStaffId());
         }
+
+        // ChangeLogRequestDTO changeLog = ChangeLogRequestDTO.builder()
+        //     .schoolId(updatedStaff.getSchoolId())
+        //     .entity("Staff")
+        //     .entityId(staffId.toString())
+        //     .action(ActionType.UPDATE.name())
+        //     .userId(updatedStaff.getUserId())
+        //     .beforeChange(beforeChange)
+        //     .afterChange(updatedStaff.toString())
+        //     .createdBy("admin")
+        //     .build();
+        // kafkaTemplate.send("change-logs", changeLog);
+
+        // // Log user activity
+        // UserActivityRequestDTO activity = UserActivityRequestDTO.builder()
+        //     .schoolId(updatedStaff.getSchoolId())
+        //     .userId(updatedStaff.getUserId())
+        //     .action(ActionType.UPDATE.name())
+        //     .resource("Staff")
+        //     .resourceId(staffId.toString())
+        //     .details("Staff updated: " + updatedStaff.getEmail())
+        //     .ipAddress(getClientIp())
+        //     .createdBy("admin")
+        //     .createdAt(LocalDateTime.now())
+        //     .build();
+        // kafkaTemplate.send("user-activities", activity);
+
+        // // Log system event
+        // SystemLogRequestDTO systemLog = SystemLogRequestDTO.builder()
+        //     .schoolId(updatedStaff.getSchoolId())
+        //     .level(LogLevel.INFO.name())
+        //     .source("StaffService")
+        //     .message("Staff updated successfully: " + updatedStaff.getEmail())
+        //     .createdBy("admin")
+        //     .createdAt(LocalDateTime.now())
+        //     .build();
+        // kafkaTemplate.send("system-logs", systemLog);
+
+        // log.info("Staff updated: {}", updatedStaff.getEmail());
         return ResponseEntity.ok(convertToStaffResponse(updatedStaff));
     }
 
@@ -128,16 +203,58 @@ public class StaffService {
         var logo = fileStorageService.saveFile(file, staffId);
         staff.setPhoto(logo);
         staffRepository.save(staff);
+
+        // UserActivityRequestDTO activity = UserActivityRequestDTO.builder()
+        //     .schoolId(staff.getSchoolId())
+        //     .userId(staff.getUserId())
+        //     .action(ActionType.UPDATE.name())
+        //     .resource("StaffPhoto")
+        //     .resourceId(staffId.toString())
+        //     .details("Photo uploaded for staff: " + staff.getEmail())
+        //     .ipAddress(getClientIp())
+        //     .createdBy(staff.getUserId())
+        //     .createdAt(LocalDateTime.now())
+        //     .build();
+        // kafkaTemplate.send("user-activities", activity);
     }
 
     // Method to delete a staff by ID (soft delete by setting isActive to false)
     public ResponseEntity<String> deleteStaffById(Long staffId) {
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new EntityNotFoundException("Staff not found with ID:: " + staffId));
-
         staff.setIsActive(false);
+        staff.setStatus(EmploymentStatus.INACTIVE); // Use enum value
+        staff.setUpdatedAt(LocalDateTime.now());
+        staff.setUpdated_by("admin");
         staffRepository.save(staff);
-        return ResponseEntity.ok("Staff with ID " + staff.getStaffId() + " deleted successfully.");
+
+        // ChangeLogRequestDTO changeLog = ChangeLogRequestDTO.builder()
+        //     .schoolId(staff.getSchoolId())
+        //     .entity("Staff")
+        //     .entityId(staffId.toString())
+        //     .action(ActionType.DELETE.name())
+        //     .userId(staff.getUserId())
+        //     .beforeChange(staff.toString())
+        //     .afterChange("Staff deactivated")
+        //     .createdBy("admin")
+        //     .build();
+        // kafkaTemplate.send("change-logs", changeLog);
+
+        // UserActivityRequestDTO activity = UserActivityRequestDTO.builder()
+        //     .schoolId(staff.getSchoolId())
+        //     .userId(staff.getUserId())
+        //     .action(ActionType.DELETE.name())
+        //     .resource("Staff")
+        //     .resourceId(staffId.toString())
+        //     .details("Staff deactivated: " + staff.getEmail())
+        //     .ipAddress(getClientIp())
+        //     .createdBy("admin")
+        //     .createdAt(LocalDateTime.now())
+        //     .build();
+        // kafkaTemplate.send("user-activities", activity);
+
+        // log.info("Staff deactivated: {}", staff.getEmail());
+        return ResponseEntity.ok("Staff with ID " + staff.getStaffId() + " deactivated successfully.");
     }
 
     // Method to get all active staff
@@ -146,6 +263,13 @@ public class StaffService {
         return ResponseEntity.ok(activeStaff.stream()
                 .map(this::convertToStaffResponse)
                 .collect(Collectors.toList()));
+    }
+
+    public ResponseEntity<List<StaffResponseDTO>> getAllInactiveStaff() {
+        List<Staff> inactiveStaff = staffRepository.findAllByIsActiveFalse();
+        return ResponseEntity.ok(inactiveStaff.stream()
+            .map(this::convertToStaffResponse)
+            .collect(Collectors.toList()));
     }
 
     // Method to get staff by ID
@@ -161,11 +285,11 @@ public class StaffService {
     public ResponseEntity<StaffResponseDTO> getStaffByUserId(String userId) {
         Staff staff = staffRepository.findByUserId(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Staff not found with user ID:: " + userId));
-    
+
         if (!staff.getIsActive()) {
             throw new BadRequestException("Account is inactive");
         }
-    
+
         return ResponseEntity.ok(convertToStaffResponse(staff));
     }
 
@@ -178,9 +302,38 @@ public class StaffService {
             throw new BadRequestException("Current password is incorrect");
         }
 
+        // String beforeChange = "Password hidden";
+
         staff.setPassword(passwordEncoder.encode(newPassword));
         staff.setUpdatedAt(LocalDateTime.now());
         Staff updatedStaff = staffRepository.save(staff);
+
+        // ChangeLogRequestDTO changeLog = ChangeLogRequestDTO.builder()
+        //     .schoolId(staff.getSchoolId())
+        //     .entity("Staff")
+        //     .entityId(staffId.toString())
+        //     .action(ActionType.UPDATE.name())
+        //     .userId(staff.getUserId())
+        //     .beforeChange(beforeChange)
+        //     .afterChange("Password updated")
+        //     .createdBy(staff.getUserId())
+        //     .build();
+        // kafkaTemplate.send("change-logs", changeLog);
+
+        // UserActivityRequestDTO activity = UserActivityRequestDTO.builder()
+        //     .schoolId(staff.getSchoolId())
+        //     .userId(staff.getUserId())
+        //     .action(ActionType.UPDATE.name())
+        //     .resource("StaffPassword")
+        //     .resourceId(staffId.toString())
+        //     .details("Password changed for staff: " + staff.getEmail())
+        //     .ipAddress(getClientIp())
+        //     .createdBy(staff.getUserId())
+        //     .createdAt(LocalDateTime.now())
+        //     .build();
+        // kafkaTemplate.send("user-activities", activity);
+
+        // log.info("Password changed for staff: {}", staff.getEmail());
         return ResponseEntity.ok(convertToStaffResponse(updatedStaff));
     }
 
@@ -198,36 +351,39 @@ public class StaffService {
         TeacherResponseDTO teacherDTO = null;
         if (staff.getTeacher() != null) {
             teacherDTO = TeacherResponseDTO.builder()
-                .teacherId(staff.getTeacher().getTeacherId())
-                .streamId(staff.getTeacher().getStreamId())
-                .experience(staff.getTeacher().getExperience())
-                .qualification(staff.getTeacher().getQualification())
-                .subjectSpecialization(staff.getTeacher().getSubjectSpecialization())
-                .build();
+                    .teacherId(staff.getTeacher().getTeacherId())
+                    .streamId(staff.getTeacher().getStreamId())
+                    .experience(staff.getTeacher().getExperience())
+                    .qualification(staff.getTeacher().getQualification())
+                    .subjectSpecialization(staff.getTeacher().getSubjectSpecialization())
+                    .build();
         }
-    
+
         return StaffResponseDTO.builder()
-            .staffId(staff.getStaffId())
-            .userId(staff.getUserId())
-            .schoolId(staff.getSchoolId())
-            .firstName(staff.getFirstName())
-            .middleName(staff.getMiddleName())
-            .lastName(staff.getLastName())
-            .username(staff.getUsername())
-            .dateOfJoining(staff.getDateOfJoining())
-            .email(staff.getEmail())
-            .password(staff.getPassword())
-            .roles(staff.getRoles())
-            .phoneNumber(staff.getPhoneNumber())
-            .status(staff.getStatus())
-            .dob(staff.getDob())
-            .gender(staff.getGender())
-            .addressJson(staff.getAddressJson())
-            .isActive(staff.getIsActive())
-            .photo(FileUtils.readFileFromLocation(staff.getPhoto()))
-            .createdAt(staff.getCreatedAt())
-            .updatedAt(staff.getUpdatedAt())
-            .teacher(teacherDTO) 
-            .build();
+                .staffId(staff.getStaffId())
+                .userId(staff.getUserId())
+                .schoolId(staff.getSchoolId())
+                .firstName(staff.getFirstName())
+                .middleName(staff.getMiddleName())
+                .lastName(staff.getLastName())
+                .username(staff.getUsername())
+                .dateOfJoining(staff.getDateOfJoining())
+                .email(staff.getEmail())
+                .password(staff.getPassword())
+                .roles(staff.getRoles())
+                .phoneNumber(staff.getPhoneNumber())
+                .status(staff.getStatus())
+                .dob(staff.getDob())
+                .gender(staff.getGender())
+                .addressJson(staff.getAddressJson())
+                .isActive(staff.getIsActive())
+                .photo(FileUtils.readFileFromLocation(staff.getPhoto()))
+                .createdAt(staff.getCreatedAt())
+                .updatedAt(staff.getUpdatedAt())
+                .teacher(teacherDTO)
+                .build();
     }
+    // private String getClientIp() {
+    //     return "127.0.0.1"; 
+    // }
 }
