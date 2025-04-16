@@ -64,38 +64,39 @@ public class AttendanceService {
     }
 
     public void validateAndMarkAttendance(Long qrCodeId, Long studentId) {
-    // Fetch the QR Code
-    QRCode qrCode = qrCodeRepository.findById(qrCodeId)
-            .orElseThrow(() -> new IllegalArgumentException("QR Code not found."));
+        // Fetch the QR Code
+        QRCode qrCode = qrCodeRepository.findById(qrCodeId)
+                .orElseThrow(() -> new IllegalArgumentException("QR Code not found."));
 
-    // Check if the QR Code is active and not expired
-    if (!QRCodeStatus.ACTIVE.equals(qrCode.getStatus()) || qrCode.getExpiryTime().isBefore(LocalDateTime.now())) {
-        throw new IllegalArgumentException("QR Code is invalid or expired.");
+        // Check if the QR Code is active and not expired
+        if (!QRCodeStatus.ACTIVE.equals(qrCode.getStatus()) || qrCode.getExpiryTime().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("QR Code is invalid or expired.");
+        }
+
+        // Fetch the student
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found."));
+
+        // Validate that the student belongs to the same school, class, and section
+        if (!student.getSchoolId().equals(qrCode.getSchoolId())
+                || !student.getClassId().equals(qrCode.getClassId())
+                || !student.getSectionId().equals(qrCode.getSectionId())) {
+            throw new IllegalArgumentException(
+                    "Student does not belong to the school, class, or section for this QR Code.");
+        }
+
+        // Check if attendance for this session is already marked
+        boolean alreadyMarked = attendanceRepository.existsByStudentIdAndQrCodeId(studentId, qrCodeId);
+        if (alreadyMarked) {
+            throw new IllegalArgumentException("Attendance already marked for this student in this session.");
+        }
+
+        // Mark attendance
+        Attendance attendance = new Attendance();
+        attendance.setStudentId(studentId);
+        attendance.setQrCodeId(qrCodeId);
+        attendance.setRecordedBy(qrCode.getGeneratedBy());
+        attendance.setAttendanceDate(LocalDateTime.now());
+        attendanceRepository.save(attendance);
     }
-
-    // Fetch the student
-    Student student = studentRepository.findById(studentId)
-            .orElseThrow(() -> new IllegalArgumentException("Student not found."));
-
-    // Validate that the student belongs to the same school, class, and section
-    if (!student.getSchoolId().equals(qrCode.getSchoolId())
-            || !student.getClassId().equals(qrCode.getClassId())
-            || !student.getSectionId().equals(qrCode.getSectionId())) {
-        throw new IllegalArgumentException("Student does not belong to the school, class, or section for this QR Code.");
-    }
-
-    // Check if attendance for this session is already marked
-    boolean alreadyMarked = attendanceRepository.existsByStudentIdAndQrCodeId(studentId, qrCodeId);
-    if (alreadyMarked) {
-        throw new IllegalArgumentException("Attendance already marked for this student in this session.");
-    }
-
-    // Mark attendance
-    Attendance attendance = new Attendance();
-    attendance.setStudentId(studentId);
-    attendance.setQrCodeId(qrCodeId);
-    attendance.setRecordedBy(qrCode.getGeneratedBy());
-    attendance.setAttendanceDate(LocalDateTime.now());
-    attendanceRepository.save(attendance);
-}
 }

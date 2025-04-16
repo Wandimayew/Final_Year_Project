@@ -22,11 +22,13 @@ import com.schoolmanagement.student_service.service.PromotionService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 
 @RestController
 @RequestMapping("/api/promotions")
 @RequiredArgsConstructor
+@Slf4j
 public class PromotionController {
     private final PromotionService promotionService;
 
@@ -37,6 +39,7 @@ public class PromotionController {
         List<PromotionResponse> response = promotions.stream()
                 .map(PromotionMapper::toResponse)
                 .collect(Collectors.toList());
+                log.info("Fetched all promotions successfully.");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -51,9 +54,12 @@ public class PromotionController {
     // Create a new promotion
     @PostMapping
     public ResponseEntity<PromotionResponse> createPromotion(@Valid @RequestBody PromotionRequest request) {
+        log.info("Creating new promotion with request: {}", request);
         Promotion promotion = PromotionMapper.toEntity(request);
         Promotion createdPromotion = promotionService.createPromotion(promotion);
         PromotionResponse response = PromotionMapper.toResponse(createdPromotion);
+        // log.info("Created new promotion successfully: {}", response);
+         // Log the creation of a new promotion
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 

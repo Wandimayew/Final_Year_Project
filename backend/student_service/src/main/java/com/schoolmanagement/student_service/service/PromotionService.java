@@ -12,9 +12,11 @@ import com.schoolmanagement.student_service.repository.PromotionRepository;
 import com.schoolmanagement.student_service.repository.StudentRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PromotionService {
     private final PromotionRepository promotionRepository;
     private final StudentRepository studentRepository;
@@ -32,6 +34,13 @@ public class PromotionService {
 
     // Create a new promotion
     public Promotion createPromotion(Promotion promotion) {
+        Student student = studentRepository.findById(promotion.getStudent().getStudentId())
+                .orElseThrow(() -> new RuntimeException("Student not found with id: " + promotion.getStudent().getStudentId()));
+                log.info("Student with ID {} found for promotion now class {}", student.getStudentId(), student.getClassId());
+                student.setClassId(promotion.getNewClassId());
+        studentRepository.save(student);
+        promotion.setStudent(student);
+        log.info("Student with ID {} promoted to class ID {}", student.getStudentId(), promotion.getNewClassId());
         return promotionRepository.save(promotion);
     }
 

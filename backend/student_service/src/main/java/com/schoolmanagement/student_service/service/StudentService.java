@@ -1,17 +1,21 @@
 package com.schoolmanagement.student_service.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import com.schoolmanagement.student_service.model.Student;
 import com.schoolmanagement.student_service.model.Student.PassedOrFail;
+import com.schoolmanagement.student_service.model.Student.Status;
 import com.schoolmanagement.student_service.repository.StudentRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StudentService {
     private final StudentRepository studentRepository;
 
@@ -28,7 +32,8 @@ public class StudentService {
             return studentRepository.findBySectionId(sectionId);
         } else {
             // No filters applied, return all QR codes
-            return studentRepository.findAll();
+            // return studentRepository.findAll();
+            return studentRepository.findAllIsActive(Status.ACTIVE);
         }
     }
     
@@ -38,15 +43,16 @@ public class StudentService {
         if (classId != null && sectionId != null) {
             // Filter by both classId and sectionId
             return studentRepository.findByClassIdAndSectionIdAndIsPassed(classId, sectionId, isPassed);
-        } else if (classId != null) {
-            // Filter by classId only
-            return studentRepository.findByClassIdAndIsPassed(classId, isPassed);
-        } else if (sectionId != null) {
-            // Filter by sectionId only
-            return studentRepository.findBySectionIdAndIsPassed(sectionId, isPassed);
+        // } else if (classId != null) {
+        //     // Filter by classId only
+        //     return studentRepository.findByClassIdAndIsPassed(classId, isPassed);
+        // } else if (sectionId != null) {
+        //     // Filter by sectionId only
+        //     return studentRepository.findBySectionIdAndIsPassed(sectionId, isPassed);
         } else {
             // No filters applied, return all QR codes
-            return studentRepository.findAllIsPassed(isPassed);
+            return new ArrayList<>();
+            // return studentRepository.findAllIsPassed(isPassed);
         }
     }
 
@@ -92,8 +98,12 @@ public class StudentService {
 
     // Delete a student
     public void deleteStudent(Long id) {
+        log.info("Deleting student with ID: {}", id);
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found with id: " + id));
-        studentRepository.delete(student);
+                log.info("Student with ID: {} found for deletion", student);
+                student.setIsActive(Status.INACTIVE);
+                studentRepository.save(student);
+        // studentRepository.delete(student);
     }
 }

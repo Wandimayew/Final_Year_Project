@@ -8,14 +8,14 @@ public class QRCodeMapper {
 
     public static QRCode toEntity(QRCodeRequest request) {
         QRCode qrCode = new QRCode();
-        qrCode.setSchoolId(request.getSchoolId());
+        // qrCode.setSchoolId(request.getSchoolId());
         qrCode.setClassId(request.getClassId());
         qrCode.setSectionId(request.getSectionId());
-        qrCode.setGeneratedTime(request.getGeneratedTime());
+        // qrCode.setGeneratedTime(request.getGeneratedTime());
         qrCode.setExpiryTime(request.getExpiryTime());
-        qrCode.setSessionToken(request.getSessionToken());
-        qrCode.setGeneratedBy(request.getGeneratedBy());
-        qrCode.setQrCodePath(request.getQrCodePath());
+        // qrCode.setSessionToken(request.getSessionToken());
+        // qrCode.setGeneratedBy(request.getGeneratedBy());
+        // qrCode.setQrCodePath(request.getQrCodePath());
         qrCode.setStatus(request.getStatus());
         return qrCode;
     }

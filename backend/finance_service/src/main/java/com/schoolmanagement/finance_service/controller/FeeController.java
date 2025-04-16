@@ -51,6 +51,7 @@ public class FeeController {
     public ResponseEntity<StudentFeeDTO> assignFeeToStudent(
             @Valid @RequestBody StudentFeeDTO studentFeeDTO) {
                 log.info("request body inside controller {}", studentFeeDTO);
+                
         return new ResponseEntity<>(feeManagementService.assignFeeToStudent(studentFeeDTO), HttpStatus.CREATED);
     }
     

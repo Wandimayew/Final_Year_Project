@@ -1,344 +1,266 @@
 "use client";
-import { use, useEffect, useState } from "react";
-import { Mail, User, Phone, School } from "lucide-react";
+import { useState } from "react";
+import AdmissionForm from "@/components/students/AdmissionForm";
+import * as XLSX from "xlsx";
 import { useCreateStudent } from "@/lib/api/studentService/students";
 import {
-  useParentGuardianByContact,
   useCreateParentGuardian,
   useParentGuardians
 } from "@/lib/api/studentService/parentGuardian";
 import { useCreateUser } from "@/lib/api/users";
-import InputField from "@/components/InputField";
-import ImageUpload from "@/components/ImageUpload";
-import SectionHeader from "@/components/SectionHeader";
 
-const AdmissionForm = () => {
-  const [showProfilePicture, setShowProfilePicture] = useState(null);
-  const [showGuardianPicture, setShowGuardianPicture] = useState(null);
-  const [guardianExists, setGuardianExists] = useState(false);
-  const [parentId, setParentId] = useState(null);
+export default function StudentManagementPage() {
+  const [activeTab, setActiveTab] = useState("form");
+  const [fileData, setFileData] = useState(null);
+  const [classId, setClassId] = useState("");
+  const [sectionId, setSectionId] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
 
   const createUserMutation = useCreateUser();
   const createParentGuardianMutation = useCreateParentGuardian();
-  const {
-    data: parentData,
-    refetch,
-  } = useParentGuardians();
+  const { data: parentData } = useParentGuardians();
   const { mutateAsync: createStudent } = useCreateStudent();
 
-  useEffect(() => {
-    if (guardianExists) {
-      refetch();
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        setFileData(jsonData);
+      };
+      reader.readAsArrayBuffer(file);
     }
-  }, [guardianExists]);
+  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log("start handleSubmit");
-    // Step 1: Register the User
-    const userData = {
-      schoolId: 1,
-      username:
-        e.target.firstName.value.toLowerCase() +
-        e.target.lastName.value.charAt(0).toLowerCase(),
-      email: e.target.firstName.value.toLowerCase() + "@student.com",
-      password:
-        e.target.firstName.value.toLowerCase() + e.target.registerNo.value,
-      roles: ["STUDENT"],
-    };
 
+  const handleImport = async () => {
+    if (!fileData || !classId || !sectionId) {
+      alert("Please select a file, class, and section");
+      return;
+    }
+
+    setIsImporting(true);
     try {
-      const userResponse = await createUserMutation.mutateAsync(userData);
-
-      let guardianId;
-      if(!guardianExists) {
-        const parentGuardianData = {
+      for (const student of fileData) {
+        // Create user for each student
+        const userData = {
           schoolId: 1,
-          fatherName: e.target.fatherName.value,
-          motherName: e.target.motherName.value,
-          otherFamilyMemberName: e.target.guardianName.value,
-          relation: e.target.guardianRelation.value,
-          occupation: e.target.guardianOccupation.value,
-          education: e.target.guardianEducation.value,
-          phoneNumber: e.target.guardianMobile.value,
-          email: e.target.guardianEmail.value,
-          address: {
-            city: e.target.guardianCity.value,
-            state: e.target.guardianState.value,
-          },
+          username: `${student.firstName.toLowerCase()}${student.lastName.charAt(0).toLowerCase()}`,
+          email: `${student.firstName.toLowerCase()}@student.com`,
+          password: `${student.firstName.toLowerCase()}${student.registerNo}`,
+          roles: ["STUDENT"],
         };
-        const parentGuardianResponse =
-          await createParentGuardianMutation.mutateAsync(parentGuardianData);
-        guardianId = parentGuardianResponse.parentId;
+
+        const userResponse = await createUserMutation.mutateAsync(userData);
+
+        // Handle guardian
+        let guardianId;
+        if (student.GuardianUsername) {
+          // Find existing guardian
+          guardianId = parentData?.find(p => p.username === student.GuardianUsername)?.parentId;
+        } else if (student.fatherName || student.motherName) {
+          // Create new guardian if guardian info provided
+          const parentGuardianData = {
+            schoolId: 1,
+            fatherName: student.fatherName || "",
+            motherName: student.motherName || "",
+            otherFamilyMemberName: student.guardianName || "",
+            relation: student.guardianRelation || "",
+            occupation: student.guardianOccupation || "",
+            education: student.guardianEducation || "",
+            phoneNumber: student.guardianMobile || "",
+            email: student.guardianEmail || "",
+            address: {
+              city: student.guardianCity || "",
+              state: student.guardianState || "",
+            },
+          };
+          const parentResponse = await createParentGuardianMutation.mutateAsync(parentGuardianData);
+          guardianId = parentResponse.parentId;
+        }
+
+        // Create student
+        await createStudent({
+          schoolId: 1,
+          userId: userResponse.userId,
+          registId: student.registerNo,
+          roll: student.roll,
+          admissionDate: student.admissionDate,
+          classId: classId,
+          sectionId: sectionId,
+          category: student.category,
+          firstName: student.firstName,
+          lastName: student.lastName || student.firstName,
+          nationalId: student.registerNo,
+          dateOfBirth: student.dateOfBirth,
+          gender: student.gender,
+          contactInfo: student.contactInfo || "+251987654321",
+          address: { 
+            city: student.city || "Addis Ababa", 
+            state: student.state || "Addis Ababa" 
+          },
+          username: userData.username,
+          isActive: "ACTIVE",
+          isPassed: "PASSED",
+          parentId: guardianId,
+        });
       }
-
-      await createStudent({
-        schoolId: 1,
-        userId: userResponse.userId,
-        registId: e.target.registerNo.value,
-        roll: e.target.roll.value,
-        admissionDate: e.target.admissionDate.value,
-        classId: e.target.class.value,
-        sectionId: e.target.section.value,
-        category: e.target.category.value,
-        firstName: e.target.firstName.value,
-        lastName: e.target.lastName.value
-          ? e.target.lastName.value
-          : e.target.firstName.value,
-        nationalId: e.target.registerNo.value,
-        dateOfBirth: e.target.dateOfBirth.value,
-        gender: e.target.gender.value,
-        contactInfo: "+251987654321",
-        address: { city: "Addis Ababa", state: "Addis Ababa" },
-        username:
-          e.target.firstName.value.toLowerCase() +
-          e.target.lastName.value.charAt(0).toLowerCase(),
-        isActive: "ACTIVE",
-        isPassed: "PASSED",
-        parentId: guardianExists ? parentId : guardianId,
-      });
-
+      alert(`Successfully imported ${fileData.length} students`);
+      setFileData(null);
+      document.getElementById("file-upload").value = "";
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Import error:", error);
+      alert("Error importing students: " + error.message);
+    } finally {
+      setIsImporting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="mx-auto max-w-7xl rounded-lg bg-white p-6 shadow-lg">
-        <h1 className="mb-6 flex items-center text-2xl font-bold text-gray-800">
-          <School className="mr-2 h-6 w-6" />
-          Create Admission
-        </h1>
+    <div className="min-h-screen bg-gray-100 my-6">
+      <div className="max-w-7xl mx-auto bg-white rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold my-6 px-6 pt-6">Student Management</h1>
 
-        {/* Form starts here */}
-        <form onSubmit={handleSubmit}>
-          {/* Academic Details */}
-          <section className="mb-8">
-            <SectionHeader icon="🎓" title="Academic Details" />
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <InputField
-                label="Academic Year"
-                name="academicYear"
-                type="select"
-                required
-              >
-                <option>2025-2026</option>
-              </InputField>
-              <InputField
-                label="Register No"
-                name="registerNo"
-                defaultValue="ISC-0001"
-                required
-              />
-              <InputField label="Roll" name="roll" />
-              <InputField
-                label="Admission Date"
-                name="admissionDate"
-                type="date"
-                defaultValue="2025-01-12"
-                required
-              />
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <InputField label="Class" name="class" type="select" required>
-                <option>Select Class</option>
-                <option value={1}>Class One</option>
-                <option value={2}>Class Two</option>
-              </InputField>
-              <InputField label="Section" name="section" type="select" required>
-                <option>Select Section</option>
-                <option value={1}>A</option>
-                <option value={2}>B</option>
-              </InputField>
-              <InputField
-                label="Category"
-                name="category"
-                type="select"
-                required
-              >
-                <option>Select</option>
-              </InputField>
-            </div>
-          </section>
+        {/* Tabs */}
+        <div className="flex border-b mb-6">
+          <button
+            className={`py-2 px-4 ${activeTab === "form" ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-500"}`}
+            onClick={() => setActiveTab("form")}
+          >
+            Create Student
+          </button>
+          <button
+            className={`py-2 px-4 ${activeTab === "import" ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-500"}`}
+            onClick={() => setActiveTab("import")}
+          >
+            Import Students
+          </button>
+        </div>
 
-          {/* Student Details */}
-          <section className="mb-8">
-            <SectionHeader icon="👤" title="Student Details" />
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <InputField
-                label="First Name"
-                name="firstName"
-                icon={User}
-                required
-              />
-              <InputField
-                label="Last Name"
-                name="lastName"
-                icon={User}
-                required
-              />
-              <InputField label="Gender" name="gender" type="select">
-                <option value={"Male"}>Male</option>
-                <option value={"Female"}>Female</option>
-              </InputField>
-              <InputField
-                label="Date of Birth"
-                name="dateOfBirth"
-                type="date"
-              />
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <InputField
-                label="Present Address"
-                name="presentAddress"
-                type="textarea"
-                rows={3}
-              />
-              <InputField
-                label="Permanent Address"
-                name="permanentAddress"
-                type="textarea"
-                rows={3}
-              />
-            </div>
-            <ImageUpload
-              label="Profile Picture"
-              name="profilePicture"
-              image={showProfilePicture}
-              onChange={(file) =>
-                setShowProfilePicture(URL.createObjectURL(file))
-              }
-            />
-          </section>
+        {/* Tab Content */}
+        {activeTab === "form" && <AdmissionForm />}
 
-          {/* Guardian Details */}
-          <section className="mb-8">
-            <SectionHeader icon="👥" title="Guardian Details" />
-            <div className="mb-4">
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  name="guardianExists"
-                  className="rounded border-gray-300"
-                  onChange={(e) => setGuardianExists(!guardianExists)}
-                  checked={guardianExists}
-                />
-                <span className="ml-2 text-sm text-gray-700">
-                  Guardian Already Exist
-                </span>
-              </label>
+        {activeTab === "import" && (
+          <div className="space-y-6 mx-auto max-w-6xl bg-gray-50 rounded-lg p-6 shadow-lg ">
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Instructions:</h2>
+              <ol className="list-decimal list-inside space-y-2 text-sm">
+                <li>Upload a CSV/Excel file containing multiple student records</li>
+                <li>Supported formats: CSV, Excel (.xlsx, .xls)</li>
+                <li>Required columns: firstName, lastName, roll, registerNo, dateOfBirth, gender</li>
+                <li>Optional columns: admissionDate, category, GuardianUsername, fatherName, motherName, guardianName, guardianRelation, guardianOccupation, guardianEducation, guardianMobile, guardianEmail, guardianCity, guardianState</li>
+                <li>Date format: YYYY-MM-DD (e.g., 2025-01-12)</li>
+                <li>Gender: "Male" or "Female"</li>
+                <li>Category: Use Category ID from Category page</li>
+                <li>For existing guardians: include only GuardianUsername</li>
+                <li>For new guardians: include guardian-related columns</li>
+              </ol>
             </div>
-            {guardianExists &&  (
-              <div className="mt-4">
-                <InputField label="Select Guardian" name="parentId" type="select" onChange={(e) => setParentId(e.target.value)}>
-                  <option value="">Select a guardian</option>
-                  {parentData.map((parent) => (
-                    <option key={parent.parentId} value={parent.parentId}>
-                      {parent.fatherName} & {parent.motherName}
-                    </option>
-                  ))}
-              </InputField>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Class*
+                </label>
+                <select
+                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+                  value={classId}
+                  onChange={(e) => setClassId(e.target.value)}
+                  required
+                >
+                  <option value="">Select Class</option>
+                  <option value="1">Class One</option>
+                  <option value="2">Class Two</option>
+                </select>
               </div>
-            )}
 
-            {!guardianExists && (
-              <>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <InputField label="Name" name="guardianName" required />
-                  <InputField
-                    label="Relation"
-                    name="guardianRelation"
-                    required
-                  />
-                </div>
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <InputField label="Father Name" name="fatherName" />
-                  <InputField label="Mother Name" name="motherName" />
-                </div>
-                <div className="mt-4 grid gap-4 md:grid-cols-3">
-                  <InputField
-                    label="Occupation"
-                    name="guardianOccupation"
-                    required
-                  />
-                  <InputField
-                    label="Education"
-                    name="guardianEducation"
-                    required
-                  />
-                </div>
-                <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <InputField label="City" name="guardianCity" />
-                  <InputField label="State" name="guardianState" />
-                  <InputField
-                    label="Mobile No"
-                    name="guardianMobile"
-                    icon={Phone}
-                    required
-                  />
-                  <InputField
-                    label="Email"
-                    name="guardianEmail"
-                    icon={Mail}
-                    type="email"
-                    required
-                  />
-                </div>
-                <ImageUpload
-                  label="Guardian Picture"
-                  name="guardianPicture"
-                  image={showGuardianPicture}
-                  onChange={(file) =>
-                    setShowGuardianPicture(URL.createObjectURL(file))
-                  }
-                />
-              </>
-            )}
-          </section>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Section*
+                </label>
+                <select
+                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+                  value={sectionId}
+                  onChange={(e) => setSectionId(e.target.value)}
+                  required
+                >
+                  <option value="">Select Section</option>
+                  <option value="1">A</option>
+                  <option value="2">B</option>
+                </select>
+              </div>
 
-          {/* Previous School Details */}
-          <section className="mb-8">
-            <SectionHeader
-              icon={<School className="mr-2 h-6 w-6" />}
-              title="Previous School Details"
-            />
-            <div className="grid gap-4 md:grid-cols-2">
-              <InputField label="School Name" name="previousSchoolName" />
-              <InputField
-                label="Qualification"
-                name="previousSchoolQualification"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Select File* (CSV or Excel)
+                </label>
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <div className="space-y-1 text-center">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <div className="flex text-sm text-gray-600">
+                      <label
+                        htmlFor="file-upload"
+                        className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500"
+                      >
+                        <span>Upload a file</span>
+                        <input
+                          id="file-upload"
+                          name="file-upload"
+                          type="file"
+                          accept=".csv,.xlsx,.xls"
+                          className="sr-only"
+                          onChange={handleFileUpload}
+                        />
+                      </label>
+                      <p className="pl-1">or drag and drop</p>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      CSV or Excel files with multiple student records
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {fileData && (
+                <div className="text-sm text-gray-600">
+                  <p>Students to import: {fileData.length}</p>
+                  <p>First student sample: {JSON.stringify(fileData[0])}</p>
+                </div>
+              )}
+
+              <button
+                onClick={handleImport}
+                disabled={isImporting}
+                className={`w-full py-2 px-4 rounded-md text-white ${
+                  isImporting
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-500 hover:bg-blue-600"
+                }`}
+              >
+                {isImporting ? "Importing..." : "Import Students"}
+              </button>
             </div>
-            <div className="mt-4">
-              <InputField
-                label="Remarks"
-                name="remarks"
-                type="textarea"
-                rows={3}
-              />
-            </div>
-          </section>
-
-          {/* Form actions */}
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-            >
-              Save
-            </button>
           </div>
-        </form>
+        )}
       </div>
     </div>
   );
-};
-
-export default AdmissionForm;
+}

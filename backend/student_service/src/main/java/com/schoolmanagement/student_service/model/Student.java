@@ -151,4 +151,30 @@ public class Student {
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
     private List<Promotion> promotions;
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "studentId=" + studentId +
+                ", registNo='" + registNo + '\'' +
+                ", userId=" + userId +
+                ", schoolId=" + schoolId +
+                ", classId=" + classId +
+                ", sectionId=" + sectionId +
+                ", firstName='" + firstName + '\'' +
+                ", middleName='" + middleName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", nationalId='" + nationalId + '\'' +
+                ", username='" + username + '\'' +
+                ", dateOfBirth=" + dateOfBirth +
+                ", gender='" + gender + '\'' +
+                ", contactInfo='" + contactInfo + '\'' +
+                ", photo='" + photo + '\'' +
+                ", address=" + address +
+                ", isActive=" + isActive +
+                ", isPassed=" + isPassed +
+                ", admissionDate=" + admissionDate +
+                // Exclude parentGuardian, attendanceRecords, enrollment, and promotions to avoid recursion
+                '}';
+    }
 }

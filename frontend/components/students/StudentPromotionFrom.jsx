@@ -12,7 +12,7 @@ export default function StudentPromotionForm() {
   const [carryForwardDue, setCarryForwardDue] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  
+
   // Mock data for classes, sections, and sessions
   const classes = [
     { id: 1, name: 'One' },
@@ -30,15 +30,17 @@ export default function StudentPromotionForm() {
     { id: 1, name: '2024-2025' },
     { id: 2, name: '2025-2026' }
   ];
-  
-  // Get passed students based on class and section
-  const { data: students = [], isLoading, error } = usePassedStudents({
+
+  // Fetch students based on selected class and section
+  const { data: students = [], isLoading, error, refetch } = usePassedStudents({
     classId: selectedClass?.id,
     sectionId: selectedSection?.id,
     passed: "PASSED"
   });
+
   const createPromotion = useCreatePromotion();
-  
+
+  // Update selectedStudents when students data changes
   useEffect(() => {
     if (students.length > 0) {
       setSelectedStudents(students.map(student => ({
@@ -46,9 +48,13 @@ export default function StudentPromotionForm() {
         selected: false,
         isAlumni: false
       })));
+      setSelectAll(false); // Reset select all when student list changes
+    } else {
+      setSelectedStudents([]);
+      setSelectAll(false);
     }
   }, [students]);
-  
+
   const handleSelectAll = () => {
     const newSelectAll = !selectAll;
     setSelectAll(newSelectAll);
@@ -59,22 +65,20 @@ export default function StudentPromotionForm() {
       }))
     );
   };
-  
+
   const handleSelectStudent = (index) => {
     const newSelectedStudents = [...selectedStudents];
     newSelectedStudents[index].selected = !newSelectedStudents[index].selected;
     setSelectedStudents(newSelectedStudents);
-    
-    // Check if all students are selected
     setSelectAll(newSelectedStudents.every(student => student.selected));
   };
-  
+
   const handleAlumniChange = (index) => {
     const newSelectedStudents = [...selectedStudents];
     newSelectedStudents[index].isAlumni = !newSelectedStudents[index].isAlumni;
     setSelectedStudents(newSelectedStudents);
   };
-  
+
   const handlePromote = () => {
     const studentsToPromote = selectedStudents.filter(student => student.selected);
     
@@ -88,32 +92,38 @@ export default function StudentPromotionForm() {
       return;
     }
     
-    // Create promotion requests for each selected student
     const promotionPromises = studentsToPromote.map(student => {
       const promotionData = {
-        schoolId: 1, // Replace with actual school ID
+        schoolId: 1,
         previousClassId: selectedClass?.id,
         newClassId: selectedNewClass?.id,
         sectionId: selectedNewSection?.id,
         isPassed: true,
         promotionDate: new Date().toISOString().split('T')[0],
         remark: '',
-        studentId: student.id
+        studentId: student.studentId,
+        registNo: student.registNo,
       };
       
       return createPromotion.mutateAsync(promotionData);
     });
     
-    // Process all promotions
     Promise.all(promotionPromises)
       .then(() => {
         toast.success(`Successfully promoted ${studentsToPromote.length} students`);
+        // Reset selections after successful promotion
+        refetch(); 
+        setSelectedStudents(selectedStudents.map(student => ({
+          ...student,
+          selected: false
+        })));
+        setSelectAll(false);
       })
       .catch(error => {
         toast.error('Failed to promote students: ' + error.message);
       });
   };
-  
+
   return (
     <div className="bg-white min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -126,7 +136,7 @@ export default function StudentPromotionForm() {
           <h1 className="text-2xl font-bold text-gray-800">Student Promotion</h1>
         </div>
         
-        {/* Select ground section */}
+        {/* Select source section */}
         <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="p-4 border-b border-gray-200">
             <h2 className="text-lg font-medium text-gray-800">Select Source</h2>
@@ -142,8 +152,12 @@ export default function StudentPromotionForm() {
                 value={selectedClass?.id || ''}
                 onChange={(e) => {
                   const classId = parseInt(e.target.value);
-                  const selectedClass = classes.find(c => c.id === classId);
-                  setSelectedClass(selectedClass);
+                  const selected = classes.find(c => c.id === classId);
+                  setSelectedClass(selected || null);
+                  if (!selected) {
+                    setSelectedSection(null);
+                    setSelectedStudents([]);
+                  }
                 }}
               >
                 <option value="">Select</option>
@@ -162,9 +176,10 @@ export default function StudentPromotionForm() {
                 value={selectedSection?.id || ''}
                 onChange={(e) => {
                   const sectionId = parseInt(e.target.value);
-                  const selectedSection = sections.find(s => s.id === sectionId);
-                  setSelectedSection(selectedSection);
+                  const selected = sections.find(s => s.id === sectionId);
+                  setSelectedSection(selected || null);
                 }}
+                disabled={!selectedClass}
               >
                 <option value="">Select</option>
                 {sections.map(section => (
@@ -173,20 +188,6 @@ export default function StudentPromotionForm() {
               </select>
             </div>
           </div>
-          
-          {/* <div className="px-6 pb-4 flex justify-end">
-            <button 
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              onClick={() => {
-                // Filter action would go here
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              Filter
-            </button>
-          </div> */}
         </div>
         
         {/* Promotion details section */}
@@ -199,7 +200,9 @@ export default function StudentPromotionForm() {
             <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
               <h3 className="font-medium text-blue-800 mb-2">Instructions:</h3>
               <ol className="list-decimal pl-5 text-sm text-blue-800 space-y-1">
-                <li>Please double check and fill up all fields carefully, then click Promotion button.</li>
+                <li>Select class and section to view students</li>
+                <li>Choose students to promote using checkboxes</li>
+                <li>Fill promotion details and click Promotion button</li>
               </ol>
             </div>
             
@@ -208,7 +211,7 @@ export default function StudentPromotionForm() {
                 <input 
                   type="checkbox" 
                   id="carryForward" 
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="h- W-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   checked={carryForwardDue}
                   onChange={() => setCarryForwardDue(!carryForwardDue)}
                 />
@@ -228,8 +231,8 @@ export default function StudentPromotionForm() {
                   value={selectedSession?.id || ''}
                   onChange={(e) => {
                     const sessionId = parseInt(e.target.value);
-                    const selectedSession = sessions.find(s => s.id === sessionId);
-                    setSelectedSession(selectedSession);
+                    const selected = sessions.find(s => s.id === sessionId);
+                    setSelectedSession(selected || null);
                   }}
                 >
                   <option value="">Select</option>
@@ -248,8 +251,8 @@ export default function StudentPromotionForm() {
                   value={selectedNewClass?.id || ''}
                   onChange={(e) => {
                     const classId = parseInt(e.target.value);
-                    const selectedClass = classes.find(c => c.id === classId);
-                    setSelectedNewClass(selectedClass);
+                    const selected = classes.find(c => c.id === classId);
+                    setSelectedNewClass(selected || null);
                   }}
                 >
                   <option value="">Select</option>
@@ -268,8 +271,8 @@ export default function StudentPromotionForm() {
                   value={selectedNewSection?.id || ''}
                   onChange={(e) => {
                     const sectionId = parseInt(e.target.value);
-                    const selectedSection = sections.find(s => s.id === sectionId);
-                    setSelectedNewSection(selectedSection);
+                    const selected = sections.find(s => s.id === sectionId);
+                    setSelectedNewSection(selected || null);
                   }}
                 >
                   <option value="">Select</option>
@@ -291,42 +294,27 @@ export default function StudentPromotionForm() {
                         className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                         checked={selectAll}
                         onChange={handleSelectAll}
+                        disabled={selectedStudents.length === 0}
                       />
                     </th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      #
-                    </th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Student Name
-                    </th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Register No
-                    </th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Guardian Name
-                    </th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Mark Summary
-                    </th>
-                    {/* <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Class
-                    </th> */}
-                    {/* <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Roll
-                    </th> */}
-                    {/* <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Current Due Amount
-                    </th> */}
-                    {/* <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th> */}
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Register No</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guardian Name</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mark Summary</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {isLoading ? (
                     <tr>
-                      <td colSpan="10" className="px-6 py-4 text-center text-sm text-gray-500">
+                      <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
                         Loading students...
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-4 text-center text-sm text-red-500">
+                        Error loading students: {error.message}
                       </td>
                     </tr>
                   ) : selectedStudents.length > 0 ? (
@@ -340,17 +328,13 @@ export default function StudentPromotionForm() {
                             onChange={() => handleSelectStudent(index)}
                           />
                         </td>
-                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {index + 1}
+                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                        <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {student.firstName} {student.lastName}
                         </td>
-                        <td className="px-3 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{student.firstName + " " + student.lastName}</div>
-                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">{student.registId}</td>
                         <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {student.registId}
-                        </td>
-                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {student.parentId}
+                          {student.parentId ? 'Assigned' : 'Not Assigned'}
                         </td>
                         <td className="px-3 py-4 whitespace-nowrap">
                           <button className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200">
@@ -361,73 +345,14 @@ export default function StudentPromotionForm() {
                             View
                           </button>
                         </td>
-                        {/* <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <input 
-                              type="radio" 
-                              id={`running-${student.id}`} 
-                              name={`status-${student.id}`} 
-                              className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                              checked={!student.promoted}
-                              readOnly
-                            />
-                            <label htmlFor={`running-${student.id}`} className="ml-2 text-sm text-gray-700 mr-4">
-                              Running
-                            </label>
-                            
-                            <input 
-                              type="radio" 
-                              id={`promoted-${student.id}`} 
-                              name={`status-${student.id}`} 
-                              className="h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500"
-                              checked={student.promoted}
-                              readOnly
-                            />
-                            <label htmlFor={`promoted-${student.id}`} className="ml-2 text-sm text-gray-700">
-                              Promoted
-                            </label>
-                          </div>
-                        </td> */}
-                        {/* <td className="px-3 py-4 whitespace-nowrap">
-                          <input 
-                            type="text" 
-                            className="w-16 p-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            value={student.roll || ''}
-                            onChange={(e) => {
-                              const newSelectedStudents = [...selectedStudents];
-                              newSelectedStudents[index].roll = e.target.value;
-                              setSelectedStudents(newSelectedStudents);
-                            }}
-                          />
-                        </td> */}
-                        {/* <td className="px-3 py-4 whitespace-nowrap">
-                          <input 
-                            type="text" 
-                            className="w-24 p-1 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            value={student.dueAmount || '0'}
-                            readOnly
-                          />
-                        </td> */}
-                        {/* <td className="px-3 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <input 
-                              type="checkbox" 
-                              id={`alumni-${student.id}`} 
-                              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                              checked={student.isAlumni}
-                              onChange={() => handleAlumniChange(index)}
-                            />
-                            <label htmlFor={`alumni-${student.id}`} className="ml-2 text-sm text-gray-700">
-                              Leave / Add Alumni
-                            </label>
-                          </div>
-                        </td> */}
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="10" className="px-6 py-4 text-center text-sm text-gray-500">
-                        No students found. Please select a class and section.
+                      <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                        {selectedClass && selectedSection 
+                          ? "No students found for this class and section"
+                          : "Please select a class and section to view students"}
                       </td>
                     </tr>
                   )}
@@ -440,23 +365,13 @@ export default function StudentPromotionForm() {
             <button 
               className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 font-medium"
               onClick={handlePromote}
-              disabled={createPromotion.isLoading}
+              disabled={createPromotion.isLoading || selectedStudents.length === 0}
             >
-              {createPromotion.isLoading ? 'Processing...' : 'Promotion'}
+              {createPromotion.isLoading ? 'Processing...' : 'Promote'}
             </button>
           </div>
         </div>
       </div>
-      
-      {/* WhatsApp-like floating action button */}
-      {/* <div className="fixed bottom-6 right-6">
-        <button className="flex items-center justify-center w-14 h-14 bg-green-500 rounded-full shadow-lg hover:bg-green-600">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" className="w-8 h-8 text-white fill-current">
-            <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
-          </svg>
-        </button>
-      </div> */}
-
     </div>
   );
 }

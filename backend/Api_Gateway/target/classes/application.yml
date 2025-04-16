@@ -1,0 +1,147 @@
+spring:
+  application:
+    name: API_GATEWAY
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://10.194.61.72:3000"  
+              - "http://10.194.61.74:8080"  
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true  # Enable credentials
+            maxAge: 3600
+      routes:
+        # Service Routes
+        - id: User_Service
+          uri: http://10.194.61.74:8087
+          predicates:
+            - Path=/auth/api/**
+        - id: academic_service
+          uri: http://10.194.61.74:8081
+          predicates:
+            - Path=/academic/api/**
+        - id: tenant_service
+          uri: http://10.194.61.74:8086
+          predicates:
+            - Path=/tenant/api/**
+        - id: communication_service
+          uri: http://10.194.61.74:8083
+          predicates:
+            - Path=/communication/api/**
+        - id: Staff_Service
+          uri: http://10.194.61.74:8084
+          predicates:
+            - Path=/staff/api/**
+        - id: Assessment_Service
+          uri: http://10.194.61.74:8082
+          predicates:
+            - Path=/assessment/api/**
+        - id: student_service
+          uri: http://10.194.61.74:8085
+          predicates:
+            - Path=/student/api/**
+        # Swagger Routes with Path Rewriting
+        - id: user-swagger
+          uri: http://10.194.61.74:8087
+          predicates:
+            - Path=/auth/v3/api-docs/**
+          filters:
+            - RewritePath=/auth/v3/api-docs(/?.*), /v3/api-docs$1
+        - id: academic-swagger
+          uri: http://10.194.61.74:8081
+          predicates:
+            - Path=/academic/v3/api-docs/**
+          filters:
+            - RewritePath=/academic/v3/api-docs(/?.*), /v3/api-docs$1
+        - id: tenant-swagger
+          uri: http://10.194.61.74:8086
+          predicates:
+            - Path=/tenant/v3/api-docs/**
+          filters:
+            - RewritePath=/tenant/v3/api-docs(/?.*), /v3/api-docs$1
+        - id: communication-swagger
+          uri: http://10.194.61.74:8083
+          predicates:
+            - Path=/communication/v3/api-docs/**
+          filters:
+            - RewritePath=/communication/v3/api-docs(/?.*), /v3/api-docs$1
+        - id: staff-swagger
+          uri: http://10.194.61.74:8084
+          predicates:
+            - Path=/staff/v3/api-docs/**
+          filters:
+            - RewritePath=/staff/v3/api-docs(/?.*), /v3/api-docs$1
+        - id: assessment-swagger
+          uri: http://10.194.61.74:8082
+          predicates:
+            - Path=/assessment/v3/api-docs/**
+          filters:
+            - RewritePath=/assessment/v3/api-docs(/?.*), /v3/api-docs$1
+        - id: student-swagger
+          uri: http://10.194.61.74:8085
+          predicates:
+            - Path=/student/v3/api-docs/**
+          filters:
+            - RewritePath=/student/v3/api-docs(/?.*), /v3/api-docs$1
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    non-secure-port: 8080
+    metadata-map:
+      appName: API_GATEWAY
+server:
+  port: 8080
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /auth/v3/api-docs
+        name: User Service
+      - url: /academic/v3/api-docs
+        name: Academic Service
+      - url: /tenant/v3/api-docs
+        name: Tenant Service
+      - url: /communication/v3/api-docs
+        name: Communication Service
+      - url: /staff/v3/api-docs
+        name: Staff Service
+      - url: /assessment/v3/api-docs
+        name: Assessment Service
+      - url: /student/v3/api-docs
+        name: Student Service
+    disable-swagger-default-url: true
+    display-request-duration: true
+    use-root-path: true
+  api-docs:
+    enabled: true
+    resolve-schema-properties: true
+  paths-to-match: /**
+  cache:
+    disabled: true
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: DEBUG
+    org.springdoc: DEBUG

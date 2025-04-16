@@ -1,4 +1,5 @@
 import localFont from "next/font/local";
+import { Toaster } from 'react-hot-toast';
 import ReactQueryProvider from '@/lib/ReactQueryProvider';
 import "./globals.css";
 
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ReactQueryProvider>
+          <Toaster position="top-right" />
           {children}
         </ReactQueryProvider>
       </body>

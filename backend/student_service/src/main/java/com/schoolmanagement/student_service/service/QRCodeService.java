@@ -16,6 +16,7 @@ import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.schoolmanagement.student_service.config.JwtUtil;
 import com.schoolmanagement.student_service.model.QRCode;
 import com.schoolmanagement.student_service.repository.QRCodeRepository;
 
@@ -37,16 +38,16 @@ public class QRCodeService {
     public QRCode getQRCodeById(Long id) {
         QRCode qrCode = qrCodeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("QR Code not found with id: " + id));
-                String qrCodeImageBase64;
-                try {
-                    // Assuming qrCodeImage is a file path; adjust if it's different
-                    byte[] imageBytes = Files.readAllBytes(Path.of(qrCode.getQrCodePath()));
-                    qrCodeImageBase64 = Base64.getEncoder().encodeToString(imageBytes);
-                } catch (Exception e) {
-                    log.error("Error converting QR Code image to Base64", e);
-                    throw new RuntimeException("Failed to convert QR Code image to Base64");
-                }
-                qrCode.setQrCodePath(qrCodeImageBase64);
+        String qrCodeImageBase64;
+        try {
+            // Assuming qrCodeImage is a file path; adjust if it's different
+            byte[] imageBytes = Files.readAllBytes(Path.of(qrCode.getQrCodePath()));
+            qrCodeImageBase64 = Base64.getEncoder().encodeToString(imageBytes);
+        } catch (Exception e) {
+            log.error("Error converting QR Code image to Base64", e);
+            throw new RuntimeException("Failed to convert QR Code image to Base64");
+        }
+        qrCode.setQrCodePath(qrCodeImageBase64);
         return qrCode;
     }
 
@@ -64,7 +65,7 @@ public class QRCodeService {
             // No filters applied, return all QR codes
             return qrCodeRepository.findAll();
         }
-    }   
+    }
 
     // Create a new QR code
     public QRCode createQRCode(QRCode qrCode) {
@@ -97,14 +98,20 @@ public class QRCodeService {
                 .orElseThrow(() -> new RuntimeException("QR Code not found with id: " + id));
         qrCodeRepository.delete(qrCode);
     }
-    
+
     public QRCode generateQRCode(QRCode qrCode) throws WriterException, IOException {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiryTime = now.plusHours(10);
-        String sessionToken = "TOKEN-" + qrCode.getSectionId() + "-" + now.toString();
+        // String jwtToken = "TOKEN-" + qrCode.getSectionId() + "-" + now.toString();
 
+        String jwtToken = JwtUtil.generateToken(
+                qrCode.getSchoolId(),
+                qrCode.getClassId(),
+                qrCode.getSectionId());
         // Generate QR code
-        String qrCodeText = "SchoolID:" + qrCode.getSchoolId() + ",ClassID:" + qrCode.getClassId() + ",SectionID:" + qrCode.getSectionId() + ",Token:" + sessionToken;
+        String qrCodeText = "SchoolID:" + qrCode.getSchoolId() + ",ClassID:" + qrCode.getClassId() + ",SectionID:"
+                + qrCode.getSectionId() + ",Token:" + jwtToken;
+        String qrCodeUrl = "http://localhost:8080/api/v1/attendance/mark?token=" + jwtToken;
         String qrCodePath = generateQRCodeImage(qrCodeText, 200, 200);
 
         QRCode newQRCode = new QRCode();
@@ -112,8 +119,11 @@ public class QRCodeService {
         newQRCode.setClassId(qrCode.getClassId());
         newQRCode.setSectionId(qrCode.getSectionId());
         newQRCode.setGeneratedTime(now);
+        if (qrCode.getExpiryTime() != null) {
+            expiryTime = qrCode.getExpiryTime();
+        }
         newQRCode.setExpiryTime(expiryTime);
-        newQRCode.setSessionToken(sessionToken);
+        newQRCode.setSessionToken(jwtToken);
         newQRCode.setGeneratedBy(qrCode.getGeneratedBy());
         newQRCode.setQrCodePath(qrCodePath);
         newQRCode.setStatus(QRCode.QRCodeStatus.ACTIVE);
