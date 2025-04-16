@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.schoolmanagement.communication_service.dto.request.PermissionCheckRequest;
 import com.schoolmanagement.communication_service.dto.response.PermissionCheckResponse;
 
-@FeignClient(name = "user-service", url = "${user.service.url:http://localhost:8080}", configuration = FeignConfig.class)
+@FeignClient(name = "user-service", url = "${user.service.url:http://localhost:8082}", configuration = FeignConfig.class)
 public interface UserManagementClient {
 
     @GetMapping("/auth/api/{schoolId}/{userId}/email")

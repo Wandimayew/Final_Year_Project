@@ -54,7 +54,7 @@ server:
 user:
   management:
     service:
-      url: http://localhost:8080
+      url: http://localhost:8082
 
 communication:
   service:
