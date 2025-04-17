@@ -1,9 +1,9 @@
 services:
   mysql-db:
     image: mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password
     ports:
       - "0.0.0.0:3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_USER: toor
@@ -11,6 +11,8 @@ services:
       MYSQL_DATABASE: User_Service
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
     healthcheck:
       test:
         [
@@ -26,36 +28,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - app-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  service-registry:
-    build:
-      context: ./backend/service-registry
-      dockerfile: Dockerfile
-    ports:
-      - "0.0.0.0:8761:8761"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://10.194.61.25:8761/actuator/health"]
-      interval: 60s
-      timeout: 10s
-      retries: 5
-    volumes:
-      - service-registry-data:/app/data
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-    networks:
-      - app-network
     logging:
       driver: "json-file"
       options:
@@ -68,11 +40,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "0.0.0.0:8080:8080"
-    depends_on:
-      service-registry:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://10.194.61.25:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://192.168.1.98:8080/actuator/health"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -83,40 +52,8 @@ services:
         limits:
           cpus: "0.5"
           memory: 512M
-    networks:
-      - app-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  tenant-service:
-    build:
-      context: ./backend/tenant_service
-      dockerfile: Dockerfile
-    ports:
-      - "0.0.0.0:8081:8081"
-    depends_on:
-      mysql-db:
-        condition: service_healthy
-      service-registry:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://10.194.61.25:8081/actuator/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    env_file:
-      - ./backend/tenant_service/.env
     environment:
-      - SPRING_DATASOURCE_USERNAME=toor
-      - SPRING_DATASOURCE_PASSWORD=toor
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
+      - HOST_IP=192.168.1.98
     networks:
       - app-network
     logging:
@@ -130,22 +67,23 @@ services:
       context: ./backend/User_Service
       dockerfile: Dockerfile
     ports:
-      - "0.0.0.0:8082:8082" 
+      - "0.0.0.0:8082:8082"
     depends_on:
       mysql-db:
         condition: service_healthy
-      service-registry:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://10.194.61.25:8082/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://192.168.1.98:8082/actuator/health"]
       interval: 30s
       timeout: 5s
-      retries: 3
+      retries: 4
     env_file:
       - ./backend/User_Service/.env
     environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://192.168.1.98:3306/User_Service?allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=toor
       - SPRING_DATASOURCE_PASSWORD=toor
+      - EUREKA_INSTANCE_HOSTNAME=10.194.53.26
+      - HOST_IP=192.168.1.98
     deploy:
       resources:
         limits:
@@ -165,6 +103,8 @@ services:
       - "0.0.0.0:3000:3000"
     depends_on:
       - api-gateway
+    environment:
+      - HOST=0.0.0.0
     env_file:
       - ./frontend/.env
     deploy:
