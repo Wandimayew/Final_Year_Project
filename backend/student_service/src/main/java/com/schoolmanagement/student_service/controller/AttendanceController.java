@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.schoolmanagement.student_service.dto.AttendanceRequest;
@@ -23,11 +24,13 @@ import com.schoolmanagement.student_service.service.AttendanceService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 
 @RestController
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor
+@Slf4j
 public class AttendanceController {
     private final AttendanceService attendanceService;
 
@@ -80,6 +83,13 @@ public class AttendanceController {
     public ResponseEntity<String> validateQRCodeAndMarkAttendance(@RequestBody QRCodeScanRequest request) {
         attendanceService.validateAndMarkAttendance(request.getQrCodeId(), request.getStudentId());
         return ResponseEntity.ok("Attendance marked successfully.");
+    }
+
+    @PostMapping("/markAttendance")
+    public ResponseEntity<String> markAttendance(@RequestParam String token) {
+        log.info("Marking attendance for token: {}", token);
+        
+        return attendanceService.markAttendance(token);
     }
 
 }

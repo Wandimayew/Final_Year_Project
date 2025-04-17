@@ -3,8 +3,10 @@ package com.schoolmanagement.student_service.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.schoolmanagement.student_service.config.JwtUtil;
 import com.schoolmanagement.student_service.model.Attendance;
 import com.schoolmanagement.student_service.model.QRCode;
 import com.schoolmanagement.student_service.model.QRCode.QRCodeStatus;
@@ -13,10 +15,13 @@ import com.schoolmanagement.student_service.repository.AttendanceRepository;
 import com.schoolmanagement.student_service.repository.QRCodeRepository;
 import com.schoolmanagement.student_service.repository.StudentRepository;
 
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final QRCodeRepository qrCodeRepository;
@@ -99,4 +104,89 @@ public class AttendanceService {
         attendance.setAttendanceDate(LocalDateTime.now());
         attendanceRepository.save(attendance);
     }
+
+    public ResponseEntity<String> markAttendance(String token) {
+        log.info("Received token: {}", token);
+
+        try {
+            // Decode token
+            Claims claims = JwtUtil.verifyToken(token);
+
+            // Handle both String and Integer claim types
+            String schoolId = getClaimAsString(claims, "schoolId");
+            String classId = getClaimAsString(claims, "classId");
+            String sectionId = getClaimAsString(claims, "sectionId");
+            String qrCodeUUID = claims.get("qrCodeUUID", String.class);
+            String expiryDateStr = claims.get("expiryDate", String.class);
+
+            log.info("Decoded Token => SchoolID: {}, ClassID: {}, SectionID: {}, QRCodeUUID: {}, Expiry: {}",
+                    schoolId, classId, sectionId, qrCodeUUID, expiryDateStr);
+
+            QRCode qrCode = qrCodeRepository.findByQrCodeUUID(qrCodeUUID)
+                    .orElseThrow(() -> new RuntimeException("QR Code not found."));
+
+            log.info("QR Code: {}", qrCode);
+
+            // Parse expiryDate string to LocalDateTime
+            LocalDateTime expiryDate = LocalDateTime.parse(expiryDateStr);
+            if (LocalDateTime.now().isAfter(expiryDate)) {
+                log.warn("QR Code has expired.");
+                throw new IllegalArgumentException("QR Code has expired.");
+                // return ResponseEntity.badRequest().body("QR Code has expired.");
+            }
+
+            long studentId = 7L;
+            // Fetch the student
+            Student student = studentRepository.findById(studentId)
+                    .orElseThrow(() -> new IllegalArgumentException("Student not found."));
+
+            log.info("Student: {}", student);
+            // Validate that the student belongs to the same school, class, and section
+            if (!student.getSchoolId().equals(qrCode.getSchoolId())) {
+                log.warn("Student does not belong to the school for this QR Code.");
+                return ResponseEntity.badRequest().body("Student does not belong to the school for this QR Code.");
+            }
+
+            if (!student.getClassId().equals(qrCode.getClassId())) {
+                log.warn("Student does not belong to the class for this QR Code.");
+                return ResponseEntity.badRequest().body("Student does not belong to the class for this QR Code.");
+            }
+
+            if (!student.getSectionId().equals(qrCode.getSectionId())) {
+                log.warn("Student does not belong to the section for this QR Code.");
+                return ResponseEntity.badRequest().body("Student does not belong to the section for this QR Code.");
+            }
+
+            // Check if attendance for this session is already marked
+            boolean alreadyMarked = attendanceRepository.existsByStudentIdAndQrCodeId(studentId, qrCode.getQrCodeId());
+            if (alreadyMarked) {
+                return ResponseEntity.badRequest().body("Attendance already marked for this student in this session.");
+            }
+
+            // Mark attendance
+            Attendance attendance = new Attendance();
+            attendance.setStudentId(studentId);
+            attendance.setQrCodeId(qrCode.getQrCodeId());
+            attendance.setRecordedBy(qrCode.getGeneratedBy());
+            attendance.setAttendanceDate(LocalDateTime.now());
+            attendanceRepository.save(attendance);
+
+            return ResponseEntity.ok("Attendance marked successfully.");
+            // log.info("Attendance marked successfully for QR Code ID: {}", qrCodeUUID);
+
+        } catch (Exception e) {
+            log.error("Failed to mark attendance: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid or expired token.");
+        }
+    }
+
+    // Helper method to handle both String and Integer claim types
+    private String getClaimAsString(Claims claims, String claimName) {
+        Object claimValue = claims.get(claimName);
+        if (claimValue == null) {
+            throw new RuntimeException("Missing required claim: " + claimName);
+        }
+        return claimValue.toString(); // Convert whatever type it is to String
+    }
+
 }

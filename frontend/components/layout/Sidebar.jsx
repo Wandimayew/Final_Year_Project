@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MENU_ITEMS } from "@/config/menuItems";
-import { FaChevronDown, FaChevronRight } from "react-icons/fa";
+import { FaChevronDown, FaChevronRight, FaMinus, FaPlus } from "react-icons/fa";
 
 const Sidebar = ({ isMenuOpen }) => {
   const pathname = usePathname();
@@ -49,9 +49,11 @@ const Sidebar = ({ isMenuOpen }) => {
           </Link>
           {isMenuOpen && hasSubItems && (
             isExpanded ? (
-              <FaChevronDown className="w-3 h-3" />
+              // <FaChevronDown className="w-3 h-3" />
+              <FaMinus className="w-3 h-3" />
             ) : (
-              <FaChevronRight className="w-3 h-3" />
+              // <FaChevronRight className="w-3 h-3" />
+              <FaPlus className="w-3 h-3" />
             )
           )}
         </div>

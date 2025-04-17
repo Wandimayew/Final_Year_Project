@@ -81,7 +81,7 @@ const QRCodeScannerPage = () => {
   }, [scanResult, validateQRCodeAndMarkAttendance]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center top-28 p-4">
       <h1 className="text-2xl font-bold mb-6">QR Code Scanner</h1>
 
       {/* Video Stream for QR Code Scanning */}

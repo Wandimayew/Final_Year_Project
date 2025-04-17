@@ -5,7 +5,7 @@ import axios from "axios";
 // Adjust the path as necessary
 
 const attendanceApi = axios.create({
-  baseURL: 'http://localhost:8086/api', // Adjust the base URL as needed
+  baseURL: 'http://10.194.61.73:8086/api', // Adjust the base URL as needed
 });
 
 // ================== ATTENDANCE API FUNCTIONS ==================
@@ -94,3 +94,17 @@ export const useValidateQRCodeAndMarkAttendance = () => {
   });
 };
 
+// Mark attendance via token (new hook for the new endpoint)
+export const useMarkAttendanceWithToken = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (token) => {
+      const response = await attendanceApi.post(`/attendance/markAttendance?token=${encodeURIComponent(token)}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["attendance"] });
+    },
+  });
+};

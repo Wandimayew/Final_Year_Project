@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -104,18 +105,25 @@ public class QRCodeService {
         LocalDateTime expiryTime = now.plusHours(10);
         // String jwtToken = "TOKEN-" + qrCode.getSectionId() + "-" + now.toString();
 
+        String qrCodeUUID = UUID.randomUUID().toString();
+
+        long schoolId = 1L;
+        ;
+
         String jwtToken = JwtUtil.generateToken(
-                qrCode.getSchoolId(),
+                schoolId,
                 qrCode.getClassId(),
-                qrCode.getSectionId());
+                qrCode.getSectionId(),
+                qrCodeUUID,
+                qrCode.getExpiryTime());
         // Generate QR code
         String qrCodeText = "SchoolID:" + qrCode.getSchoolId() + ",ClassID:" + qrCode.getClassId() + ",SectionID:"
                 + qrCode.getSectionId() + ",Token:" + jwtToken;
-        String qrCodeUrl = "http://localhost:8080/api/v1/attendance/mark?token=" + jwtToken;
-        String qrCodePath = generateQRCodeImage(qrCodeText, 200, 200);
+        String qrCodeUrl = "http://10.194.61.73:3000/attendance/students/mark?token=" + jwtToken;
+        String qrCodePath = generateQRCodeImage(qrCodeUrl, 200, 200);
 
         QRCode newQRCode = new QRCode();
-        newQRCode.setSchoolId(qrCode.getSchoolId());
+        newQRCode.setSchoolId(schoolId);
         newQRCode.setClassId(qrCode.getClassId());
         newQRCode.setSectionId(qrCode.getSectionId());
         newQRCode.setGeneratedTime(now);
@@ -124,6 +132,7 @@ public class QRCodeService {
         }
         newQRCode.setExpiryTime(expiryTime);
         newQRCode.setSessionToken(jwtToken);
+        newQRCode.setQrCodeUUID(qrCodeUUID);
         newQRCode.setGeneratedBy(qrCode.getGeneratedBy());
         newQRCode.setQrCodePath(qrCodePath);
         newQRCode.setStatus(QRCode.QRCodeStatus.ACTIVE);

@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.schoolmanagement.student_service.model.Attendance;
 import com.schoolmanagement.student_service.model.QRCode;
 
 @Repository
@@ -17,4 +18,6 @@ public interface QRCodeRepository extends JpaRepository<QRCode, Long> {
     List<QRCode> findBySectionId(Long sectionId);
 
     List<QRCode> findByClassIdAndSectionId(Long classId, Long sectionId);
+
+    Optional<QRCode> findByQrCodeUUID(String qrCodeUUID);
 }

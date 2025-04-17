@@ -55,7 +55,7 @@ const QRCodeDetails = ({ id, onClose, setOnClose }) => {
   if (isError) return <div className="text-center py-8 text-red-600">Error fetching QR code details</div>;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 top-28 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className={`bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl transform transition-all ${
         isPrinting ? "scale-100" : "scale-95 hover:scale-100"
       }`}>

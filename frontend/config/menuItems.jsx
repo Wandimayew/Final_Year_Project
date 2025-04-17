@@ -9,7 +9,17 @@ import {
   FaFileImport,
   FaList,
 } from "react-icons/fa";
-import { FiClock, FiDollarSign, FiEye, FiGrid, FiList, FiPackage, FiSettings, FiUserPlus, FiCamera } from "react-icons/fi";
+import {
+  FiClock,
+  FiDollarSign,
+  FiEye,
+  FiGrid,
+  FiList,
+  FiPackage,
+  FiSettings,
+  FiUserPlus,
+  FiCamera,
+} from "react-icons/fi";
 
 export const MENU_ITEMS = [
   {
@@ -182,10 +192,17 @@ export const MENU_ITEMS = [
         href: "/students/promotion",
         roles: "",
       },
+      {
+        id: "Attendance",
+        icon: FaCalendarCheck,
+        label: "Attendance",
+        href: "/attendance/students/generate-qrcode",
+        roles: "",
+      },
     ],
   },
   {
-    id: 'finance',
+    id: "finance",
     icon: FiDollarSign,
     label: "Finance",
     href: "/finance",
@@ -215,7 +232,7 @@ export const MENU_ITEMS = [
     ],
   },
   {
-    id: 'setting',
+    id: "setting",
     icon: FiSettings,
     label: "Settings",
     href: "/setting",

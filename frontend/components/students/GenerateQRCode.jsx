@@ -24,7 +24,7 @@ const GenerateQRCode = ({ onCloseGenQr, setOnCloseGenQr }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div className="fixed top-28 inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="w-full max-w-5xl mx-auto bg-white rounded-lg shadow-md p-6 overflow-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">Generate QR Code</h2>
