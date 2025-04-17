@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createApiService } from "@/lib/api";
 
 export const userService = createApiService(
-  process.env.NEXT_PUBLIC_API_URL_FOR_USER || "http://localhost:8080/auth/api"
+  process.env.NEXT_PUBLIC_API_URL_FOR_USER || "http://192.168.1.98:8080/auth/api"
 );
 
 // Use userService for permission-related requests

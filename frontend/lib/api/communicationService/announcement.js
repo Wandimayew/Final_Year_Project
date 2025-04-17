@@ -4,7 +4,7 @@ import { createApiService } from "@/lib/api";
 
 export const communicationService = createApiService(
   process.env.NEXT_PUBLIC_API_URL_FOR_COMMUNICATION ||
-    "http://localhost:8080/communication/api"
+    "http://192.168.1.98:8080/communication/api"
 );
 
 const announcementApi = {

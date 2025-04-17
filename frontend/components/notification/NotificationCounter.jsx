@@ -33,7 +33,7 @@ const NotificationCounter = ({ schoolId, userId }) => {
   const connectWebSocket = (tokenToUse) => {
     if (typeof window === "undefined" || !tokenToUse || !userId) return;
 
-    const socketUrl = `http://localhost:8084/notifications?access_token=${tokenToUse}`;
+    const socketUrl = `http://192.168.1.98:8080/notifications?access_token=${tokenToUse}`;
     console.log("Initializing SockJS with URL:", socketUrl);
     const socket = new SockJS(socketUrl);
 

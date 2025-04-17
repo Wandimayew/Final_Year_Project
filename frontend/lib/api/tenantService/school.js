@@ -7,7 +7,7 @@ import { createApiService } from "@/lib/api";
 
 export const schoolService = createApiService(
   process.env.NEXT_PUBLIC_API_URL_FOR_TENANT ||
-    "http://localhost:8080/tenant/api"
+    "http://192.168.1.98:8080/tenant/api"
 );
 
 const schoolApi = {
