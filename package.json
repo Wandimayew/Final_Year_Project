@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "next": "^15.2.4",
-    "react-toastify": "^11.0.5"
-  }
-}
