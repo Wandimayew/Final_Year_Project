@@ -7,9 +7,15 @@ import com.schoolmanagement.Staff_Service.enums.AttendanceStatus;
 
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class StaffAttendanceRequestDTO {
 
     private Long staffId;
@@ -35,6 +41,6 @@ public class StaffAttendanceRequestDTO {
     
     private String remark;
 
-    
+    private Boolean isInTime;
 
 }

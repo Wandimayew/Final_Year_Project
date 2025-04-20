@@ -38,14 +38,19 @@ public class QRCode{
     private Integer startTimeMinute;  
     private Integer endTimeHour;      
     private Integer endTimeMinute;  
+
+    private LocalDateTime expiryTime;
     
     @NotBlank(message = "Session token is required.")
+    @Column(name = "session_token", columnDefinition = "TEXT")
     private String sessionToken;
     
     private String generatedBy;
     
     @Enumerated(EnumType.STRING)
     private QRCodeStatus status;
+
+    private String qrCodeUUID;
 
     @Column(name = "qr_code_image", columnDefinition = "TEXT")
     private String qrCodeImage;
@@ -57,6 +62,7 @@ public class QRCode{
     private LocalDateTime updatedAt;
     
     private String createdBy;
+
     private String updatedBy;
     
     @NotNull(message = "Active status cannot be null")

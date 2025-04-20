@@ -33,6 +33,8 @@ public class QRCodeResponseDTO {
 
     private String qrCodeImage;
 
+    private String qrCodeUUID;
+
     private String generatedBy;
 
     private QRCodeStatus status;

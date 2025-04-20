@@ -15,6 +15,8 @@ import com.schoolmanagement.Staff_Service.model.QRCode;
 public interface QRCodeRepository extends JpaRepository<QRCode, Long> {
     Optional<QRCode> findBySessionToken(String sessionToken);
 
+    Optional<QRCode> findByQrCodeUUID(String qrCodeUUID);
+
     @Query("SELECT q FROM QRCode q " +
            "WHERE q.schoolId = :schoolId " +
            "AND q.status = :status " +
